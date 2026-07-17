@@ -1,0 +1,13 @@
+.page-transition {
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.page-transition.fade-in {
+  opacity: 1;
+}
+
+.page-transition.fade-out {
+  opacity: 0;
+}

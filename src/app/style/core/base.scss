@@ -1,0 +1,210 @@
+/* 基础样式 */
+@use "sass:list";
+
+@function generate-sizes($start, $end, $step) {
+  $sizes: ();
+  @for $i from $start through $end {
+    @if $i % $step == 0 {
+      $sizes: list.append($sizes, $i);
+    }
+  }
+  @return $sizes;
+}
+
+/* 宽度和高度百分比工具类（5%的倍数，如W10,W15,W30） */
+/* 使用方式：class="W100" */
+@for $i from 1 through 20 {
+  .W#{$i * 5} {
+    width: $i * 5% !important;
+  }
+  .H#{$i * 5} {
+    height: $i * 5% !important;
+  }
+}
+@for $i from 1 through 100 {
+  .VW#{$i} {
+    width: #{$i}vw !important;
+  }
+  .VH#{$i} {
+    height: #{$i}vh !important;
+  }
+}
+@for $i from 50 through 500 {
+  .w-#{$i} {
+    width: #{$i}px !important;
+  }
+  .h-#{$i} {
+    height: #{$i}px !important;
+  }
+}
+/* 固定像素尺寸工具类 */
+/* 使用方式：class="w-100" */
+/* 推荐以50的倍数设置 */
+$sizes: generate-sizes(50, 900, 50);
+@each $size in $sizes {
+  .w-#{$size} {
+    width: #{$size}px !important;
+  }
+  .h-#{$size} {
+    height: #{$size}px !important;
+  }
+  .min-w-#{$size} {
+    min-width: #{$size}px !important;
+  }
+  .min-h-#{$size} {
+    min-height: #{$size}px !important;
+  }
+  .max-w-#{$size} {
+    max-width: #{$size}px !important;
+  }
+  .max-h-#{$size} {
+    max-height: #{$size}px !important;
+  }
+}
+
+/* 外边距和内边距工具类 */
+/* 使用方式：class="mr10" */
+@for $i from 0 through 50 {
+  // 外边距
+  .m#{$i} {
+    margin: #{$i}px !important;
+  }
+  .mt#{$i} {
+    margin-top: #{$i}px !important;
+  }
+  .mr#{$i} {
+    margin-right: #{$i}px !important;
+  }
+  .mb#{$i} {
+    margin-bottom: #{$i}px !important;
+  }
+  .ml#{$i} {
+    margin-left: #{$i}px !important;
+  }
+  .mx#{$i} {
+    margin-left: #{$i}px !important;
+    margin-right: #{$i}px !important;
+  }
+  .my#{$i} {
+    margin-top: #{$i}px !important;
+    margin-bottom: #{$i}px !important;
+  }
+
+  // 内边距
+  .p#{$i} {
+    padding: #{$i}px !important;
+  }
+  .pt#{$i} {
+    padding-top: #{$i}px !important;
+  }
+  .pr#{$i} {
+    padding-right: #{$i}px !important;
+  }
+  .pb#{$i} {
+    padding-bottom: #{$i}px !important;
+  }
+  .pl#{$i} {
+    padding-left: #{$i}px !important;
+  }
+  .px#{$i} {
+    padding-left: #{$i}px !important;
+    padding-right: #{$i}px !important;
+  }
+  .py#{$i} {
+    padding-top: #{$i}px !important;
+    padding-bottom: #{$i}px !important;
+  }
+}
+
+/* Flex布局工具类 */
+.flex {
+  display: flex;
+}
+
+.flex-1 {
+  flex: 1; // 自动填充剩余空间
+}
+
+// 带间距的flex布局
+@for $i from 0 through 20 {
+  $gap: $i * 5;
+
+  .flex-gap-#{$gap} {
+    display: flex;
+    gap: #{$gap * 0.1}vw;
+  }
+
+  .flex-column-gap-#{$gap} {
+    display: flex;
+    flex-direction: column;
+    gap: #{$gap}px;
+  }
+
+  .flex-column-center-gap-#{$gap} {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: #{$gap}px;
+  }
+
+  .flex-row-center-gap-#{$gap} {
+    display: flex;
+    justify-content: center;
+    gap: #{$gap}px;
+  }
+}
+
+// Flex方向
+.flex-column {
+  flex-direction: column;
+}
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+// Flex对齐方式
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.flex-justify-between {
+  justify-content: space-between;
+}
+.flex-justify-end {
+  justify-content: flex-end;
+}
+.flex-justify-center {
+  justify-content: center;
+}
+.flex-align-center {
+  align-items: center;
+}
+.flex-align-center-justify-end {
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Grid布局工具类 */
+@for $i from 0 through 20 {
+  .grid-auto-fit-gap-#{$i * 5} {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: #{$i * 5}px;
+  }
+}
+
+/* 自动边距工具类 */
+.ml-auto {
+  margin-left: auto !important;
+}
+.mr-auto {
+  margin-right: auto !important;
+}
+.mx-auto {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.overflow-hidden {
+  overflow: hidden !important;
+}

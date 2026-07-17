@@ -1,0 +1,72 @@
+// 聊天内容区域
+.chat-content-wrapper {
+  flex: 1;
+  width: 100%;
+  max-width: 700px;
+  overflow-y: auto;
+  padding: 16px 0;
+
+  .chat-content {
+    .message-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+
+      .message {
+        display: flex;
+        gap: 12px;
+        max-width: 100%;
+
+        &.user {
+          flex-direction: row-reverse;
+
+          .message-avatar {
+            background: #2563eb;
+            color: #fff;
+          }
+
+          .message-content {
+            background: #2563eb;
+            color: #fff;
+            border-radius: 16px 16px 4px 16px;
+          }
+        }
+
+        &.ai {
+          .message-avatar {
+            background: #f4f4f5;
+            color: #52525b;
+          }
+
+          .message-content {
+            background: #f4f4f5;
+            color: #18181b;
+            border-radius: 16px 16px 16px 4px;
+
+            &.error {
+              color: #dc2626;
+            }
+          }
+        }
+
+        .message-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .message-content {
+          padding: 10px 14px;
+          font-size: 14px;
+          line-height: 1.6;
+          max-width: 70%;
+          word-break: break-word;
+        }
+      }
+    }
+  }
+}

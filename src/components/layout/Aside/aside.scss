@@ -1,0 +1,241 @@
+.aside {
+  width: 72px;
+  height: 100%;
+  padding: 12px 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+
+  .aside-logo {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #f4f4f5;
+    }
+  }
+
+  .menu-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    padding: 0 10px;
+
+    .menu-item {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 4px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.15s;
+      width: 100%;
+
+      svg {
+        color: #71717a;
+      }
+
+      .menu-title {
+        margin: 0;
+        font-size: 11px;
+        color: #71717a;
+        line-height: 1.2;
+      }
+
+      &:hover {
+        background: #f4f4f5;
+
+        svg {
+          color: #18181b;
+        }
+
+        .menu-title {
+          color: #18181b;
+        }
+      }
+
+      &--active {
+        background: #ffffff;
+
+        svg {
+          color: #01040a;
+        }
+
+        .menu-title {
+          color: #01040a;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .person-panel {
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+
+    .login-btn {
+      width: 100%;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .user-avatar-trigger {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #f4f4f5;
+      }
+    }
+  }
+}
+
+// Popover 用户面板
+.user-popover {
+  .ant-popover-inner {
+    padding: 0;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  }
+
+  .ant-popover-inner-content {
+    padding: 0;
+  }
+}
+
+.user-panel {
+  width: 280px;
+  padding: 16px;
+
+  .user-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+
+    .user-panel-avatar {
+      flex-shrink: 0;
+    }
+
+    .user-panel-info {
+      flex: 1;
+      min-width: 0;
+
+      .user-panel-phone {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #18181b;
+
+        .vip-tag {
+          font-size: 11px;
+          padding: 0 6px;
+          height: 20px;
+          line-height: 18px;
+          border-radius: 4px;
+        }
+      }
+
+      .user-panel-vip-text {
+        font-size: 12px;
+        color: #a1a1aa;
+        margin-top: 2px;
+      }
+    }
+  }
+
+  .vip-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #f0f4ff;
+    border-radius: 10px;
+    margin-bottom: 16px;
+
+    .vip-card-left {
+      .vip-card-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e3a5f;
+      }
+
+      .vip-card-desc {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 2px;
+      }
+    }
+
+    .vip-card-btn {
+      flex-shrink: 0;
+      border-radius: 8px;
+      height: 32px;
+      padding: 0 16px;
+      font-size: 13px;
+    }
+  }
+
+  .user-operations {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+
+    .operation-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 8px;
+      border-radius: 8px;
+      color: #3f3f46;
+      font-size: 12px;
+      height: auto;
+
+      svg {
+        color: #52525b;
+      }
+
+      &:hover {
+        background: #f4f4f5;
+      }
+
+      &:last-child {
+        color: #ef4444;
+
+        svg {
+          color: #ef4444;
+        }
+
+        &:hover {
+          background: #fef2f2;
+        }
+      }
+    }
+  }
+}

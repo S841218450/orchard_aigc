@@ -1,0 +1,29 @@
+.not-found-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 16px;
+
+  h2 {
+    font-size: 36px;
+    font-weight: 600;
+    color: #18181b;
+  }
+
+  p {
+    color: #71717a;
+  }
+
+  a {
+    color: #3b82f6;
+    text-decoration: none;
+    transition: color 0.2s;
+
+    &:hover {
+      text-decoration: underline;
+      color: #2563eb;
+    }
+  }
+}

@@ -9,18 +9,26 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ant-design/icons": "~6.3.2",
+    "ahooks": "^3.9.7",
+    "animate.css": "^4.1.1",
+    "antd": "^6.5.0",
+    "axios": "^1.18.1",
+    "dayjs": "^1.11.21",
+    "gsap": "^3.15.0",
+    "lucide-react": "^1.21.0",
     "next": "16.2.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sass": "^1.101.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
-    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }

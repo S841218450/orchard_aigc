@@ -1,0 +1,464 @@
+// 登录页隐藏 Header
+.root-layout:has(.login-page) > .header {
+  display: none;
+}
+
+.login-page {
+  min-height: 100vh;
+  min-width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: #f8f9fc;
+
+  // 淡白渐变背景
+  .login-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse at 20% 20%,
+        rgba(59, 130, 246, 0.06) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse at 80% 80%,
+        rgba(37, 99, 235, 0.04) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse at 50% 50%,
+        rgba(147, 197, 253, 0.05) 0%,
+        transparent 60%
+      );
+    z-index: 0;
+  }
+
+  // 右上角返回按钮
+  .back-btn {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    z-index: 10;
+    color: #71717a;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #2563eb;
+    }
+  }
+
+  .login-container {
+    width: 440px;
+    padding: 48px 40px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    position: relative;
+    z-index: 1;
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 32px;
+
+      .logo-wrapper {
+        margin-bottom: 12px;
+
+        .logo {
+          width: 52px;
+          height: 52px;
+          margin: 0 auto;
+          background: #2563eb;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+        }
+      }
+
+      .brand-name {
+        font-size: 28px;
+        font-weight: 700;
+        color: #18181b;
+        margin: 0 0 6px;
+        letter-spacing: 2px;
+      }
+
+      .brand-slogan {
+        font-size: 13px;
+        color: #a1a1aa;
+        margin: 0;
+      }
+    }
+
+    // Segmented 切换样式
+    .login-segmented {
+      margin-bottom: 24px;
+
+      .ant-segmented {
+        width: 100%;
+        background: #f4f4f5;
+        border-radius: 10px;
+        padding: 3px;
+
+        .ant-segmented-item {
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #71717a;
+          transition: all 0.2s;
+
+          &-selected {
+            background: #fff;
+            color: #18181b;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+          }
+        }
+      }
+    }
+
+    // 表单样式
+    .login-form {
+      .ant-form-item {
+        margin-bottom: 16px;
+      }
+
+      .ant-input-affix-wrapper {
+        background: #fff;
+        border-color: #e4e4e7;
+        border-radius: 10px;
+        transition: all 0.25s ease;
+
+        &:hover {
+          border-color: #2563eb;
+        }
+
+        &:focus,
+        &:focus-within {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .ant-input {
+          font-size: 14px;
+
+          &::placeholder {
+            color: #a1a1aa;
+          }
+        }
+      }
+
+      // 密码/验证码切换
+      .login-type-switch {
+        margin-bottom: 16px;
+
+        .ant-segmented {
+          background: #f4f4f5;
+          border-radius: 8px;
+          padding: 3px;
+
+          .ant-segmented-item {
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #71717a;
+            transition: all 0.2s;
+
+            &-selected {
+              background: #fff;
+              color: #18181b;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            }
+          }
+        }
+      }
+
+      .login-btn {
+        height: 46px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        background: #2563eb;
+        border: none;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        transition: all 0.2s;
+
+        &:hover:not(:disabled) {
+          background: #1d4ed8;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+          transform: translateY(-1px);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+        }
+      }
+
+      .form-footer {
+        text-align: right;
+        margin-bottom: 16px;
+
+        .forgot-password {
+          font-size: 13px;
+          color: #71717a;
+          text-decoration: none;
+          transition: color 0.2s;
+
+          &:hover {
+            color: #2563eb;
+          }
+        }
+      }
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 24px 0;
+
+      .divider-line {
+        flex: 1;
+        height: 1px;
+        background: #e4e4e7;
+      }
+
+      .divider-text {
+        font-size: 12px;
+        color: #a1a1aa;
+      }
+    }
+
+    .third-party-login {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+
+      .ant-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 40px;
+        padding: 0 20px;
+        border-radius: 10px;
+        border-color: #e4e4e7;
+        background: #fff;
+        color: #3f3f46;
+        font-size: 13px;
+        transition: all 0.2s;
+
+        &:hover:not(:disabled) {
+          border-color: #2563eb;
+          color: #2563eb;
+          background: #f8faff;
+        }
+      }
+    }
+
+    .signup-link {
+      text-align: center;
+      font-size: 13px;
+      color: #a1a1aa;
+
+      .signup-btn {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 4px;
+        transition: color 0.2s;
+
+        &:hover {
+          color: #1d4ed8;
+        }
+      }
+    }
+  }
+
+  // 扫码弹窗
+  .scan-modal {
+    .ant-modal-content {
+      border-radius: 16px;
+    }
+
+    .scan-close-btn {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      color: #71717a;
+      z-index: 1;
+      font-size: 16px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+
+      &:hover {
+        background: #f4f4f5;
+        color: #18181b;
+      }
+    }
+
+    .scan-content {
+      text-align: center;
+      padding: 8px 0 16px;
+
+      // Tab 切换
+      .scan-tabs {
+        margin-bottom: 20px;
+
+        .ant-tabs-nav {
+          margin-bottom: 0;
+        }
+
+        .ant-tabs-tab {
+          font-size: 14px;
+          color: #71717a;
+          padding: 8px 16px;
+
+          &.ant-tabs-tab-active .ant-tabs-tab-btn {
+            color: #2563eb;
+            font-weight: 600;
+          }
+        }
+
+        .ant-tabs-ink-bar {
+          background: #2563eb;
+          height: 2px;
+        }
+
+        .scan-tab-label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+      }
+
+      // 二维码区域
+      .qr-code-area {
+        min-height: 260px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .qr-code-placeholder {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 16px;
+        background: #f4f4f5;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #71717a;
+      }
+
+      .scan-tip {
+        font-size: 15px;
+        color: #18181b;
+        margin: 0 0 6px;
+        font-weight: 500;
+      }
+
+      .scan-subtip {
+        font-size: 12px;
+        color: #a1a1aa;
+        margin: 0 0 16px;
+      }
+
+      // 刷新按钮
+      .qr-refresh-btn {
+        font-size: 13px;
+        color: #71717a;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        transition: all 0.2s;
+
+        &:hover {
+          color: #2563eb;
+          background: #f0f4ff;
+        }
+
+        svg {
+          transition: transform 0.3s;
+        }
+
+        &:hover svg {
+          transform: rotate(180deg);
+        }
+      }
+
+      // 已扫码状态
+      .qr-scanned {
+        .qr-code-placeholder {
+          opacity: 0.5;
+        }
+      }
+
+      // 扫码成功状态
+      .qr-success {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+
+        .qr-success-text {
+          font-size: 18px;
+          font-weight: 600;
+          color: #18181b;
+          margin: 8px 0 0;
+        }
+
+        .qr-success-sub {
+          font-size: 13px;
+          color: #a1a1aa;
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+
+// 登录按钮加载动画
+.btn-loading-spinner {
+  display: inline-block !important;
+  width: 16px !important;
+  height: 16px !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-top-color: #fff !important;
+  border-radius: 50% !important;
+  animation: spin 0.8s linear infinite !important;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    .login-container {
+      width: calc(100% - 32px);
+      padding: 32px 20px;
+    }
+  }
+}

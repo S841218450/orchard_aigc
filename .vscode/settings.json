@@ -1,0 +1,100 @@
+{
+  // ========== 你原来的配置（保留不动） ==========
+  "editor.tabSize": 2,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/*.log": true,
+    "**/*.log*": true,
+    "**/bower_components": true,
+    "**/dist": true,
+    "**/.git": true,
+    "**/.gitignore": true,
+    "**/.svn": true,
+    "**/.DS_Store": true,
+    "**/.idea": true,
+    "**/.vscode": false,
+    "**/yarn.lock": true,
+    "**/tmp": true,
+    "out": true,
+    "dist": true,
+    "node_modules": true,
+    "README.md": true,
+    "examples": true,
+    "res": true
+  },
+  "files.exclude": {
+    "**/.cache": true,
+    "**/.editorconfig": true,
+    "**/.eslintcache": true,
+    "**/bower_components": true,
+    "**/.idea": true,
+    "**/tmp": true,
+    "**/.git": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "never",
+      "source.fixAll.stylelint": "explicit"
+    }
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#2b2b2b",
+    "titleBar.activeBackground": "#29050d",
+    "titleBar.activeForeground": "#FDFBFB"
+  },
+  "editor.formatOnSave": true,
+  "i18n-ally.localesPaths": ["src/language"],
+  "i18n-ally.keystyle": "nested",
+
+  // ========== 我新增：字体大小 + 字体样式 ==========
+  "editor.fontSize": 14, // 代码字体大小（可改 13/14/15）
+  "editor.lineHeight": 1.6, // 行高（更舒服）
+  "editor.fontFamily": "JetBrains Mono, Consolas, 'Courier New', monospace",
+  "editor.fontWeight": "normal", // 字体粗细
+  "terminal.integrated.fontSize": 13, // 终端字体
+
+  // ========== 我新增：代码颜色高亮（超好看） ==========
+  "editor.tokenColorCustomizations": {
+    "comments": "#6A9955", // 注释
+    "keywords": "#569CD6", // 关键字 if/for/let
+    "strings": "#CE9178", // 字符串
+    "numbers": "#B5CEA8", // 数字
+    "functions": "#DCDCAA", // 函数
+    "variables": "#9CDCFE" // 变量
+  },
+
+  // ========== 我新增：括号彩色配对 + 辅助线（必开！） ==========
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.guides.highlightActiveBracketPair": true,
+  "editor.matchBrackets": "always",
+
+  // ========== 我新增：自动闭合括号/引号 ==========
+  "editor.autoClosingBrackets": "languageDefined",
+  "editor.autoClosingQuotes": "languageDefined",
+  "editor.autoSurround": true,
+  "html.autoClosingTags": true,
+  "javascript.autoClosingTags": true,
+  "typescript.autoClosingTags": true
+}
