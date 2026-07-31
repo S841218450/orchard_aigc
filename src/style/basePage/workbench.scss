@@ -42,7 +42,7 @@
       flex-direction: row-reverse;
 
       .chat-message__content {
-        background: #2563eb;
+        background: #18181b;
         color: #fff;
         border-radius: 16px 16px 4px 16px;
       }
@@ -106,8 +106,8 @@
 
       &:focus,
       &:focus-within {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        border-color: #18181b;
+        box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.08);
       }
     }
 
@@ -235,8 +235,8 @@
       &-tag {
         display: inline-block;
         padding: 2px 8px;
-        background: #f0f4ff;
-        color: #2563eb;
+        background: #f4f4f5;
+        color: #18181b;
         border-radius: 4px;
         font-size: 11px;
         font-weight: 500;

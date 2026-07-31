@@ -3,38 +3,41 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px;
+  padding: 14px 16px;
   width: 100%;
   max-width: 1000px;
   min-height: 80px;
   height: auto;
-  border-radius: 16px;
-  border: 1px solid #e4e4e7;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition:
-    border-color 0.25s ease,
-    box-shadow 0.25s ease;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-overlay);
+  backdrop-filter: blur(16px) saturate(1.6);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-normal) var(--ease-out-expo);
   margin-bottom: 8px;
   position: relative;
 
   &:focus-within,
   &.focused {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+    border-color: #27272a !important;
+    box-shadow:
+      0 0 0 2px rgba(24, 24, 27, 0.06),
+      var(--shadow-md) !important;
+    background: var(--color-bg-elevated) !important;
   }
 
   &.dragging {
-    border-color: #2563eb !important;
+    border-color: #27272a !important;
     border-style: dashed !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+    box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.08) !important;
   }
 
   .drag-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-xl);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -45,7 +48,7 @@
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      color: #2563eb;
+      color: #18181b;
 
       p {
         margin: 0;
@@ -60,46 +63,40 @@
     flex-wrap: nowrap;
     gap: 8px;
     padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--color-border-light);
     overflow: hidden;
     flex: 1;
     position: relative;
 
     .file-item {
-      // display: flex;
-      // align-items: center;
-      // gap: 8px;
-      // padding: 8px 10px;
-      // background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
       max-width: 240px;
-      transition: all 0.2s;
+      transition: all var(--duration-normal) var(--ease-out-expo);
 
       &:hover {
-        background: #f3f4f6;
-        border-color: #d1d5db;
+        background: var(--color-bg-sunken);
+        border-color: var(--color-text-quaternary);
       }
 
       .file-preview {
         width: auto;
         height: 40px;
-
-        // overflow: hidden;
         flex-shrink: 0;
 
         .file-preview-wrapper {
           position: relative;
           width: 100%;
           height: 100%;
-          border-radius: 6px;
+          border-radius: var(--radius-sm);
+
           .ant-image {
             width: 100%;
             height: 100%;
           }
 
           img {
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -111,13 +108,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(2px);
             display: flex;
             align-items: flex-start;
             justify-content: flex-end;
             opacity: 0;
-            transition: opacity 0.2s ease;
-            border-radius: 6px;
+            transition: opacity var(--duration-normal);
+            border-radius: var(--radius-sm);
 
             .file-remove-btn {
               position: absolute;
@@ -130,15 +128,18 @@
               display: flex;
               align-items: center;
               justify-content: center;
-              background: rgba(255, 142, 142, 0.6);
-              border: none;
+              background: rgba(239, 68, 68, 0.85);
+              border: 2px solid white;
               color: #fff;
               border-radius: 50%;
               cursor: pointer;
               line-height: 1;
+              transition: all var(--duration-fast) var(--ease-out-expo);
+              box-shadow: var(--shadow-xs);
 
               &:hover {
-                background: rgba(239, 68, 68, 0.8);
+                background: var(--color-error);
+                transform: scale(1.1);
               }
 
               .anticon {
@@ -156,13 +157,13 @@
       .file-icon {
         width: 40px;
         height: 40px;
-        border-radius: 6px;
-        background: #e5e7eb;
+        border-radius: var(--radius-sm);
+        background: var(--color-bg-sunken);
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        color: #6b7280;
+        color: var(--color-text-tertiary);
       }
 
       .file-info {
@@ -171,7 +172,7 @@
 
         .file-name {
           font-size: 13px;
-          color: #1f2937;
+          color: var(--color-text);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -180,7 +181,7 @@
 
         .file-size {
           font-size: 11px;
-          color: #9ca3af;
+          color: var(--color-text-quaternary);
           margin-top: 2px;
         }
       }
@@ -189,20 +190,20 @@
         flex-shrink: 0;
         width: 24px;
         height: 24px;
-        color: #9ca3af;
+        color: var(--color-text-quaternary);
         border: none;
         background: none;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 4px;
-        transition: all 0.2s;
+        border-radius: var(--radius-sm);
+        transition: all var(--duration-fast);
         padding: 0;
 
         &:hover {
-          color: #ef4444;
-          background: #fef2f2;
+          color: var(--color-error);
+          background: rgba(220, 38, 38, 0.06);
         }
       }
     }
@@ -218,13 +219,14 @@
     outline: none !important;
     font-size: 14px;
     line-height: 1.6;
-    color: #18181b;
+    color: var(--color-text);
     padding: 4px 0;
     width: 100%;
     overflow-y: auto;
+    font-family: var(--font-sans);
 
     &::placeholder {
-      color: #a1a1aa;
+      color: var(--color-text-quaternary);
     }
 
     &:focus {
@@ -269,11 +271,12 @@
     }
 
     button {
-      color: #a1a1aa !important;
+      color: var(--color-text-quaternary) !important;
       border: none !important;
+      transition: color var(--duration-fast) !important;
 
       &:hover {
-        color: #71717a !important;
+        color: var(--color-text-tertiary) !important;
       }
     }
   }

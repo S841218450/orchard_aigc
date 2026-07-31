@@ -31,6 +31,7 @@ interface UserState {
     oauthType?: OAuthType,
   ) => void;
   setToken: (token: string | null) => void;
+  setRefreshToken: (refreshToken: string | null) => void;
   setUserInfo: (userInfo: UserInfo | null) => void;
   logout: () => Promise<void>;
 }
@@ -54,7 +55,7 @@ export const useUserStore = create<UserState>()(
 
       setToken: (token) => set({ token }),
       setUserInfo: (userInfo) => set({ userInfo }),
-      setRefreshToken: (refreshToken) => set({ refreshToken }),
+      setRefreshToken: (refreshToken: string | null) => set({ refreshToken }),
       // 设置登录数据
       setLoginData: (data, oauthType = null) =>
         set({

@@ -6,12 +6,18 @@ const apiList = [
   { url: "/api/ai/work/list", apiName: "getWorkList", type: "get" },
   // 更新作品
   { url: "/api/ai/work/update", apiName: "updateWork", type: "post" },
-  // 删除作品
-  { url: "/api/ai/work/delete", apiName: "deleteWork", type: "delete" },
+  // 删除作品（路径参数）
+  {
+    url: "/api/ai/work/delete/",
+    apiName: "deleteWork",
+    type: "post",
+    pathParams: true,
+  },
 ];
 
 export default apiList.map((item) => ({
   name: item.apiName,
   url: item.url,
   type: item.type || "post",
+  pathParams: item.pathParams || false,
 }));

@@ -1,15 +1,90 @@
 @import "animate.css";
 @import "antd/dist/reset.css";
-@import "./style/core/base.scss";
+@import "./_style/core/base.scss";
+@import "../style/core/antDesign.scss";
+@import "../style/core/text.scss";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
 
 :root {
-  --color-primary: #1677ff;
-  --color-primary-hover: #4096ff;
-  --color-bg: #ffffff;
-  --color-bg-secondary: #fafafa;
-  --color-text: #18181b;
-  --color-text-secondary: #71717a;
-  --color-border: #e4e4e7;
+  /* ========================================
+     巧思 AIGC 配色系统
+     白色基底 · 深绿主色 · 黑灰文字 · 暖色装饰
+     ======================================== */
+
+  /* ---- 1. 基底亮白体系 ---- */
+  --color-pure-0: #ffffff; /* 标准亮白：主背景、弹窗、画布 */
+  --color-pure-100: #f7f7f7; /* 浅灰白：卡片 hover、次要区块 */
+  --color-pure-200: #eaeaea; /* 浅灰：边框、分割线 */
+
+  /* ---- 2. 黑灰功能体系（加深，易读性优先） ---- */
+  --color-gray-950: #111111; /* 纯黑：标题、导航、主按钮 */
+  --color-gray-800: #2a2a2a; /* 深灰：次级标题、按钮文字 */
+  --color-gray-600: #4a4a4a; /* 中灰：正文（加深，易读） */
+  --color-gray-400: #8a8a8a; /* 浅灰：占位符、禁用 */
+  --color-gray-300: #d1d1d1; /* 分割线、次要边框 */
+
+  /* ---- 3. 暖调装饰（仅小面积装饰，不用于交互） ---- */
+  --color-warm-500: #d4a574; /* 暖棕：装饰线条、图标点缀 */
+  --color-warm-200: #f0dcc8; /* 浅暖：背景装饰 */
+  --color-warm-100: #fbf5ee; /* 极浅暖：卡片背景装饰 */
+
+  /* ---- 5. AI 平衡色 ---- */
+  --color-ai-cyan: #60c4c4; /* 水雾浅青：AI 图标 */
+  --color-ai-cyan-light: #e0f4f4; /* 极浅青：AI 功能底色 */
+
+  /* ---- 6. 语义色 ---- */
+  --color-success: #52b788;
+  --color-warning: #f0a030;
+  --color-error: #e54d4d;
+
+  /* ---- 7. 语义映射（黑色主色） ---- */
+  --color-primary: var(--color-gray-950);
+  --color-primary-hover: var(--color-gray-800);
+  --color-primary-active: #000000;
+  --color-primary-soft: rgba(17, 17, 17, 0.06);
+  --color-primary-muted: rgba(17, 17, 17, 0.03);
+
+  --color-bg: var(--color-pure-0);
+  --color-bg-elevated: var(--color-pure-0);
+  --color-bg-hover: var(--color-pure-100);
+  --color-bg-sunken: var(--color-pure-100);
+  --color-bg-overlay: rgba(255, 255, 255, 0.95);
+
+  --color-text: var(--color-gray-950);
+  --color-text-secondary: var(--color-gray-600);
+  --color-text-tertiary: var(--color-gray-400);
+  --color-text-quaternary: var(--color-gray-300);
+
+  --color-border: var(--color-pure-200);
+  --color-border-light: var(--color-pure-100);
+  --color-border-focus: rgba(17, 17, 17, 0.15);
+
+  /* ---- 阴影体系 ---- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-dark: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+  /* ---- 圆角 ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ---- 过渡 ---- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 0.15s;
+  --duration-normal: 0.25s;
+  --duration-slow: 0.4s;
+
+  /* ---- 字体 ---- */
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
 }
 
 html,
@@ -22,33 +97,15 @@ body {
 }
 
 body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
+  font-family: var(--font-sans);
   background: var(--color-bg);
   color: var(--color-text);
   box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #__next {
   width: 100%;
   height: 100%;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa;
 }

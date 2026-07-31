@@ -1,11 +1,12 @@
 import { useRouter } from "next/navigation";
 import API from "@/api";
 import { useUserStore } from "@/store";
-import { message } from "antd";
+import { App } from "antd";
 
 export const useAuth = () => {
   const router = useRouter();
   const userStore = useUserStore();
+  const { message } = App.useApp();
 
   // 登录
   const login = async (data: { username: string; password: string }) => {

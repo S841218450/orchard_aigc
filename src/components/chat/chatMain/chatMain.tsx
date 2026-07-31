@@ -1,3 +1,5 @@
+"use client";
+
 import { Code, FileText, Search, Palette, Zap, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import NextImage from "next/image";

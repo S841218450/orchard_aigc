@@ -3,38 +3,158 @@
   flex: 1;
   flex-direction: column;
   align-items: center;
-  background: #ffffff;
+  background: var(--color-bg-elevated);
   min-height: 100vh;
   height: 100vh;
   overflow: auto;
+  position: relative;
+
+  /* ---- 环形滚动作品背景 ---- */
+  .ring-showcase {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    height: 800px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.12;
+  }
+
+  .ring-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    animation: ring-rotate 60s linear infinite;
+  }
+
+  @keyframes ring-rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .ring-item {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 80px;
+    margin: -40px;
+  }
+
+  /* 12个卡片的位置（预计算角度，避免SSR问题） */
+  .ring-item-0 {
+    transform: rotate(0deg) translateX(320px);
+  }
+  .ring-item-1 {
+    transform: rotate(30deg) translateX(320px);
+  }
+  .ring-item-2 {
+    transform: rotate(60deg) translateX(320px);
+  }
+  .ring-item-3 {
+    transform: rotate(90deg) translateX(320px);
+  }
+  .ring-item-4 {
+    transform: rotate(120deg) translateX(320px);
+  }
+  .ring-item-5 {
+    transform: rotate(150deg) translateX(320px);
+  }
+  .ring-item-6 {
+    transform: rotate(180deg) translateX(320px);
+  }
+  .ring-item-7 {
+    transform: rotate(210deg) translateX(320px);
+  }
+  .ring-item-8 {
+    transform: rotate(240deg) translateX(320px);
+  }
+  .ring-item-9 {
+    transform: rotate(270deg) translateX(320px);
+  }
+  .ring-item-10 {
+    transform: rotate(300deg) translateX(320px);
+  }
+  .ring-item-11 {
+    transform: rotate(330deg) translateX(320px);
+  }
+
+  .ring-card {
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      135deg,
+      var(--color-warm-200),
+      var(--color-warm-100)
+    );
+    animation: ring-counter-rotate 60s linear infinite;
+  }
+
+  @keyframes ring-counter-rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+
+  .ring-card-inner {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    border: 1px solid var(--color-warm-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  .ring-card-icon {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-warm-500);
+    text-transform: uppercase;
+  }
+
+  /* ---- 主内容区 ---- */
   .chat-container {
     width: 100%;
-    // height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 16px;
     margin-bottom: 16px;
-    background:
-      radial-gradient(ellipse at top left, #3b9dff59 0%, transparent 70%),
-      radial-gradient(ellipse at top right, #ff7c3b59 0%, transparent 70%),
-      linear-gradient(to bottom, rgba(220, 226, 232, 0.05) 0%, transparent 60%);
+    position: relative;
+    z-index: 1;
   }
 
   .input-tip {
     font-size: 12px;
-    color: #a1a1aa;
+    color: var(--color-text-quaternary);
     text-align: center;
     margin-top: 8px;
     margin-bottom: 16px;
+    letter-spacing: 0.2px;
   }
+
   .data-list {
     width: 100%;
     height: 100%;
-    border-radius: 12px;
-    // flex: 1 1 0;
+    border-radius: var(--radius-lg);
     min-height: 0;
-    // overflow: auto;
+    position: relative;
+    z-index: 1;
   }
 }

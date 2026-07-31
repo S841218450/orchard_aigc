@@ -1,7 +1,7 @@
 "use client";
 
 import "./chatInput.scss";
-import { Input, Button, message, Image } from "antd";
+import { Input, Button, App, Image } from "antd";
 import { useState, useRef, useCallback } from "react";
 const { TextArea } = Input;
 import {
@@ -38,6 +38,7 @@ const ChatInput = ({
   onChange,
   placeholder = "发挥你的奇思妙想",
 }: ChatInputProps) => {
+  const { message } = App.useApp();
   const [internalValue, setInternalValue] = useState("");
   const messageText = value !== undefined ? value : internalValue;
   const setMessageText = (text: string) => {

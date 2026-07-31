@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input, Spin, message } from "antd";
+import { Button, Input, Spin, App } from "antd";
 import {
   SquarePen,
   Search,
@@ -26,6 +26,7 @@ export default function Aside({
 }: {
   changeSessionId: (id: string) => void;
 }) {
+  const { message } = App.useApp();
   const { activeView, setActiveView, currentSessionId, setCurrentSession } =
     useChatStore();
   const [collapsed, setCollapsed] = useState(false);

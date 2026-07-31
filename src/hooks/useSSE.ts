@@ -30,12 +30,12 @@ export const useSSE = (options: SSEOptions): SSEReturn => {
 
   const getConfig = useCallback(
     () => ({
-      baseURL: import.meta.env.PROD ? "" : "/ai-api",
+      baseURL: process.env.NODE_ENV === "production" ? "" : "/ai-api",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
         "Access-Token": token || "",
-        user_id: userId ?? "",
+        user_id: String(userId ?? ""),
       },
     }),
     [token, userId],

@@ -1,7 +1,19 @@
 import axios from "axios";
 import type { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import { message } from "antd";
+import NProgress from "nprogress";
 import { useUserStore } from "@/store";
+import { requestQueue } from "@/utils/requestQueue";
+// 配置 NProgress
+NProgress.configure({
+  showSpinner: false,
+  minimum: 0.1,
+  speed: 400,
+  trickleSpeed: 200,
+});
+
+// 请求计数器
+let requestCount = 0;
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const TIMEOUT = 30000;
@@ -36,12 +48,6 @@ const jumpToLogin = () => {
   window.location.href = "/login";
 };
 
-// 安全弹窗提示（避免Node环境报错）
-const safeMessageError = (text: string) => {
-  if (typeof window === "undefined") return;
-  message.error(text);
-};
-
 // 刷新 token
 async function refreshToken(): Promise<string | null> {
   const refreshTokenValue = useUserStore.getState().refreshToken;
@@ -53,7 +59,9 @@ async function refreshToken(): Promise<string | null> {
     const response = await axios.post(
       `${BASE_URL}/auth/refresh`,
       { refreshToken: refreshTokenValue },
-      { timeout: TIMEOUT, _isRefreshReq: true },
+      { timeout: TIMEOUT, _isRefreshReq: true } as AxiosRequestConfig & {
+        _isRefreshReq: boolean;
+      },
     );
     const { accessToken, refreshToken: newRefreshToken } = response.data.data;
     useUserStore.setState({
@@ -69,7 +77,27 @@ async function refreshToken(): Promise<string | null> {
 
 // 请求拦截器
 instance.interceptors.request.use(
-  (config) => {
+  (
+    config: AxiosRequestConfig &
+      InternalAxiosRequestConfig & { _isRefreshReq?: boolean },
+  ) => {
+    // 检查重复请求（排除刷新token请求）
+    if (!config._isRefreshReq && requestQueue.isDuplicate(config)) {
+      const error = new Error("请求重复，已取消");
+      error.name = "DuplicateRequest";
+      return Promise.reject(error);
+    }
+
+    // 添加到请求队列
+    const controller = requestQueue.add(config);
+    config.signal = controller.signal;
+
+    // 启动进度条
+    if (requestCount === 0) {
+      NProgress.start();
+    }
+    requestCount++;
+
     const token = useUserStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -85,16 +113,42 @@ instance.interceptors.request.use(
 
 // 响应拦截器
 instance.interceptors.response.use(
+  // 成功响应
   (response) => {
+    // 从队列中移除
+    requestQueue.removeByConfig(response.config);
+    // 更新进度条
+    requestCount--;
+    if (requestCount === 0) {
+      NProgress.done();
+    }
+
     const res = response.data;
     // 拦截业务错误码
     if (res.code !== 200) {
-      safeMessageError(res.msg || "请求异常");
+      message.error(res.msg || "请求异常");
       return Promise.reject(res);
     }
     return res;
   },
+  // 错误响应
   async (error) => {
+    // 从队列中移除
+    if (error.config) {
+      requestQueue.removeByConfig(error.config);
+    }
+    // 更新进度条
+    requestCount--;
+    if (requestCount <= 0) {
+      requestCount = 0;
+      NProgress.done();
+    }
+
+    // 忽略重复请求和取消的请求
+    if (error.name === "DuplicateRequest" || axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
       _isRefreshReq?: boolean;
@@ -102,7 +156,6 @@ instance.interceptors.response.use(
 
     if (error.response) {
       const { status } = error.response;
-
       // 401 未登录/过期，排除刷新接口自身，且只重试一次
       if (
         status === 401 &&
@@ -139,19 +192,26 @@ instance.interceptors.response.use(
 
       switch (status) {
         case 403:
-          safeMessageError("拒绝访问");
+          message.error("拒绝访问");
           typeof window !== "undefined" && (window.location.href = "/error");
           break;
         case 404:
-          safeMessageError("请求资源不存在");
+          message.error("请求资源不存在");
           break;
         case 500:
-          safeMessageError("服务器错误");
+          message.error("服务器错误");
           break;
       }
     }
     return Promise.reject(error);
   },
 );
+
+// 导出取消所有请求的方法
+export const cancelAllRequests = () => {
+  requestQueue.cancelAll();
+  requestCount = 0;
+  NProgress.done();
+};
 
 export default instance;

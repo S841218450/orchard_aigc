@@ -34,7 +34,7 @@ export const formatDate = (
     }
 
     if (diffSeconds < 60) {
-      return `${diffSeconds}秒前`;
+      return "刚刚";
     }
 
     if (diffMinutes < 10) {

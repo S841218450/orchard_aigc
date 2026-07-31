@@ -1,13 +1,12 @@
 .creation-page {
   display: flex;
   flex-direction: row;
-  justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
   height: fit-content;
   width: 100%;
   padding: 20px;
-  background: #f3f3f3;
+  background: var(--color-bg-sunken);
 
   .creation-content-container {
     flex: 1;
@@ -15,8 +14,50 @@
     display: flex;
     flex-direction: column;
     min-width: 600px;
+
+    /* ==================== Tabs 胶囊样式 ==================== */
+    .creation-tabs {
+      margin-bottom: 16px;
+
+      .ant-tabs-nav {
+        margin-bottom: 0 !important;
+      }
+
+      .ant-tabs-nav-list {
+        background: var(--color-bg-sunken);
+        border-radius: var(--radius-full);
+        padding: 3px;
+        gap: 2px;
+      }
+
+      .ant-tabs-tab {
+        color: var(--color-text-tertiary) !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        padding: 7px 20px !important;
+        margin: 0 !important;
+        border-radius: var(--radius-full) !important;
+        transition: all var(--duration-normal) var(--ease-out-expo) !important;
+
+        &:hover {
+          color: var(--color-text-secondary) !important;
+        }
+
+        &.ant-tabs-tab-active {
+          background: var(--color-bg-elevated) !important;
+          color: var(--color-text) !important;
+          box-shadow: var(--shadow-xs);
+        }
+      }
+
+      /* 隐藏下划线 */
+      .ant-tabs-ink-bar {
+        display: none !important;
+      }
+    }
+
     .history-content {
-      height: calc(100vh - 100px);
+      height: 90vh;
       display: flex;
       width: 100%;
       position: relative;
@@ -29,21 +70,23 @@
         width: 100%;
         height: 100%;
         gap: 16px;
-        color: #8c8c8c;
+        color: var(--color-text-quaternary);
         font-size: 14px;
       }
+
       .message-list {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
         overflow-y: auto;
-        // 自定义滚动条 简约弱化
+        padding: 4px;
+
         &::-webkit-scrollbar {
-          width: 6px;
+          width: 5px;
         }
         &::-webkit-scrollbar-thumb {
-          background-color: #e4e4e7;
+          background-color: #d4d4d8;
           border-radius: 3px;
         }
         &::-webkit-scrollbar-track {
@@ -52,33 +95,34 @@
 
         .message-item {
           padding: 20px 24px;
-          margin: 0 12px;
-          border-radius: 14px;
-          background: #ffffff;
-          // 卡片底层柔和阴影，高级微浮效果
-          box-shadow:
-            0 1px 3px rgba(0, 0, 0, 0.04),
-            0 4px 12px rgba(0, 0, 0, 0.03);
-          transition: box-shadow 0.22s ease;
-          // 轻微悬浮hover提升层次
+          margin: 0 4px;
+          border-radius: var(--radius-lg);
+          background: var(--color-bg-elevated);
+          border: 1px solid var(--color-border-light);
+          animation: message-fade-in 0.4s var(--ease-out-expo) both;
+
+          &.message-item-removing {
+            animation: message-fade-out 0.4s var(--ease-out-expo) both;
+          }
+
           &:hover {
-            box-shadow:
-              0 2px 6px rgba(0, 0, 0, 0.06),
-              0 6px 18px rgba(0, 0, 0, 0.04);
+            border-color: var(--color-border);
+            box-shadow: var(--shadow-sm);
           }
 
           .message-time {
-            font-size: 13px;
-            color: #a1a1aa;
+            font-size: 12px;
+            color: var(--color-text-quaternary);
             margin: 0 0 10px;
             font-weight: 400;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
           }
 
           .message-content {
             margin: 0 0 16px;
             line-height: 1.65;
-            color: #27272a;
+            color: var(--color-text);
             font-size: 15px;
             font-weight: 400;
           }
@@ -91,33 +135,136 @@
 
           .message-tags {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             margin-bottom: 8px;
+            flex-wrap: wrap;
           }
 
           .message-status {
             display: flex;
             align-items: center;
+            gap: 8px;
             margin-bottom: 12px;
             font-size: 13px;
+            color: var(--color-text-tertiary);
+            padding: 10px 14px;
+            background: var(--color-primary-muted);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--color-primary);
           }
 
           .image-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
           }
 
           .message-image {
             display: block;
-            border-radius: 8px;
-            transition:
-              transform 0.22s ease,
-              box-shadow 0.22s ease;
-            // 图片hover微动效
+            border-radius: var(--radius-md);
+            transition: all var(--duration-normal) var(--ease-out-expo);
+            cursor: pointer;
+
             &:hover {
-              transform: translateY(-3px);
-              box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+              transform: translateY(-3px) scale(1.02);
+              box-shadow: var(--shadow-md);
+            }
+          }
+
+          // 补充问题选择样式
+          .supplementary-section {
+            max-width: 50%;
+            min-width: 300px;
+            width: auto;
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--color-bg-container);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--color-border-light);
+            box-shadow: var(--shadow-xs);
+            animation: message-fade-in 0.4s var(--ease-out-expo) both;
+
+            // 步骤条指示器
+            .step-indicator {
+              display: flex;
+              justify-content: center;
+              gap: 8px;
+              margin-bottom: 20px;
+
+              .step-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--color-border);
+                transition: all var(--duration-normal) var(--ease-out-expo);
+
+                &.active {
+                  width: 24px;
+                  border-radius: 4px;
+                  background: var(--color-primary);
+                }
+
+                &.completed {
+                  background: var(--color-primary);
+                }
+              }
+            }
+
+            .supplementary-item {
+              .step-header {
+                margin-bottom: 12px;
+                font-size: 12px;
+                color: var(--color-text-quaternary);
+
+                .step-number {
+                  font-size: 20px;
+                  font-weight: 600;
+                  color: var(--color-primary);
+                }
+
+                .step-total {
+                  font-size: 14px;
+                }
+              }
+
+              .supplementary-question {
+                font-size: 15px;
+                font-weight: 500;
+                color: var(--color-text);
+                margin: 0 0 16px;
+                line-height: 1.5;
+              }
+
+              .option-group {
+                width: 100%;
+
+                .ant-radio-wrapper {
+                  margin: 0;
+                  padding: 10px 14px;
+                  border-radius: var(--radius-md);
+                  border: 1px solid var(--color-border-light);
+                  transition: all var(--duration-fast) var(--ease-out-expo);
+
+                  &:hover {
+                    background: var(--color-bg-hover);
+                    border-color: var(--color-border);
+                  }
+
+                  &.ant-radio-wrapper-checked {
+                    background: var(--color-primary-muted);
+                    border-color: var(--color-primary);
+                  }
+                }
+              }
+
+              .step-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 12px;
+                margin-top: 20px;
+                padding-top: 16px;
+                border-top: 1px solid var(--color-border-light);
+              }
             }
           }
         }
@@ -127,10 +274,23 @@
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          // height: 100%;
-          color: #71717a;
+          height: 100%;
+          color: var(--color-text-tertiary);
           font-size: 14px;
-          gap: 12px;
+          gap: 16px;
+          padding: 60px 0;
+
+          .empty-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin: 0;
+          }
+
+          .empty-desc {
+            color: var(--color-text-quaternary);
+            margin: 0;
+          }
         }
       }
     }
@@ -138,32 +298,34 @@
     .history-content,
     .example-content {
       h3 {
-        font-size: 19px;
+        font-size: 18px;
         font-weight: 600;
-        color: #09090b;
+        color: var(--color-text);
         margin: 0 0 18px 0;
-        letter-spacing: 0.3px;
+        letter-spacing: -0.2px;
       }
 
       .hint-text {
-        color: #71717a;
+        color: var(--color-text-tertiary);
         font-size: 14px;
-        line-height: 1.55;
+        line-height: 1.6;
       }
     }
+
     .example-content {
-      height: calc(100vh - 100px);
-      padding: 20px;
-      width: 90%;
+      height: calc(100vh - 130px);
+      padding: 16px 0;
+      width: 100%;
+
       .example-list {
         height: 100%;
         overflow-y: auto;
-        // 自定义滚动条 简约弱化
+
         &::-webkit-scrollbar {
-          width: 6px;
+          width: 5px;
         }
         &::-webkit-scrollbar-thumb {
-          background-color: #e4e4e7;
+          background-color: #d4d4d8;
           border-radius: 3px;
         }
         &::-webkit-scrollbar-track {
@@ -182,5 +344,27 @@
   }
   40% {
     transform: scale(1);
+  }
+}
+
+@keyframes message-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes message-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
   }
 }

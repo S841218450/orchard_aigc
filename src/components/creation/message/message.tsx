@@ -1,6 +1,36 @@
 import { LoadingOutlined, ReloadOutlined } from "@ant-design/icons";
 import { formatDate } from "@/utils/timeUtils";
-import { Image, Button, Tag, Spin, Result } from "antd";
+import {
+  Image,
+  Popconfirm,
+  Button,
+  Tag,
+  Spin,
+  Result,
+  Radio,
+  Space,
+  Checkbox,
+  Flex,
+  Tooltip,
+  Input,
+  App,
+} from "antd";
+import Loading from "@/components/core/loadding/loading";
+import { useState, useCallback } from "react";
+import API from "@/api";
+import { Copy, Trash2, RotateCcw } from "lucide-react";
+/** 补充问题选项 */
+export interface SelectListItem {
+  question: string; //问题
+  select_type: string; //单选和多选
+  options: string[]; //选项
+}
+/** 用户选择的答案 */
+export interface SelectAnswer {
+  question: string;
+  options: string;
+}
+
 /** 后端 work 消息结构 */
 export interface WorkMessage {
   id: number;
@@ -14,24 +44,262 @@ export interface WorkMessage {
     imageCount: string;
   };
   resultUrl: string | null;
+  operationData: {
+    selectList: SelectListItem[]; /** 补充问题列表 */
+  } | null;
   status: WorkStatus;
   createTime: number;
   /** SSE 实时状态文本（前端维护） */
   sseStatus?: string;
+  /** SSE 当前步骤类型 */
+  sseStepType?: string;
 }
 /** 作品状态：0-待处理 1-处理中 2-已完成 3-失败 */
-type WorkStatus = 0 | 1 | 2 | 3;
+type WorkStatus = 0 | 1 | 2 | 3 | 4;
 const WORK_STATUS_MAP: Record<WorkStatus, { label: string; color: string }> = {
   0: { label: "等待中", color: "#8c8c8c" },
   1: { label: "生成中", color: "#1677ff" },
   2: { label: "已完成", color: "#52c41a" },
   3: { label: "失败", color: "#ff4d4f" },
+  4: { label: "待操作", color: "#ff9900" },
 };
 
+const errImg =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNjY2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7lm77niYc8L3RleHQ+PC9zdmc+";
+
 // ==================== 消息列表项组件 ====================
-const MessageItem = ({ message }: { message: WorkMessage }) => {
-  const { id, prompt, params, createTime, status, sseStatus, resultUrl } =
-    message;
+interface MessageItemProps {
+  message: WorkMessage;
+  onRetry?: (message: WorkMessage) => void;
+  onSelectSubmit?: (message: WorkMessage, answers: SelectAnswer[]) => void;
+  onDelete?: (message: WorkMessage) => void;
+  onRegenerate?: (message: WorkMessage) => void;
+}
+// ========== 问题选择相关 =========
+const SelectList = ({
+  selectList,
+  onSelectSubmit,
+}: {
+  selectList: SelectListItem[];
+  onSelectSubmit?: (answers: SelectAnswer[]) => void;
+}) => {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [customInputs, setCustomInputs] = useState<Record<string, string>>({});
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const CUSTOM_VALUE = "__custom__";
+
+  const handleSelectChange = (question: string, value: string) => {
+    setAnswers((prev) => ({ ...prev, [question]: value }));
+  };
+
+  // 提交补充问题答案
+  const handleSubmitSelect = () => {
+    if (!selectList || !onSelectSubmit) return;
+    const formatted: SelectAnswer[] = selectList.map((item) => {
+      const selected = answers[item.question] || "";
+      const customVal = customInputs[item.question] || "";
+
+      // 单选：直接替换
+      if (selected === CUSTOM_VALUE) {
+        return { question: item.question, options: customVal };
+      }
+
+      // 多选：替换列表中的 __custom__
+      if (selected.includes(CUSTOM_VALUE)) {
+        const replaced = selected
+          .split(",")
+          .map((v) => (v === CUSTOM_VALUE ? customVal : v))
+          .filter(Boolean)
+          .join(",");
+        return { question: item.question, options: replaced };
+      }
+
+      return { question: item.question, options: selected };
+    });
+    onSelectSubmit(formatted);
+  };
+
+  const currentItem = selectList[currentIndex];
+  const isLast = currentIndex === selectList.length - 1;
+  const isCustomSelected = answers[currentItem?.question] === CUSTOM_VALUE;
+  const currentAnswered =
+    !!answers[currentItem?.question] &&
+    (isCustomSelected ? !!customInputs[currentItem?.question] : true);
+
+  return (
+    <div className="supplementary-section">
+      {/* 步骤条指示器 */}
+      <div className="step-indicator">
+        {selectList.map((item, index) => (
+          <div
+            key={index}
+            className={`step-dot ${index === currentIndex ? "active" : ""} ${
+              answers[item.question] ? "completed" : ""
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* 当前问题 */}
+      <div className="supplementary-item">
+        <div className="step-header">
+          <span className="step-number">{currentIndex + 1}</span>
+          <span className="step-total">/{selectList.length}</span>
+        </div>
+
+        <p className="supplementary-question">{`${currentItem.question} (${currentItem.select_type})`}</p>
+        {currentItem.select_type === "单选" ? (
+          <Radio.Group
+            vertical
+            onChange={(e) =>
+              handleSelectChange(currentItem.question, e.target.value)
+            }
+            value={answers[currentItem.question]}
+            options={currentItem.options.map((opt) =>
+              opt.includes("自定义")
+                ? {
+                    value: CUSTOM_VALUE,
+                    label: (
+                      <>
+                        <span>{opt}</span>
+                        {isCustomSelected && (
+                          <Input
+                            value={customInputs[currentItem.question] || ""}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              setCustomInputs((prev) => ({
+                                ...prev,
+                                [currentItem.question]: e.target.value,
+                              }));
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            variant="filled"
+                            placeholder="请输入自定义内容"
+                            style={{ width: 200, marginInlineStart: 12 }}
+                          />
+                        )}
+                      </>
+                    ),
+                  }
+                : {
+                    label: opt,
+                    value: opt,
+                  },
+            )}
+            className="option-group"
+          />
+        ) : (
+          <Checkbox.Group
+            className="option-group"
+            onChange={(checkedValues) => {
+              handleSelectChange(currentItem.question, checkedValues.join(","));
+            }}
+            value={answers[currentItem.question]?.split(",") || []}
+          >
+            <Flex vertical gap={8}>
+              {currentItem.options.map((opt) =>
+                opt.includes("自定义") ? (
+                  <Checkbox key={opt} value={CUSTOM_VALUE}>
+                    <span>{opt}</span>
+                    {answers[currentItem.question]?.includes(CUSTOM_VALUE) && (
+                      <Input
+                        value={customInputs[currentItem.question] || ""}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            [currentItem.question]: e.target.value,
+                          }));
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        variant="filled"
+                        placeholder="请输入自定义内容"
+                        style={{ width: 200, marginLeft: 12 }}
+                      />
+                    )}
+                  </Checkbox>
+                ) : (
+                  <Checkbox key={opt} value={opt}>
+                    {opt}
+                  </Checkbox>
+                ),
+              )}
+            </Flex>
+          </Checkbox.Group>
+        )}
+        {/* 导航按钮 */}
+        <div className="step-actions">
+          <Button
+            type="text"
+            size="small"
+            disabled={currentIndex === 0}
+            onClick={() => setCurrentIndex((prev) => prev - 1)}
+          >
+            上一个
+          </Button>
+          {isLast ? (
+            <Button
+              size="small"
+              type="primary"
+              disabled={!currentAnswered}
+              onClick={handleSubmitSelect}
+            >
+              确认提交
+            </Button>
+          ) : (
+            <Button
+              size="small"
+              type="primary"
+              disabled={!currentAnswered}
+              onClick={() => setCurrentIndex((prev) => prev + 1)}
+            >
+              下一个
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+// ===========消息列表项组件============
+const MessageItem = ({
+  message,
+  onSelectSubmit,
+  onDelete,
+  onRegenerate,
+  onRetry,
+}: MessageItemProps) => {
+  const {
+    prompt,
+    params,
+    model,
+    createTime,
+    status,
+    sseStatus,
+    resultUrl,
+    operationData,
+  } = message;
+
+  const selectList = operationData?.selectList || [];
+  const { message: messageApi } = App.useApp();
+  // 删除动画状态
+  const [removing, setRemoving] = useState(false);
+
+  // 处理删除（先请求接口，成功后再播放淡出动画）
+  const handleDelete = useCallback(async () => {
+    try {
+      await API.deleteWork(message.id);
+      messageApi.success("删除成功");
+      // 接口成功后播放淡出动画
+      setRemoving(true);
+      setTimeout(() => {
+        onDelete?.(message);
+      }, 400);
+    } catch (error) {
+      console.error("删除失败:", error);
+    }
+  }, [message, onDelete]);
 
   // 计算图片比例
   const getImgSize = (proportion: string) => {
@@ -48,25 +316,79 @@ const MessageItem = ({ message }: { message: WorkMessage }) => {
     return sizeMap[proportion] || { width: 300, height: 300 };
   };
 
-  const errImg =
-    'data:image/png;base64,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"';
-
   const statusInfo = WORK_STATUS_MAP[status] || WORK_STATUS_MAP[0];
   const imgSize = getImgSize(params?.imageProportion || "1:1");
 
+  const copyPrompt = (prompt: string) => {
+    //操作按钮
+    console.log(prompt);
+  };
+  // 处理补充问题提交
+  const handleSelectSubmit = (answers: SelectAnswer[]) => {
+    //提交问题
+    onSelectSubmit?.(message, answers);
+  };
   return (
-    <div className="message-item">
+    <div className={`message-item ${removing ? "message-item-removing" : ""}`}>
       <h2 className="message-time">{formatDate(createTime)}</h2>
       <p className="message-content">{prompt}</p>
 
       {/* 参数标签 */}
-      <div className="message-tags">
-        {params?.model && <Tag size="small">{params.model}</Tag>}
-        {params?.style && <Tag size="small">{params.style}</Tag>}
-        {params?.imageQuality && <Tag size="small">{params.imageQuality}</Tag>}
-        {params?.imageProportion && (
-          <Tag size="small">{params.imageProportion}</Tag>
-        )}
+      <div className="flex ">
+        <div className="message-tags flex-align-center">
+          {model && <Tag>{model}</Tag>}
+          {params?.style && <Tag>{params.style}</Tag>}
+          {params?.imageQuality && (
+            <Tag>{params.imageQuality}</Tag>
+          )}
+          {params?.imageProportion && (
+            <Tag>{params.imageProportion}</Tag>
+          )}
+        </div>
+        <div className="oprationBtn flex-gap-2 flex-align-center ml10">
+          <Tooltip title="复制提示词">
+            <Button
+              size="small"
+              type="text"
+              icon={<Copy color="#707070" size={18} />}
+              onClick={() => copyPrompt(prompt)}
+            />
+          </Tooltip>
+          {status === 3 ? (
+            <Tooltip title="重试">
+              <Button
+                size="small"
+                type="text"
+                icon={<RotateCcw color="#707070" size={18} />}
+                onClick={() => onRetry?.(message)}
+              />
+            </Tooltip>
+          ) : (
+            <Tooltip title="重新生成">
+              <Button
+                size="small"
+                type="text"
+                icon={<RotateCcw color="#707070" size={18} />}
+                onClick={() => onRegenerate?.(message)}
+              />
+            </Tooltip>
+          )}
+
+          <Popconfirm
+            title="删除记录"
+            description="确认删除这条记录吗？"
+            onConfirm={handleDelete}
+            onCancel={() => {}}
+            okText="确认"
+            cancelText="取消"
+          >
+            <Button
+              size="small"
+              type="text"
+              icon={<Trash2 color="#707070" size={18} />}
+            />
+          </Popconfirm>
+        </div>
       </div>
 
       {/* 状态展示 */}
@@ -76,6 +398,14 @@ const MessageItem = ({ message }: { message: WorkMessage }) => {
           {sseStatus || statusInfo.label}
         </span>
       </div>
+
+      {/* 补充问题选择 UI（human_in_the_loop） */}
+      {message.status === 4 && selectList.length > 0 && (
+        <SelectList
+          selectList={selectList}
+          onSelectSubmit={handleSelectSubmit}
+        />
+      )}
 
       {/* 生成结果图片 */}
       {resultUrl && (
@@ -109,21 +439,28 @@ export const HistoryContent = ({
   loading,
   error,
   onRetry,
+  onRegenerate,
+  onSelectSubmit,
+  onDelete,
+  onRetryHistory,
 }: {
   activeKey: string;
   onSwitchTab: () => void;
   messageList: WorkMessage[];
   loading?: boolean;
   error?: Error | null;
-  onRetry?: () => void;
+  onRetry?: (message: WorkMessage) => void;
+  onRegenerate?: (message: WorkMessage) => void;
+  onSelectSubmit?: (message: WorkMessage, answers: SelectAnswer[]) => void;
+  onDelete?: (message: WorkMessage) => void;
+  onRetryHistory?: () => void;
 }) => {
   // 加载中
   if (loading) {
     return (
       <div className="history-content">
         <div className="history-loading">
-          <Spin size="large" />
-          <span>加载中...</span>
+          <Loading />
         </div>
       </div>
     );
@@ -138,7 +475,11 @@ export const HistoryContent = ({
           title="获取历史记录失败"
           subTitle={error.message}
           extra={
-            <Button type="primary" icon={<ReloadOutlined />} onClick={onRetry}>
+            <Button
+              type="primary"
+              icon={<ReloadOutlined />}
+              onClick={onRetryHistory}
+            >
               重新加载
             </Button>
           }
@@ -152,7 +493,14 @@ export const HistoryContent = ({
       {messageList.length > 0 ? (
         <div className="message-list">
           {messageList.map((item) => (
-            <MessageItem key={item.id} message={item} />
+            <MessageItem
+              key={item.id}
+              message={item}
+              onRetry={onRetry}
+              onRegenerate={onRegenerate}
+              onSelectSubmit={onSelectSubmit}
+              onDelete={onDelete}
+            />
           ))}
         </div>
       ) : (

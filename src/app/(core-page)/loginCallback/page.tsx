@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Loading from "@/components/core/loadding/loading";
 
 function CallbackContent() {
   const router = useRouter();
@@ -31,12 +32,15 @@ function CallbackContent() {
       style={{
         display: "flex",
         alignItems: "center",
+        flexDirection: "column",
         justifyContent: "center",
         height: "100vh",
-        color: "#71717a",
+        gap: 20,
+        color: "#000000",
         fontSize: 14,
       }}
     >
+      <Loading />
       登录处理中，请稍候...
     </div>
   );
@@ -49,13 +53,16 @@ export default function CallbackPage() {
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
+            gap: 20,
             justifyContent: "center",
             height: "100vh",
-            color: "#71717a",
+            color: "#000000",
             fontSize: 14,
           }}
         >
+          <Loading />
           加载中...
         </div>
       }

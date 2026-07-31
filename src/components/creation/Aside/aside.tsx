@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Button, Select, Upload, message, Image, Input, Popover } from "antd";
+import { Button, Select, Upload, App, Image, Input, Popover } from "antd";
+import { RightOutlined } from "@ant-design/icons";
 import type { UploadProps } from "antd";
 import {
   Wand2,
@@ -74,11 +75,14 @@ const StyleSelect = ({
             <Palette size={24} />
           </div>
         )}
-        <div className="style-select-info">
+        <div className="style-select-info flex-1">
           <span className="style-select-label">
             {currentStyle?.label || "智能匹配"}
           </span>
           <span className="style-select-hint">点击选择风格</span>
+        </div>
+        <div>
+          <RightOutlined className="fs-12" />
         </div>
       </div>
     </Popover>
@@ -98,9 +102,40 @@ const TextToImage = ({
   const [imageProportion, setImageProportion] = useState("1:1");
   const [imageQuality, setImageQuality] = useState("1080p");
   const [imageCount, setImageCount] = useState("1");
+  const [imageQualityList, setImageQualityList] = useState([
+    "1080p",
+    "2k",
+    "4k",
+  ]);
+
+  //模型选择(不同模型显示的画面质量不同,根据模型选择画面质量)
+  const modelList = [
+    {
+      value: "default",
+      label: "DouBao-Seedream-5.0-Lite 最新模型",
+      QualityList: ["2k", "4k"],
+    },
+    {
+      value: "DouBao-Seedream-5.0-Pro",
+      label: "DouBao-Seedream-5.0-Pro",
+      QualityList: ["1080p", "2k", "4k"],
+    },
+  ];
+  const handleSetModel = (value: string) => {
+    setModel(value);
+    setImageQualityList(
+      modelList.find((item) => item.value === value)?.QualityList || [],
+    );
+    setImageQuality(
+      modelList.find((item) => item.value === value)?.QualityList?.[0] ||
+        "1080p",
+    );
+  };
+  //画面质量
+  //画面风格
   const [style, setStyle] = useState("default");
   const styleList = [
-    { value: "default", label: "智能匹配" },
+    { value: "default", label: "智能匹配", url: "" },
     { value: "1", label: "商业写实", url: "" },
     { value: "2", label: "轻奢大片", url: "" },
     { value: "3", label: "INS 清新", url: "" },
@@ -120,7 +155,7 @@ const TextToImage = ({
         style: currentStyle?.label || "智能匹配",
         imageProportion,
         imageQuality,
-        imageCount,
+        imageCount: Number(imageCount),
       },
     };
     generateImage(data);
@@ -153,6 +188,18 @@ const TextToImage = ({
       </div>
       <div className="aside-content">
         <div className="aside-title">
+          <Box size={16} />
+          <span>生图模型</span>
+        </div>
+        <Select
+          value={model}
+          size="large"
+          onChange={(value) => handleSetModel(value)}
+          options={modelList}
+        />
+      </div>
+      <div className="aside-content">
+        <div className="aside-title">
           <Palette size={16} />
           <span>画面质量</span>
         </div>
@@ -160,27 +207,10 @@ const TextToImage = ({
           value={imageQuality}
           size="large"
           onChange={setImageQuality}
-          options={[
-            { value: "1080p", label: "1080p" },
-            { value: "2k", label: "2K" },
-            { value: "4k", label: "4K" },
-          ]}
-        />
-      </div>
-
-      <div className="aside-content">
-        <div className="aside-title">
-          <Box size={16} />
-          <span>生图模型</span>
-        </div>
-        <Select
-          value={model}
-          size="large"
-          onChange={setModel}
-          options={[
-            { value: "default", label: "默认模型" },
-            { value: "Banana", label: "Pro 模型" },
-          ]}
+          options={imageQualityList.map((item) => ({
+            value: item,
+            label: item,
+          }))}
         />
       </div>
 
@@ -242,6 +272,7 @@ const ImageToImage = ({
   activeKey: string;
   generateImage: (data: any) => void;
 }) => {
+  const { message } = App.useApp();
   const { Dragger } = Upload;
   const [imagePrompt, setImagePrompt] = useState("");
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
@@ -432,6 +463,7 @@ export const Aside = ({
   onMenuChange?: (menu: string) => void;
   setChatMessage: (data: any) => void;
 }) => {
+  const { message } = App.useApp();
   const [menu, setMenu] = useState("textToImage");
 
   // 切换菜单

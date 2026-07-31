@@ -2,12 +2,13 @@ import { Bot, User } from "lucide-react";
 import { Message } from "@/type/chat";
 import API from "@/api";
 import { useState, useEffect } from "react";
-import { message } from "antd";
+import { App } from "antd";
 interface ChatContentProps {
   messages: Message[];
 }
 
 const ChatContent = ({ messageList }: { messageList: Message[] }) => {
+  const { message } = App.useApp();
   const handleCopy = (content: string) => {
     navigator.clipboard.writeText(content);
     message.success("已复制到剪贴板");

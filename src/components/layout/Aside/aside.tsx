@@ -58,8 +58,8 @@ const PersonPanel = () => {
 
   const handleLogin = () => router.push("/login");
   const handleLogout = async () => {
-    router.push("/login");
     await logout();
+    router.push("/login");
   };
 
   const operationButtons = [
@@ -80,9 +80,7 @@ const PersonPanel = () => {
         <div className="user-panel-info">
           <div className="user-panel-phone">
             {userInfo?.nickname || "用户"}
-            <Tag color="default" className="vip-tag">
-              未开通
-            </Tag>
+            <Tag color="default">未开通</Tag>
           </div>
           <div className="user-panel-vip-text">未开通会员</div>
         </div>

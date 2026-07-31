@@ -4,6 +4,7 @@ import { Image, Skeleton, Input, Masonry, Segmented, Spin } from "antd";
 import { Search, FolderOpen } from "lucide-react";
 import { useRequest, useScroll } from "ahooks";
 import { useState, useEffect, useRef, useCallback } from "react";
+import Loading from "@/components/core/loadding/loading";
 
 import "./materialList.scss";
 
@@ -209,9 +210,8 @@ const MaterialList = () => {
         )}
       />
       {loadingMore && (
-        <div className="loading-more">
-          <Spin size="small" />
-          <span>加载中...</span>
+        <div className="loading-more flex-1">
+          <Loading />
         </div>
       )}
       {!hasMore && materialList.length > 0 && (

@@ -1,8 +1,8 @@
 .aside {
   width: 72px;
   height: 100%;
-  padding: 12px 0;
-  background: transparent;
+  padding: 16px 0;
+  backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,12 +16,14 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    transition: all 0.2s;
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    transition: all var(--duration-normal) var(--ease-out-expo);
+    position: relative;
 
     &:hover {
-      background: #f4f4f5;
+      background: var(--color-bg-hover);
+      transform: scale(1.05);
     }
   }
 
@@ -38,47 +40,64 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 2px;
-      padding: 8px 4px;
+      gap: 3px;
+      padding: 10px 4px;
       border: none;
       background: none;
       cursor: pointer;
-      border-radius: 10px;
-      transition: all 0.15s;
+      border-radius: var(--radius-md);
+      transition: all var(--duration-normal) var(--ease-out-expo);
       width: 100%;
+      position: relative;
 
       svg {
-        color: #71717a;
+        color: var(--color-text-tertiary);
+        transition: color var(--duration-normal) var(--ease-out-expo);
       }
 
       .menu-title {
         margin: 0;
-        font-size: 11px;
-        color: #71717a;
+        font-size: 10px;
+        color: var(--color-text-tertiary);
         line-height: 1.2;
+        letter-spacing: 0.3px;
+        transition: color var(--duration-normal) var(--ease-out-expo);
       }
 
       &:hover {
-        background: #f4f4f5;
+        background: var(--color-bg-hover);
 
         svg {
-          color: #18181b;
+          color: var(--color-text);
         }
 
         .menu-title {
-          color: #18181b;
+          color: var(--color-text-secondary);
         }
       }
 
       &--active {
-        background: #ffffff;
+        background: var(--color-pure-100);
+
+        /* 左侧指示条 */
+        &::before {
+          content: "";
+          position: absolute;
+          left: -10px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 20px;
+          background: var(--color-gray-950);
+          border-radius: 0 2px 2px 0;
+        }
 
         svg {
-          color: #01040a;
+          color: var(--color-gray-950);
         }
 
         .menu-title {
-          color: #01040a;
+          color: var(--color-gray-950);
           font-weight: 500;
         }
       }
@@ -86,14 +105,23 @@
   }
 
   .person-panel {
-    padding: 10px;
+    padding: 12px 10px;
     display: flex;
     justify-content: center;
 
     .login-btn {
       width: 100%;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       font-size: 13px;
+      background: var(--color-bg-hover);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+
+      &:hover {
+        background: var(--color-pure-200) !important;
+        border-color: var(--color-gray-300) !important;
+        color: var(--color-text) !important;
+      }
     }
 
     .user-avatar-trigger {
@@ -104,10 +132,12 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      transition: all 0.2s;
+      transition: all var(--duration-normal) var(--ease-out-expo);
+      border: 2px solid var(--color-border);
 
       &:hover {
-        background: #f4f4f5;
+        border-color: var(--color-primary);
+        transform: scale(1.05);
       }
     }
   }
@@ -117,8 +147,9 @@
 .user-popover {
   .ant-popover-inner {
     padding: 0;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--color-border-light);
   }
 
   .ant-popover-inner-content {
@@ -127,18 +158,14 @@
 }
 
 .user-panel {
-  width: 280px;
-  padding: 16px;
+  width: auto;
+  padding: 20px;
 
   .user-panel-header {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
-
-    .user-panel-avatar {
-      flex-shrink: 0;
-    }
 
     .user-panel-info {
       flex: 1;
@@ -150,20 +177,21 @@
         gap: 8px;
         font-size: 15px;
         font-weight: 600;
-        color: #18181b;
+        color: var(--color-text);
 
         .vip-tag {
-          font-size: 11px;
-          padding: 0 6px;
-          height: 20px;
-          line-height: 18px;
-          border-radius: 4px;
+          font-size: 10px;
+          padding: 1px 6px;
+          height: 18px;
+          line-height: 16px;
+          border-radius: var(--radius-sm);
+          letter-spacing: 0.3px;
         }
       }
 
       .user-panel-vip-text {
         font-size: 12px;
-        color: #a1a1aa;
+        color: var(--color-text-quaternary);
         margin-top: 2px;
       }
     }
@@ -174,27 +202,28 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px;
-    background: #f0f4ff;
-    border-radius: 10px;
+    background: var(--color-bg-hover);
+    border-radius: var(--radius-md);
     margin-bottom: 16px;
+    border: 1px solid var(--color-border);
 
     .vip-card-left {
       .vip-card-title {
         font-size: 14px;
         font-weight: 600;
-        color: #1e3a5f;
+        color: var(--color-text);
       }
 
       .vip-card-desc {
         font-size: 12px;
-        color: #64748b;
+        color: var(--color-text-secondary);
         margin-top: 2px;
       }
     }
 
     .vip-card-btn {
       flex-shrink: 0;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       height: 32px;
       padding: 0 16px;
       font-size: 13px;
@@ -212,28 +241,33 @@
       align-items: center;
       gap: 6px;
       padding: 12px 8px;
-      border-radius: 8px;
-      color: #3f3f46;
+      border-radius: var(--radius-md);
+      color: var(--color-text-secondary);
       font-size: 12px;
       height: auto;
+      transition: all var(--duration-fast) var(--ease-out-expo);
 
       svg {
-        color: #52525b;
+        color: var(--color-text-tertiary);
       }
 
       &:hover {
-        background: #f4f4f5;
+        background: var(--color-bg-sunken);
+      }
+
+      &:active {
+        transform: scale(0.97);
       }
 
       &:last-child {
-        color: #ef4444;
+        color: var(--color-error);
 
         svg {
-          color: #ef4444;
+          color: var(--color-error);
         }
 
         &:hover {
-          background: #fef2f2;
+          background: rgba(220, 38, 38, 0.06);
         }
       }
     }

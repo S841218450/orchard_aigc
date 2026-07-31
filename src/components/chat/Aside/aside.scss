@@ -66,8 +66,8 @@
       }
 
       &.active {
-        background: #e8edf5;
-        color: #2563eb;
+        background: #f0f0f2;
+        color: #18181b;
         font-weight: 500;
       }
 
@@ -84,7 +84,7 @@
     border-color: #e4e4e7;
 
     &:focus-within {
-      border-color: #2563eb;
+      border-color: #18181b;
     }
   }
 
@@ -130,10 +130,10 @@
       }
 
       &.active {
-        background: #e8edf5;
+        background: #f0f0f2;
 
         .session-title {
-          color: #2563eb;
+          color: #18181b;
           font-weight: 500;
         }
       }

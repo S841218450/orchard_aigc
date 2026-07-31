@@ -2,7 +2,7 @@
 
 import "./mywork.scss";
 import { useState } from "react";
-import { Image, Button, Input, Select, Dropdown, message, Empty, Spin } from "antd";
+import { Image, Button, Input, Select, Dropdown, App, Empty, Spin } from "antd";
 import {
   Search,
   FolderOpen,
@@ -29,6 +29,7 @@ interface WorkItem {
 }
 
 const MyWorkPage = () => {
+  const { message } = App.useApp();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filterType, setFilterType] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -206,7 +207,11 @@ const MyWorkPage = () => {
                 <span>{getTypeLabel(item.type)}</span>
               </div>
               <Dropdown menu={getDropdownItems(item)} trigger={["click"]}>
-                <Button type="text" size="small" icon={<MoreHorizontal size={16} />} />
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<MoreHorizontal size={16} />}
+                />
               </Dropdown>
             </div>
             <h4 className="card-title">{item.title}</h4>
@@ -321,9 +326,7 @@ const MyWorkPage = () => {
               onClick={() => setViewMode("list")}
             />
           </div>
-          <Button icon={<SlidersHorizontal size={16} />}>
-            筛选
-          </Button>
+          <Button icon={<SlidersHorizontal size={16} />}>筛选</Button>
         </div>
       </div>
 
@@ -333,10 +336,7 @@ const MyWorkPage = () => {
             <Spin size="large" />
           </div>
         ) : filteredList.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="暂无项目"
-          >
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无项目">
             <Button type="primary">开始创作</Button>
           </Empty>
         ) : viewMode === "grid" ? (

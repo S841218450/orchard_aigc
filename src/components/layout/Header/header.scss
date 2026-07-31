@@ -1,7 +1,7 @@
 .header {
   height: 56px;
-  border-bottom: 1px solid #e4e4e7;
-  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -19,7 +19,7 @@
       cursor: pointer;
       transition: all 0.5s;
       &:hover {
-        box-shadow: 0 0px 6px -2px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--shadow-sm);
         transform: translate(-1px, -1px);
       }
     }
@@ -39,21 +39,21 @@
         background: transparent;
         border-radius: 8px;
         font-size: 14px;
-        color: #52525b;
+        color: var(--color-text-tertiary);
         cursor: pointer;
         transition: all 0.15s;
         position: relative;
         white-space: nowrap;
 
         &:hover {
-          background: #f4f4f5;
-          color: #18181b;
+          background: var(--color-bg-hover);
+          color: var(--color-text);
         }
 
         &--active {
-          color: #2563eb;
-          font-weight: 500;
-          background: #eff4ff;
+          color: var(--color-text);
+          font-weight: 600;
+          background: var(--color-bg-hover);
 
           &::after {
             content: "";
@@ -63,7 +63,7 @@
             transform: translateX(-50%);
             width: 20px;
             height: 2px;
-            background: #2563eb;
+            background: var(--color-primary);
             border-radius: 1px;
           }
         }
@@ -96,7 +96,7 @@
       transition: background 0.2s;
 
       &:hover {
-        background: #f4f4f5;
+        background: var(--color-bg-hover);
       }
     }
   }
@@ -165,7 +165,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px;
-    background: #f0f4ff;
+    background: #fafafa;
     border-radius: 10px;
     margin-bottom: 16px;
 
@@ -173,12 +173,12 @@
       .vip-card-title {
         font-size: 14px;
         font-weight: 600;
-        color: #1e3a5f;
+        color: #18181b;
       }
 
       .vip-card-desc {
         font-size: 12px;
-        color: #64748b;
+        color: #71717a;
         margin-top: 2px;
       }
     }
@@ -246,7 +246,7 @@
 
       .point-link {
         font-size: 12px;
-        color: #2563eb;
+        color: #18181b;
         cursor: pointer;
 
         &:hover {

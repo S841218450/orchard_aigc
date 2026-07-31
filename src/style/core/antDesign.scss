@@ -1,0 +1,47 @@
+/* ========================================
+   Ant Design 全局样式补充
+   主题配置已移至 providers.tsx
+   ======================================== */
+
+/* ---- NProgress 进度条 ---- */
+#nprogress {
+  .bar {
+    background: var(--color-gray-950) !important;
+    height: 2px !important;
+  }
+
+  .peg {
+    box-shadow:
+      0 0 10px var(--color-gray-950),
+      0 0 5px var(--color-gray-950) !important;
+  }
+
+  .spinner-icon {
+    display: none !important;
+  }
+}
+
+/* ---- 选中文本颜色 ---- */
+::selection {
+  background: rgba(17, 17, 17, 0.1);
+  color: var(--color-gray-950);
+}
+
+/* ---- 滚动条样式 ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
+}

@@ -11,27 +11,21 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background: #f8f9fc;
 
-  // 淡白渐变背景
+  // 淡灰渐变背景
   .login-bg {
     position: absolute;
     inset: 0;
     background:
       radial-gradient(
         ellipse at 20% 20%,
-        rgba(59, 130, 246, 0.06) 0%,
+        rgba(0, 0, 0, 0.03) 0%,
         transparent 50%
       ),
       radial-gradient(
         ellipse at 80% 80%,
-        rgba(37, 99, 235, 0.04) 0%,
+        rgba(0, 0, 0, 0.02) 0%,
         transparent 50%
-      ),
-      radial-gradient(
-        ellipse at 50% 50%,
-        rgba(147, 197, 253, 0.05) 0%,
-        transparent 60%
       );
     z-index: 0;
   }
@@ -42,25 +36,26 @@
     top: 20px;
     right: 24px;
     z-index: 10;
-    color: #71717a;
+    color: var(--color-text-tertiary);
     font-size: 14px;
     display: flex;
     align-items: center;
     gap: 6px;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: color var(--duration-fast);
 
     &:hover {
-      color: #2563eb;
+      color: var(--color-primary);
     }
   }
 
   .login-container {
     width: 440px;
     padding: 48px 40px;
-    border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    border-radius: var(--radius-xl);
+    background: var(--color-bg-elevated);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border-light);
     position: relative;
     z-index: 1;
 
@@ -75,8 +70,8 @@
           width: 52px;
           height: 52px;
           margin: 0 auto;
-          background: #2563eb;
-          border-radius: 14px;
+          background: var(--color-primary);
+          border-radius: var(--radius-lg);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -87,14 +82,14 @@
       .brand-name {
         font-size: 28px;
         font-weight: 700;
-        color: #18181b;
+        color: var(--color-text);
         margin: 0 0 6px;
         letter-spacing: 2px;
       }
 
       .brand-slogan {
         font-size: 13px;
-        color: #a1a1aa;
+        color: var(--color-text-quaternary);
         margin: 0;
       }
     }
@@ -105,21 +100,21 @@
 
       .ant-segmented {
         width: 100%;
-        background: #f4f4f5;
-        border-radius: 10px;
+        background: var(--color-bg-sunken);
+        border-radius: var(--radius-md);
         padding: 3px;
 
         .ant-segmented-item {
-          border-radius: 8px;
+          border-radius: var(--radius-md);
           font-size: 14px;
           font-weight: 500;
-          color: #71717a;
-          transition: all 0.2s;
+          color: var(--color-text-tertiary);
+          transition: all var(--duration-normal) var(--ease-out-expo);
 
           &-selected {
-            background: #fff;
-            color: #18181b;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            background: var(--color-bg-elevated);
+            color: var(--color-text);
+            box-shadow: var(--shadow-xs);
           }
         }
       }
@@ -132,26 +127,26 @@
       }
 
       .ant-input-affix-wrapper {
-        background: #fff;
-        border-color: #e4e4e7;
-        border-radius: 10px;
-        transition: all 0.25s ease;
+        background: var(--color-bg-elevated);
+        border-color: var(--color-border);
+        border-radius: var(--radius-md);
+        transition: all var(--duration-normal) var(--ease-out-expo);
 
         &:hover {
-          border-color: #2563eb;
+          border-color: var(--color-primary);
         }
 
         &:focus,
         &:focus-within {
-          border-color: #2563eb;
-          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 3px var(--color-primary-muted);
         }
 
         .ant-input {
           font-size: 14px;
 
           &::placeholder {
-            color: #a1a1aa;
+            color: var(--color-text-quaternary);
           }
         }
       }
@@ -161,21 +156,21 @@
         margin-bottom: 16px;
 
         .ant-segmented {
-          background: #f4f4f5;
-          border-radius: 8px;
+          background: var(--color-bg-sunken);
+          border-radius: var(--radius-md);
           padding: 3px;
 
           .ant-segmented-item {
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             font-size: 13px;
             font-weight: 500;
-            color: #71717a;
-            transition: all 0.2s;
+            color: var(--color-text-tertiary);
+            transition: all var(--duration-normal) var(--ease-out-expo);
 
             &-selected {
-              background: #fff;
-              color: #18181b;
-              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+              background: var(--color-bg-elevated);
+              color: var(--color-text);
+              box-shadow: var(--shadow-xs);
             }
           }
         }
@@ -183,19 +178,23 @@
 
       .login-btn {
         height: 46px;
-        border-radius: 10px;
+        border-radius: var(--radius-md);
         font-size: 15px;
         font-weight: 600;
-        background: #2563eb;
+        background: var(--color-primary);
         border: none;
         color: #fff;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
-        transition: all 0.2s;
+        box-shadow: var(--shadow-sm);
+        transition: all var(--duration-normal) var(--ease-out-expo);
 
         &:hover:not(:disabled) {
-          background: #1d4ed8;
-          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+          background: var(--color-primary-hover);
+          box-shadow: var(--shadow-md);
           transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: translateY(0);
         }
 
         &:disabled {
@@ -209,12 +208,12 @@
 
         .forgot-password {
           font-size: 13px;
-          color: #71717a;
+          color: var(--color-text-tertiary);
           text-decoration: none;
-          transition: color 0.2s;
+          transition: color var(--duration-fast);
 
           &:hover {
-            color: #2563eb;
+            color: var(--color-primary);
           }
         }
       }
@@ -229,12 +228,12 @@
       .divider-line {
         flex: 1;
         height: 1px;
-        background: #e4e4e7;
+        background: var(--color-border);
       }
 
       .divider-text {
         font-size: 12px;
-        color: #a1a1aa;
+        color: var(--color-text-quaternary);
       }
     }
 
@@ -251,17 +250,17 @@
         gap: 6px;
         height: 40px;
         padding: 0 20px;
-        border-radius: 10px;
-        border-color: #e4e4e7;
-        background: #fff;
-        color: #3f3f46;
+        border-radius: var(--radius-md);
+        border-color: var(--color-border);
+        background: var(--color-bg-elevated);
+        color: var(--color-text-secondary);
         font-size: 13px;
-        transition: all 0.2s;
+        transition: all var(--duration-normal) var(--ease-out-expo);
 
         &:hover:not(:disabled) {
-          border-color: #2563eb;
-          color: #2563eb;
-          background: #f8faff;
+          border-color: var(--color-primary);
+          color: var(--color-primary);
+          background: var(--color-primary-muted);
         }
       }
     }
@@ -269,17 +268,17 @@
     .signup-link {
       text-align: center;
       font-size: 13px;
-      color: #a1a1aa;
+      color: var(--color-text-quaternary);
 
       .signup-btn {
-        color: #2563eb;
+        color: var(--color-primary);
         text-decoration: none;
         font-weight: 500;
         margin-left: 4px;
-        transition: color 0.2s;
+        transition: color var(--duration-fast);
 
         &:hover {
-          color: #1d4ed8;
+          color: var(--color-primary-hover);
         }
       }
     }
@@ -288,14 +287,14 @@
   // 扫码弹窗
   .scan-modal {
     .ant-modal-content {
-      border-radius: 16px;
+      border-radius: var(--radius-xl);
     }
 
     .scan-close-btn {
       position: absolute;
       right: 12px;
       top: 12px;
-      color: #71717a;
+      color: var(--color-text-tertiary);
       z-index: 1;
       font-size: 16px;
       width: 28px;
@@ -303,11 +302,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
+      transition: all var(--duration-fast);
 
       &:hover {
-        background: #f4f4f5;
-        color: #18181b;
+        background: var(--color-bg-sunken);
+        color: var(--color-text);
       }
     }
 
@@ -325,17 +325,17 @@
 
         .ant-tabs-tab {
           font-size: 14px;
-          color: #71717a;
+          color: var(--color-text-tertiary);
           padding: 8px 16px;
 
           &.ant-tabs-tab-active .ant-tabs-tab-btn {
-            color: #2563eb;
+            color: var(--color-primary);
             font-weight: 600;
           }
         }
 
         .ant-tabs-ink-bar {
-          background: #2563eb;
+          background: var(--color-primary);
           height: 2px;
         }
 
@@ -359,41 +359,41 @@
         width: 180px;
         height: 180px;
         margin: 0 auto 16px;
-        background: #f4f4f5;
-        border-radius: 12px;
+        background: var(--color-bg-sunken);
+        border-radius: var(--radius-lg);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #71717a;
+        color: var(--color-text-tertiary);
       }
 
       .scan-tip {
         font-size: 15px;
-        color: #18181b;
+        color: var(--color-text);
         margin: 0 0 6px;
         font-weight: 500;
       }
 
       .scan-subtip {
         font-size: 12px;
-        color: #a1a1aa;
+        color: var(--color-text-quaternary);
         margin: 0 0 16px;
       }
 
       // 刷新按钮
       .qr-refresh-btn {
         font-size: 13px;
-        color: #71717a;
+        color: var(--color-text-tertiary);
         display: flex;
         align-items: center;
         gap: 4px;
         padding: 4px 12px;
-        border-radius: 6px;
-        transition: all 0.2s;
+        border-radius: var(--radius-sm);
+        transition: all var(--duration-fast);
 
         &:hover {
-          color: #2563eb;
-          background: #f0f4ff;
+          color: var(--color-primary);
+          background: var(--color-primary-muted);
         }
 
         svg {
@@ -422,13 +422,13 @@
         .qr-success-text {
           font-size: 18px;
           font-weight: 600;
-          color: #18181b;
+          color: var(--color-text);
           margin: 8px 0 0;
         }
 
         .qr-success-sub {
           font-size: 13px;
-          color: #a1a1aa;
+          color: var(--color-text-quaternary);
           margin: 0;
         }
       }

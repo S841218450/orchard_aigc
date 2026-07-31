@@ -16,13 +16,20 @@ export const createApiCallerObject = (apiConfigList: Record<string, any>) => {
       } else {
         extraConfig.baseURL = "/admin-api";
       }
+
+      // 路径参数模式：将参数拼接到 URL 末尾
+      let url = api.url;
+      if (api.pathParams && params !== undefined) {
+        url = `${api.url}${params}`;
+      }
+
       if (method === "get") {
-        return instance.get(api.url, { ...extraConfig, params });
+        return instance.get(url, { ...extraConfig, params });
       }
       return instance.request({
-        url: api.url,
+        url,
         method: method.toUpperCase(),
-        data: params,
+        data: api.pathParams ? undefined : params,
         ...extraConfig,
       });
     };
