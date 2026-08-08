@@ -1,8 +1,10 @@
 @import "animate.css";
 @import "antd/dist/reset.css";
 @import "./_style/core/base.scss";
+
 @import "../style/core/antDesign.scss";
 @import "../style/core/text.scss";
+@import "../style/core/component.scss";
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
 
 :root {

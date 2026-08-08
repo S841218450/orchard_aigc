@@ -3,10 +3,12 @@ const RadioGraph = ({
   options,
   value,
   onChange,
+  name,
 }: {
-  options: { label: string; value: string }[];
-  value: string;
-  onChange: (value: string) => void;
+  options: { label: string; value: string | number }[];
+  value: string | number;
+  onChange: (value: string | number) => void;
+  name: string;
 }) => {
   return (
     <div className="radio-inputs">
@@ -14,7 +16,7 @@ const RadioGraph = ({
         <div className="radio" key={item.value}>
           <input
             type="radio"
-            name="radio"
+            name={name}
             value={item.value}
             checked={item.value === value}
             onChange={() => onChange(item.value)}

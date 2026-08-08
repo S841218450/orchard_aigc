@@ -8,7 +8,9 @@ import {
   ShoppingCart,
   BookOpen,
   Gift,
+  Crown,
   UserRound,
+  Bot,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { Avatar, Popover, Tag, Button } from "antd";
@@ -29,6 +31,7 @@ const MenuBtn = () => {
     { icon: <House size={20} />, title: "灵感", href: "/" },
     { icon: <Sparkle size={20} />, title: "创作", href: "/creation" },
     { icon: <FolderOpen size={20} />, title: "资产", href: "/mywork" },
+    { icon: <Bot size={20} />, title: "AI客服", href: "/chat" },
   ];
 
   return (
@@ -55,7 +58,7 @@ const MenuBtn = () => {
 const PersonPanel = () => {
   const router = useRouter();
   const { isLoggedIn, userInfo, logout } = useUserStore();
-
+  const defaultAvatar = "/defaultUser.svg";
   const handleLogin = () => router.push("/login");
   const handleLogout = async () => {
     await logout();
@@ -63,11 +66,31 @@ const PersonPanel = () => {
   };
 
   const operationButtons = [
-    { text: "个人信息", icon: <User size={20} />, onClick: () => {} },
-    { text: "我的创作", icon: <FolderOpen size={20} />, onClick: () => {} },
-    { text: "我的订单", icon: <ShoppingCart size={20} />, onClick: () => {} },
-    { text: "教程中心", icon: <BookOpen size={20} />, onClick: () => {} },
-    { text: "邀请记录", icon: <Gift size={20} />, onClick: () => {} },
+    {
+      text: "个人信息",
+      icon: <User size={20} />,
+      onClick: () => router.push("/profile"),
+    },
+    {
+      text: "会员中心",
+      icon: <Crown size={20} />,
+      onClick: () => router.push("/vip"),
+    },
+    {
+      text: "我的订单",
+      icon: <ShoppingCart size={20} />,
+      onClick: () => router.push("/orders"),
+    },
+    {
+      text: "关于我们",
+      icon: <BookOpen size={20} />,
+      onClick: () => router.push("/about"),
+    },
+    {
+      text: "邀请记录",
+      icon: <Gift size={20} />,
+      onClick: () => router.push("/invite"),
+    },
     { text: "退出登录", icon: <LogOut size={20} />, onClick: handleLogout },
   ];
 
@@ -75,7 +98,7 @@ const PersonPanel = () => {
     <div className="user-panel">
       <div className="user-panel-header">
         <div className="user-panel-avatar">
-          <Avatar size={48} src={userInfo?.avatar || "/avatar.png"} />
+          <Avatar size={48} src={userInfo?.avatar || defaultAvatar} />
         </div>
         <div className="user-panel-info">
           <div className="user-panel-phone">
@@ -91,7 +114,11 @@ const PersonPanel = () => {
           <div className="vip-card-title">开通VIP会员</div>
           <div className="vip-card-desc">开通会员，享更多权益！</div>
         </div>
-        <Button type="primary" className="vip-card-btn">
+        <Button
+          type="primary"
+          className="vip-card-btn"
+          onClick={() => router.push("/vip")}
+        >
           开通会员
         </Button>
       </div>
@@ -131,10 +158,10 @@ const PersonPanel = () => {
         content={userPanelContent}
         trigger="click"
         placement="rightBottom"
-        overlayClassName="user-popover"
+        className="user-popover"
       >
         <div className="user-avatar-trigger">
-          <Avatar size={36} src={userInfo?.avatar || "/avatar.png"} />
+          <Avatar size={36} src={userInfo?.avatar || defaultAvatar} />
         </div>
       </Popover>
     </div>

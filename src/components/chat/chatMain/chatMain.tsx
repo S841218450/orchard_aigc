@@ -1,6 +1,13 @@
 "use client";
 
-import { Code, FileText, Search, Palette, Zap, Image as ImageIcon } from "lucide-react";
+import {
+  Code,
+  FileText,
+  Search,
+  Palette,
+  Zap,
+  Image as ImageIcon,
+} from "lucide-react";
 import { useState } from "react";
 import NextImage from "next/image";
 import "./chatMain.scss";
@@ -45,7 +52,11 @@ const templates: Record<string, Template[]> = {
   ],
 };
 
-export const ChatMain = ({ chatType = "default", onSelectType, onSelectTemplate }: ChatMainProps) => {
+export const ChatMain = ({
+  chatType = "default",
+  onSelectType,
+  onSelectTemplate,
+}: ChatMainProps) => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
   const operations: OperationItem[] = [
@@ -139,16 +150,21 @@ export const ChatMain = ({ chatType = "default", onSelectType, onSelectTemplate 
 
   return (
     <div className="chat-main animate__animated animate__fadeIn">
-      <div className="chat-main-logo">
-        <NextImage
-          width={100}
-          height={50}
-          src="/logo_opcity.png"
-          alt="logo"
-        />
-      </div>
-      <h2>开始你的创作之旅</h2>
-      <p className="chat-main-desc">我是你的 AI 创作助手，可以帮你生成文案、图片、代码等内容</p>
+      <h2>
+        开始你的
+        <span>
+          <NextImage
+            width={100}
+            height={50}
+            src="/logo_opcity.png"
+            alt="logo"
+          />
+        </span>
+        创作之旅
+      </h2>
+      <p className="chat-main-desc">
+        我是你的 AI 创作助手，可以帮你生成文案、图片、代码等内容
+      </p>
     </div>
   );
 };

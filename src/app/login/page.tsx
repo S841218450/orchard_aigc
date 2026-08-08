@@ -5,21 +5,23 @@ import { useRouter } from "next/navigation";
 import { Segmented, App } from "antd";
 import { ArrowLeft } from "lucide-react";
 import { useUserStore } from "@/store";
+import messageManager from "@/utils/messageManager";
 import "@/style/basePage/login.scss";
 import NextImage from "next/image";
 import PhoneLogin from "./components/PhoneLogin";
 import AccountLogin from "./components/AccountLogin";
 import ThirdPartyLogin from "./components/ThirdPartyLogin";
+import Register from "./components/Register";
 
 type LoginMode = "phone" | "account";
 type ThirdPartyType = "wechat" | "alipay" | "github";
 
 export default function LoginPage() {
-  const { message: messageApi } = App.useApp();
   const router = useRouter();
   const { isLoggedIn, setLoginData } = useUserStore();
   const [loginMode, setLoginMode] = useState<LoginMode>("phone");
   const [isLoading, setIsLoading] = useState(false);
+  const [type, setType] = useState<"login" | "register">("login");
 
   useEffect(() => {
     if (isLoggedIn) router.push("/");
@@ -28,7 +30,7 @@ export default function LoginPage() {
   const handleLoginSuccess = useCallback(
     (data: any) => {
       setLoginData(data);
-      messageApi.success("登录成功");
+      messageManager.success("登录成功");
       router.push("/");
     },
     [router, setLoginData],
@@ -37,24 +39,31 @@ export default function LoginPage() {
   const handleThirdPartyLoginSuccess = useCallback(
     (data: any, type: ThirdPartyType) => {
       setLoginData(data, type);
-      messageApi.success("登录成功");
+      messageManager.success("登录成功");
       router.push("/");
     },
     [router, setLoginData],
   );
 
-  const handleLoginError = useCallback(
-    (msg: string) => {
-      messageApi.error(msg);
-    },
-    [messageApi],
-  );
+  const handleLoginError = useCallback((msg: string) => {
+    messageManager.error(msg);
+  }, []);
 
   const handleBack = () => {
     if (window.history.length > 1) {
       router.back();
     } else {
       router.push("/");
+    }
+  };
+
+  const handleRegisterSuccess = useCallback(() => {
+    setType("login");
+  }, []);
+
+  const handleSwitchType = (newType: "login" | "register") => {
+    if (newType !== type) {
+      setType(newType);
     }
   };
 
@@ -79,53 +88,90 @@ export default function LoginPage() {
           </div>
           <p className="brand-slogan">AI 驱动的智能创作平台</p>
         </div>
+        <div
+          key={type}
+          className="auth-panel animate__animated animate__fadeIn"
+        >
+          {type === "login" ? (
+            <>
+              <div className="login-segmented">
+                <Segmented
+                  value={loginMode}
+                  block
+                  onChange={(val) => setLoginMode(val as LoginMode)}
+                  options={[
+                    { label: "手机号登录", value: "phone" },
+                    { label: "账号登录", value: "account" },
+                  ]}
+                />
+              </div>
+              <div>
+                {loginMode === "phone" ? (
+                  <PhoneLogin
+                    onSuccess={handleLoginSuccess}
+                    onError={handleLoginError}
+                    isLoading={isLoading}
+                    setIsLoading={setIsLoading}
+                  />
+                ) : (
+                  <AccountLogin
+                    onSuccess={handleLoginSuccess}
+                    onError={handleLoginError}
+                    isLoading={isLoading}
+                    setIsLoading={setIsLoading}
+                  />
+                )}
 
-        <div className="login-segmented">
-          <Segmented
-            value={loginMode}
-            block
-            onChange={(val) => setLoginMode(val as LoginMode)}
-            options={[
-              { label: "手机号登录", value: "phone" },
-              { label: "账号登录", value: "account" },
-            ]}
-          />
-        </div>
+                <div className="divider">
+                  <span className="divider-line"></span>
+                  <span className="divider-text">其他登录方式</span>
+                  <span className="divider-line"></span>
+                </div>
 
-        {loginMode === "phone" ? (
-          <PhoneLogin
-            onSuccess={handleLoginSuccess}
-            onError={handleLoginError}
-            isLoading={isLoading}
-            setIsLoading={setIsLoading}
-          />
-        ) : (
-          <AccountLogin
-            onSuccess={handleLoginSuccess}
-            onError={handleLoginError}
-            isLoading={isLoading}
-            setIsLoading={setIsLoading}
-          />
-        )}
-
-        <div className="divider">
-          <span className="divider-line"></span>
-          <span className="divider-text">其他登录方式</span>
-          <span className="divider-line"></span>
-        </div>
-
-        <ThirdPartyLogin
-          onSuccess={handleThirdPartyLoginSuccess}
-          onError={handleLoginError}
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-        />
-
-        <div className="signup-link">
-          还没有账号？
-          <a href="#" className="signup-btn">
-            立即注册
-          </a>
+                <ThirdPartyLogin
+                  onSuccess={handleThirdPartyLoginSuccess}
+                  onError={handleLoginError}
+                  isLoading={isLoading}
+                  setIsLoading={setIsLoading}
+                />
+              </div>
+              <div className="signup-link">
+                还没有账号？
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSwitchType("register");
+                  }}
+                  className="signup-btn"
+                >
+                  立即注册
+                </a>
+              </div>
+            </>
+          ) : (
+            <>
+              <Register
+                onSuccess={handleRegisterSuccess}
+                onError={handleLoginError}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+              />
+              <div className="signup-link">
+                已有账号？
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSwitchType("login");
+                  }}
+                  className="signup-btn"
+                >
+                  去登录
+                </a>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -1,0 +1,275 @@
+.profile-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background: var(--color-bg-sunken);
+  overflow: hidden;
+
+  .profile-header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(17, 17, 17, 0.06);
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      h1 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--color-text);
+        margin: 0;
+
+        svg {
+          color: var(--color-primary);
+        }
+      }
+
+      .header-desc {
+        font-size: 12px;
+        color: var(--color-text-quaternary);
+      }
+    }
+
+    .header-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: var(--color-warm-500);
+      background: var(--color-warm-100);
+      border: 1px solid rgba(212, 165, 116, 0.3);
+      border-radius: var(--radius-full);
+    }
+  }
+
+  .profile-content {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #d4d4d8;
+      border-radius: 3px;
+    }
+
+    .profile-card {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 720px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(17, 17, 17, 0.08);
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.08),
+        0 2px 10px rgba(0, 0, 0, 0.04);
+      animation: profile-card-enter 0.6s var(--ease-out-expo) both;
+
+      .profile-card-glow {
+        position: absolute;
+        top: -120px;
+        right: -80px;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(240, 220, 200, 0.55) 0%,
+          transparent 70%
+        );
+        filter: blur(30px);
+        pointer-events: none;
+      }
+
+      .profile-avatar-section {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 32px 0 28px;
+        border-bottom: 1px solid rgba(17, 17, 17, 0.06);
+
+        .avatar-orb {
+          position: relative;
+          width: 122px;
+          height: 122px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 14px;
+
+          &::before {
+            content: "";
+            position: absolute;
+            inset: 2px;
+            border-radius: 50%;
+            background: conic-gradient(
+              from 120deg,
+              var(--color-warm-500),
+              var(--color-ai-cyan),
+              var(--color-warm-500)
+            );
+            filter: blur(14px);
+            opacity: 0.65;
+            animation: avatar-orb-breathe 4s ease-in-out infinite;
+          }
+
+          .avatar-orb-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            padding: 3px;
+            background: conic-gradient(
+              from 0deg,
+              var(--color-warm-500),
+              var(--color-ai-cyan),
+              transparent 60%,
+              var(--color-warm-500)
+            );
+            -webkit-mask:
+              linear-gradient(#000 0 0) content-box,
+              linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: avatar-ring-spin 8s linear infinite;
+          }
+
+          .ant-upload {
+            position: relative;
+            z-index: 1;
+          }
+        }
+
+        .avatar-uploader {
+          position: relative;
+          width: 96px;
+          height: 96px;
+          cursor: pointer;
+          border-radius: 50%;
+
+          .ant-avatar {
+            border: 3px solid #fff;
+            box-shadow: 0 6px 20px rgba(17, 17, 17, 0.18);
+          }
+
+          .avatar-mask {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.35);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity var(--duration-normal);
+          }
+
+          &:hover .avatar-mask {
+            opacity: 1;
+          }
+        }
+
+        .avatar-name {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--color-text);
+        }
+
+        .avatar-tip {
+          margin-top: 4px;
+          font-size: 12px;
+          color: var(--color-text-quaternary);
+        }
+      }
+
+      .profile-form {
+        padding: 24px 4px 0;
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0 20px;
+        }
+
+        .form-actions {
+          display: flex;
+          width: 100%;
+          justify-content: center;
+          gap: 12px;
+          margin-bottom: 0;
+          padding: 8px 0 20px;
+        }
+      }
+    }
+  }
+}
+
+@keyframes profile-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes avatar-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes avatar-orb-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-page .profile-card {
+    animation: none;
+  }
+
+  .profile-page .avatar-orb-ring,
+  .profile-page .avatar-orb::before {
+    animation: none;
+  }
+}

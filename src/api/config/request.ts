@@ -1,9 +1,9 @@
 import axios from "axios";
 import type { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
-import { message } from "antd";
 import NProgress from "nprogress";
-import { useUserStore } from "@/store";
+import { useUserStore, useLoadingStore } from "@/store";
 import { requestQueue } from "@/utils/requestQueue";
+import { messageManager } from "@/utils/messageManager";
 // 配置 NProgress
 NProgress.configure({
   showSpinner: false,
@@ -15,7 +15,7 @@ NProgress.configure({
 // 请求计数器
 let requestCount = 0;
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const BASE_URL = process.env.ADMIN_API_TARGET;
 const TIMEOUT = 30000;
 
 const instance = axios.create({
@@ -81,22 +81,16 @@ instance.interceptors.request.use(
     config: AxiosRequestConfig &
       InternalAxiosRequestConfig & { _isRefreshReq?: boolean },
   ) => {
-    // 检查重复请求（排除刷新token请求）
-    if (!config._isRefreshReq && requestQueue.isDuplicate(config)) {
-      const error = new Error("请求重复，已取消");
-      error.name = "DuplicateRequest";
-      return Promise.reject(error);
-    }
-
-    // 添加到请求队列
+    // 添加到请求队列（相同请求会取消旧的，保留新的）
     const controller = requestQueue.add(config);
     config.signal = controller.signal;
 
-    // 启动进度条
+    // 启动进度条 + 全局 loading
     if (requestCount === 0) {
       NProgress.start();
     }
     requestCount++;
+    useLoadingStore.getState().show();
 
     const token = useUserStore.getState().token;
     if (token) {
@@ -108,7 +102,16 @@ instance.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error),
+  (error) => {
+    // 请求拦截器出错时也要修正计数
+    requestCount--;
+    if (requestCount <= 0) {
+      requestCount = 0;
+      NProgress.done();
+    }
+    useLoadingStore.getState().hide();
+    return Promise.reject(error);
+  },
 );
 
 // 响应拦截器
@@ -122,11 +125,12 @@ instance.interceptors.response.use(
     if (requestCount === 0) {
       NProgress.done();
     }
+    useLoadingStore.getState().hide();
 
     const res = response.data;
     // 拦截业务错误码
     if (res.code !== 200) {
-      message.error(res.msg || "请求异常");
+      messageManager.error(res.msg || "请求异常");
       return Promise.reject(res);
     }
     return res;
@@ -143,9 +147,10 @@ instance.interceptors.response.use(
       requestCount = 0;
       NProgress.done();
     }
+    useLoadingStore.getState().hide();
 
-    // 忽略重复请求和取消的请求
-    if (error.name === "DuplicateRequest" || axios.isCancel(error)) {
+    // 取消的请求直接 reject，不做错误处理
+    if (axios.isCancel(error)) {
       return Promise.reject(error);
     }
 
@@ -176,6 +181,7 @@ instance.interceptors.response.use(
           } else {
             // 刷新失败，清空队列并登出
             refreshSubscribers = [];
+            messageManager.error("登录过期，请重新登录");
             jumpToLogin();
             return Promise.reject(error);
           }
@@ -192,14 +198,14 @@ instance.interceptors.response.use(
 
       switch (status) {
         case 403:
-          message.error("拒绝访问");
+          messageManager.error("拒绝访问");
           typeof window !== "undefined" && (window.location.href = "/error");
           break;
         case 404:
-          message.error("请求资源不存在");
+          messageManager.error("请求资源不存在");
           break;
         case 500:
-          message.error("服务器错误");
+          messageManager.error("服务器错误");
           break;
       }
     }
@@ -212,6 +218,7 @@ export const cancelAllRequests = () => {
   requestQueue.cancelAll();
   requestCount = 0;
   NProgress.done();
+  useLoadingStore.getState().reset();
 };
 
 export default instance;

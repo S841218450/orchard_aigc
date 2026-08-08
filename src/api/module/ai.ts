@@ -13,15 +13,18 @@ const apiList = [
     type: "post",
     baseURL: "/ai-api/v1/",
   },
-
-  // 画面风格接口
+  // 暂停问答
+  {
+    baseURL: "/ai-api/v1/",
+    url: "/knowledge-base/stop",
+    apiName: "stopKnowledgeChat",
+  },
+  // 发送消息
   { url: "/api/ai/chat/send", apiName: "sendMessage", type: "post" },
-  // AI 聊天接口，发送消息
-  { url: "/api/ai/chat/stream", apiName: "chatStream", type: "post" },
   // 获取消息列表
   { url: "/api/ai/message/list", apiName: "getMsgList", type: "get" },
   // 删除消息
-  { url: "/api/ai/message/delete", apiName: "deleteMsg", type: "post" },
+  { url: "/api/ai/chat/delete", apiName: "deleteMsg", type: "post" },
 
   // 创建会话
   { url: "/api/ai/session/add", apiName: "createSession", type: "post" },

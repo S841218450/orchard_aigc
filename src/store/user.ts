@@ -5,7 +5,7 @@ import API from "@/api";
 export type OAuthType = "wechat" | "alipay" | "github" | null;
 
 export interface UserInfo {
-  userId: number;
+  userId: string;
   nickname: string;
   avatar?: string;
   phone?: string | null;
@@ -23,7 +23,7 @@ interface UserState {
       accessToken: string;
       refreshToken: string;
       expiresIn: number;
-      userId: number;
+      userId: string;
       nickname: string;
       avatar?: string;
       phone?: string | null;

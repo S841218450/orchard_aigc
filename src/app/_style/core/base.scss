@@ -180,6 +180,12 @@ $sizes: generate-sizes(50, 900, 50);
 .flex-align-center {
   align-items: center;
 }
+.flex-align-end {
+  align-items: flex-end;
+}
+.flex-align-start {
+  align-items: flex-start;
+}
 .flex-align-center-justify-end {
   align-items: center;
   justify-content: flex-end;

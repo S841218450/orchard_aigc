@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Form, Input, Button, App } from "antd";
+import { Form, Input, Button } from "antd";
 import { Smartphone, Lock, Eye, EyeOff, MessageSquare } from "lucide-react";
 import API from "@/api";
+import messageManager from "@/utils/messageManager";
 
 type PhoneLoginProps = {
   onSuccess: (data: any) => void;
@@ -18,31 +19,29 @@ export default function PhoneLogin({
   isLoading,
   setIsLoading,
 }: PhoneLoginProps) {
-  const { message: messageApi } = App.useApp();
   const [form] = Form.useForm();
-  const [loginType, setLoginType] = useState<"password" | "sms">("password");
   const [codeCountdown, setCodeCountdown] = useState(0);
 
   const handleGetCode = useCallback(async () => {
     const phone = form.getFieldValue("phone");
     if (!phone) {
-      messageApi.warning("请输入手机号");
+      messageManager.warning("请输入手机号");
       return;
     }
     if (!/^1[3-9]\d{9}$/.test(phone)) {
-      messageApi.warning("请输入正确的手机号");
+      messageManager.warning("请输入正确的手机号");
       return;
     }
     try {
       const res = await API.sendSms({ phone });
       if (res.success) {
         setCodeCountdown(60);
-        messageApi.success("验证码已发送");
+        messageManager.success("验证码已发送");
       } else {
-        messageApi.error(res.msg || "发送失败");
+        messageManager.error(res.msg || "发送失败");
       }
     } catch {
-      messageApi.error("发送失败，请稍后重试");
+      messageManager.error("发送失败，请稍后重试");
     }
   }, [form]);
 
@@ -50,12 +49,10 @@ export default function PhoneLogin({
     async (values: { phone: string; password: string; code: string }) => {
       setIsLoading(true);
       try {
-        const password =
-          loginType === "password" ? values.password : values.code;
-        const res =
-          loginType === "password"
-            ? await API.loginPassword({ username: values.phone, password })
-            : await API.loginSms({ phone: values.phone, code: password });
+        const res = await API.loginSms({
+          phone: values.phone,
+          code: values.code,
+        });
 
         if (res.success) {
           onSuccess(res.data);
@@ -68,7 +65,7 @@ export default function PhoneLogin({
         setIsLoading(false);
       }
     },
-    [loginType, onSuccess, onError, setIsLoading],
+    [onSuccess, onError, setIsLoading],
   );
 
   return (
@@ -100,26 +97,26 @@ export default function PhoneLogin({
           name="code"
           rules={[{ required: true, message: "请输入验证码" }]}
         >
-          <Input
-            prefix={
-              <MessageSquare size={18} style={{ color: "rgba(0,0,0,0.35)" }} />
-            }
-            placeholder="请输入验证码"
-            disabled={isLoading}
-            addonAfter={
-              <Button
-                type="link"
-                onClick={handleGetCode}
-                disabled={codeCountdown > 0 || isLoading}
-                style={{
-                  color: codeCountdown > 0 || isLoading ? "#a1a1aa" : "#2563eb",
-                  padding: 0,
-                }}
-              >
+          <div className="flex-gap-5">
+            <Input
+              prefix={
+                <MessageSquare
+                  size={18}
+                  style={{ color: "rgba(0,0,0,0.35)" }}
+                />
+              }
+              placeholder="请输入验证码"
+              disabled={isLoading}
+            />
+            <Button
+              onClick={handleGetCode}
+              disabled={codeCountdown > 0 || isLoading}
+            >
+              <span className="fs-14">
                 {codeCountdown > 0 ? `${codeCountdown}s` : "获取验证码"}
-              </Button>
-            }
-          />
+              </span>
+            </Button>
+          </div>
         </Form.Item>
 
         <Form.Item style={{ marginBottom: 0 }}>

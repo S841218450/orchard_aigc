@@ -1,18 +1,20 @@
 "use client";
 
 import "./chatInput.scss";
-import { Input, Button, App, Image } from "antd";
+import { Input, Button, Image } from "antd";
 import { useState, useRef, useCallback } from "react";
 const { TextArea } = Input;
 import {
   ArrowUp,
   Paperclip,
   X,
+  Square,
   FileText,
   Image as ImageIcon,
 } from "lucide-react";
+import messageManager from "@/utils/messageManager";
 
-interface FileItem {
+export interface FileItem {
   id: string;
   file: File;
   preview?: string;
@@ -22,6 +24,10 @@ interface FileItem {
 }
 
 interface ChatInputProps {
+  /** 是否正在流式生成中（未接入流式的场景可不传，默认 false） */
+  isStreaming?: boolean;
+  /** 停止流式生成回调（未接入流式的场景可不传） */
+  stopChat?: () => void;
   sendMessage: (message: string, files?: FileItem[]) => void;
   leftOpration?: React.ReactNode;
   rightOpration?: React.ReactNode;
@@ -31,6 +37,8 @@ interface ChatInputProps {
 }
 
 const ChatInput = ({
+  isStreaming = false,
+  stopChat = () => {},
   sendMessage,
   leftOpration,
   rightOpration,
@@ -38,7 +46,6 @@ const ChatInput = ({
   onChange,
   placeholder = "发挥你的奇思妙想",
 }: ChatInputProps) => {
-  const { message } = App.useApp();
   const [internalValue, setInternalValue] = useState("");
   const messageText = value !== undefined ? value : internalValue;
   const setMessageText = (text: string) => {
@@ -74,12 +81,12 @@ const ChatInput = ({
 
     Array.from(fileList).forEach((file) => {
       if (file.size > maxSize) {
-        message.error(`${file.name} 超过 10MB 限制`);
+        messageManager.error(`${file.name} 超过 10MB 限制`);
         return;
       }
 
       if (!allowedTypes.includes(file.type)) {
-        message.error(`${file.name} 格式不支持`);
+        messageManager.error(`${file.name} 格式不支持`);
         return;
       }
 
@@ -240,7 +247,7 @@ const ChatInput = ({
           ))}
         </div>
       )}
-
+      {/* 内容输入区域 */}
       <TextArea
         value={messageText}
         className="chat-input-textarea"
@@ -271,16 +278,27 @@ const ChatInput = ({
         </div>
         <div className="operator-right">
           {rightOpration}
-          <Button
-            shape="circle"
-            type="primary"
-            icon={<ArrowUp size={18} />}
-            onClick={handleSend}
-            loading={isLoading}
-            disabled={
-              isLoading || (messageText.trim() === "" && files.length === 0)
-            }
-          />
+          {isStreaming ? (
+            <Button
+              shape="circle"
+              type="primary"
+              icon={<Square size={18} />}
+              onClick={stopChat}
+              loading={isLoading}
+              disabled={isLoading}
+            />
+          ) : (
+            <Button
+              shape="circle"
+              type="primary"
+              icon={<ArrowUp size={18} />}
+              onClick={handleSend}
+              loading={isLoading}
+              disabled={
+                isLoading || (messageText.trim() === "" && files.length === 0)
+              }
+            />
+          )}
         </div>
       </div>
     </div>

@@ -4,65 +4,40 @@ import {
   Image,
   Popconfirm,
   Button,
-  Tag,
   Spin,
   Result,
   Radio,
-  Space,
   Checkbox,
   Flex,
   Tooltip,
   Input,
-  App,
 } from "antd";
 import Loading from "@/components/core/loadding/loading";
 import { useState, useCallback } from "react";
-import API from "@/api";
-import { Copy, Trash2, RotateCcw } from "lucide-react";
-/** 补充问题选项 */
-export interface SelectListItem {
-  question: string; //问题
-  select_type: string; //单选和多选
-  options: string[]; //选项
-}
-/** 用户选择的答案 */
-export interface SelectAnswer {
-  question: string;
-  options: string;
-}
+import {
+  Copy,
+  Trash2,
+  RotateCcw,
+  Palette,
+  Image as ImageIcon,
+  Maximize2,
+  Sparkles,
+  Check,
+  Loader2,
+  X,
+  ChevronDown,
+} from "lucide-react";
+import type {
+  SelectListItem,
+  SelectAnswer,
+  WorkMessage,
+  WorkStep,
+} from "@/actions/types";
+import { WORK_STATUS_MAP } from "@/actions/types";
+import messageManager from "@/utils/messageManager";
 
-/** 后端 work 消息结构 */
-export interface WorkMessage {
-  id: number;
-  type: string;
-  prompt: string;
-  model: string;
-  params: {
-    style: string;
-    imageProportion: string;
-    imageQuality: string;
-    imageCount: string;
-  };
-  resultUrl: string | null;
-  operationData: {
-    selectList: SelectListItem[]; /** 补充问题列表 */
-  } | null;
-  status: WorkStatus;
-  createTime: number;
-  /** SSE 实时状态文本（前端维护） */
-  sseStatus?: string;
-  /** SSE 当前步骤类型 */
-  sseStepType?: string;
-}
-/** 作品状态：0-待处理 1-处理中 2-已完成 3-失败 */
-type WorkStatus = 0 | 1 | 2 | 3 | 4;
-const WORK_STATUS_MAP: Record<WorkStatus, { label: string; color: string }> = {
-  0: { label: "等待中", color: "#8c8c8c" },
-  1: { label: "生成中", color: "#1677ff" },
-  2: { label: "已完成", color: "#52c41a" },
-  3: { label: "失败", color: "#ff4d4f" },
-  4: { label: "待操作", color: "#ff9900" },
-};
+/** 补充问题选项 */
+export type { SelectListItem, SelectAnswer, WorkMessage };
 
 const errImg =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNjY2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7lm77niYc8L3RleHQ+PC9zdmc+";
@@ -75,6 +50,7 @@ interface MessageItemProps {
   onDelete?: (message: WorkMessage) => void;
   onRegenerate?: (message: WorkMessage) => void;
 }
+
 // ========== 问题选择相关 =========
 const SelectList = ({
   selectList,
@@ -262,6 +238,89 @@ const SelectList = ({
     </div>
   );
 };
+
+// ===========步骤流进度组件============
+interface StepProgressProps {
+  steps: WorkStep[];
+  status: WorkMessage["status"];
+}
+
+const StepProgress = ({ steps, status }: StepProgressProps) => {
+  const [expanded, setExpanded] = useState(true);
+
+  // 没有步骤数据时不渲染
+  if (!steps || steps.length === 0) return null;
+
+  const isRunning = status === 1;
+  const latestStep = steps[steps.length - 1];
+  const prevSteps = steps.slice(0, -1);
+
+  // SSE 结束（成功/失败/待操作）时收起，只显示最新一条
+  const shouldCollapse = !isRunning;
+
+  return (
+    <div className="step-progress">
+      {/* 展开/收起切换按钮 */}
+      <button
+        className="step-progress-toggle"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <span className="toggle-label">
+          {isRunning ? "执行中" : shouldCollapse ? "执行详情" : "执行详情"}
+        </span>
+        <ChevronDown
+          size={14}
+          className={`toggle-icon ${expanded ? "open" : ""}`}
+        />
+      </button>
+
+      {/* 历史步骤（已完成/已失败 — 划线灰显） */}
+      {expanded && prevSteps.length > 0 && (
+        <div className="step-list step-list-history">
+          {prevSteps.map((step) => (
+            <div key={step.seqId} className={`step-item step-${step.state}`}>
+              <div className="step-icon">
+                {step.state === "done" && <Check size={12} />}
+                {step.state === "error" && <X size={12} />}
+                {step.state === "running" && <Loader2 size={12} />}
+              </div>
+              <div className="step-content">
+                <div className="step-title">{step.status}</div>
+                {step.detail && step.detail !== step.status && (
+                  <div className="step-detail">{step.detail}</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 当前/最新步骤 */}
+      <div className={`step-list step-list-current`}>
+        <div
+          className={`step-item step-${latestStep.state} ${
+            isRunning ? "step-active" : ""
+          }`}
+        >
+          <div className="step-icon">
+            {latestStep.state === "running" && (
+              <Loader2 size={12} className="spin" />
+            )}
+            {latestStep.state === "done" && <Check size={12} />}
+            {latestStep.state === "error" && <X size={12} />}
+          </div>
+          <div className="step-content">
+            <div className="step-title">{latestStep.status}</div>
+            {latestStep.detail && latestStep.detail !== latestStep.status && (
+              <div className="step-detail">{latestStep.detail}</div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ===========消息列表项组件============
 const MessageItem = ({
   message,
@@ -279,26 +338,19 @@ const MessageItem = ({
     sseStatus,
     resultUrl,
     operationData,
+    steps,
   } = message;
 
   const selectList = operationData?.selectList || [];
-  const { message: messageApi } = App.useApp();
   // 删除动画状态
   const [removing, setRemoving] = useState(false);
 
-  // 处理删除（先请求接口，成功后再播放淡出动画）
-  const handleDelete = useCallback(async () => {
-    try {
-      await API.deleteWork(message.id);
-      messageApi.success("删除成功");
-      // 接口成功后播放淡出动画
-      setRemoving(true);
-      setTimeout(() => {
-        onDelete?.(message);
-      }, 400);
-    } catch (error) {
-      console.error("删除失败:", error);
-    }
+  // 处理删除（先播放淡出动画，再调用回调）
+  const handleDelete = useCallback(() => {
+    setRemoving(true);
+    setTimeout(() => {
+      onDelete?.(message);
+    }, 400);
   }, [message, onDelete]);
 
   // 计算图片比例
@@ -318,114 +370,176 @@ const MessageItem = ({
 
   const statusInfo = WORK_STATUS_MAP[status] || WORK_STATUS_MAP[0];
   const imgSize = getImgSize(params?.imageProportion || "1:1");
-
+  const downloadImage = (url: string) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = url.split("/").pop() || "image.jpg";
+    a.click();
+  };
   const copyPrompt = (prompt: string) => {
-    //操作按钮
-    console.log(prompt);
+    messageManager.success("已复制到剪贴板");
+    navigator.clipboard?.writeText(prompt);
   };
   // 处理补充问题提交
   const handleSelectSubmit = (answers: SelectAnswer[]) => {
-    //提交问题
     onSelectSubmit?.(message, answers);
   };
+
+  // 状态对应的类名
+  const statusClass = `status-${status}`;
+
   return (
-    <div className={`message-item ${removing ? "message-item-removing" : ""}`}>
-      <h2 className="message-time">{formatDate(createTime)}</h2>
-      <p className="message-content">{prompt}</p>
+    <div
+      className={`message-item ${statusClass} ${
+        removing ? "message-item-removing" : ""
+      }`}
+    >
+      <div className="message-body">
+        {/* 头部：时间 + 操作按钮 */}
+        <div className="message-header">
+          <div className="message-time-wrap">
+            <span className="message-time">{formatDate(createTime)}</span>
+            <span className="message-status-badge">
+              {status === 1 && (
+                <Spin indicator={<LoadingOutlined />} size="small" />
+              )}
+              <span className="status-text">
+                {sseStatus || statusInfo.label}
+              </span>
+            </span>
+          </div>
 
-      {/* 参数标签 */}
-      <div className="flex ">
-        <div className="message-tags flex-align-center">
-          {model && <Tag>{model}</Tag>}
-          {params?.style && <Tag>{params.style}</Tag>}
-          {params?.imageQuality && (
-            <Tag>{params.imageQuality}</Tag>
-          )}
-          {params?.imageProportion && (
-            <Tag>{params.imageProportion}</Tag>
-          )}
-        </div>
-        <div className="oprationBtn flex-gap-2 flex-align-center ml10">
-          <Tooltip title="复制提示词">
-            <Button
-              size="small"
-              type="text"
-              icon={<Copy color="#707070" size={18} />}
-              onClick={() => copyPrompt(prompt)}
-            />
-          </Tooltip>
-          {status === 3 ? (
-            <Tooltip title="重试">
+          <div className="message-actions">
+            <Tooltip title="复制提示词">
               <Button
                 size="small"
                 type="text"
-                icon={<RotateCcw color="#707070" size={18} />}
-                onClick={() => onRetry?.(message)}
+                icon={<Copy size={16} />}
+                onClick={() => copyPrompt(prompt)}
+                className="action-btn"
               />
             </Tooltip>
-          ) : (
-            <Tooltip title="重新生成">
+            {status === 3 ? (
+              <Tooltip title="重试">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<RotateCcw size={16} />}
+                  onClick={() => onRetry?.(message)}
+                  className="action-btn"
+                />
+              </Tooltip>
+            ) : (
+              <Tooltip title="重新生成">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<RotateCcw size={16} />}
+                  onClick={() => onRegenerate?.(message)}
+                  className="action-btn"
+                />
+              </Tooltip>
+            )}
+            <Popconfirm
+              title="删除记录"
+              description="确认删除这条记录吗？"
+              onConfirm={handleDelete}
+              onCancel={() => {}}
+              okText="确认"
+              cancelText="取消"
+            >
               <Button
                 size="small"
                 type="text"
-                icon={<RotateCcw color="#707070" size={18} />}
-                onClick={() => onRegenerate?.(message)}
+                icon={<Trash2 size={16} />}
+                className="action-btn action-btn-danger"
               />
-            </Tooltip>
-          )}
-
-          <Popconfirm
-            title="删除记录"
-            description="确认删除这条记录吗？"
-            onConfirm={handleDelete}
-            onCancel={() => {}}
-            okText="确认"
-            cancelText="取消"
-          >
-            <Button
-              size="small"
-              type="text"
-              icon={<Trash2 color="#707070" size={18} />}
-            />
-          </Popconfirm>
-        </div>
-      </div>
-
-      {/* 状态展示 */}
-      <div className="message-status">
-        {status === 1 && <Spin indicator={<LoadingOutlined />} size="small" />}
-        <span style={{ color: statusInfo.color, marginLeft: 4 }}>
-          {sseStatus || statusInfo.label}
-        </span>
-      </div>
-
-      {/* 补充问题选择 UI（human_in_the_loop） */}
-      {message.status === 4 && selectList.length > 0 && (
-        <SelectList
-          selectList={selectList}
-          onSelectSubmit={handleSelectSubmit}
-        />
-      )}
-
-      {/* 生成结果图片 */}
-      {resultUrl && (
-        <div className="image-list">
-          <div className="message-data">
-            <Image
-              className="message-image"
-              src={resultUrl}
-              alt="生成素材"
-              fallback={errImg}
-              style={{
-                width: imgSize.width,
-                height: imgSize.height,
-                objectFit: "cover",
-                borderRadius: 8,
-              }}
-            />
+            </Popconfirm>
           </div>
         </div>
-      )}
+
+        {/* 提示词内容 */}
+        <div className="message-content-wrap">
+          <span className="prompt-quote">&quot;</span>
+          <p className="message-content">{prompt}</p>
+        </div>
+
+        {/* 参数 chip 标签 */}
+        <div className="message-chips">
+          {model && (
+            <div className="chip">
+              <Sparkles size={12} />
+              <span>{model === "default" ? "默认模型" : model}</span>
+            </div>
+          )}
+          {params?.style && (
+            <div className="chip">
+              <Palette size={12} />
+              <span>{params.style}</span>
+            </div>
+          )}
+          {params?.imageQuality && (
+            <div className="chip">
+              <ImageIcon size={12} />
+              <span>{params.imageQuality}</span>
+            </div>
+          )}
+          {params?.imageProportion && (
+            <div className="chip">
+              <Maximize2 size={12} />
+              <span>{params.imageProportion}</span>
+            </div>
+          )}
+        </div>
+
+        {/* 执行步骤流 */}
+        {steps && steps.length > 0 && (
+          <StepProgress steps={steps} status={status} />
+        )}
+
+        {/* 补充问题选择 UI（human_in_the_loop） */}
+        {message.status === 4 && selectList.length > 0 && (
+          <SelectList
+            selectList={selectList}
+            onSelectSubmit={handleSelectSubmit}
+          />
+        )}
+
+        {/* 生成结果图片 */}
+        {resultUrl && (
+          <div className="image-list">
+            <div className="message-image-wrap">
+              <Image
+                className="message-image"
+                src={resultUrl}
+                alt="生成素材"
+                fallback={errImg}
+                preview={{
+                  mask: { blur: true },
+                  cover: (
+                    <div className="flex-column-gap-5">
+                      <Button onClick={() => window.open(resultUrl)}>
+                        预览
+                      </Button>
+                      <Button
+                        type="primary"
+                        onClick={() => downloadImage(resultUrl)}
+                      >
+                        下载图片
+                      </Button>
+                    </div>
+                  ),
+                }}
+                style={{
+                  width: imgSize.width,
+                  height: imgSize.height,
+                  objectFit: "cover",
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -471,6 +585,7 @@ export const HistoryContent = ({
     return (
       <div className="history-content">
         <Result
+          className="W100 H100"
           status="error"
           title="获取历史记录失败"
           subTitle={error.message}

@@ -1,0 +1,257 @@
+/* 图片编辑组件样式（Popover 内容区） */
+$spacing-unit: 8px;
+
+/* 关闭按钮外层容器（相对定位，供右上角按钮悬浮） */
+.image-edit-close-wrap {
+  position: relative;
+}
+
+/* 右上角红色圆形关闭按钮 */
+.image-edit-close-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 100;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: all var(--duration-fast) var(--ease-out-expo);
+
+  &:hover {
+    background: #dc2626;
+    transform: scale(1.08);
+  }
+}
+
+.image-edit-popover {
+  width: 480px;
+  max-width: 55vw;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-elevated);
+  font-family: var(--font-sans);
+
+  /* ------------- 工具栏 ------------- */
+  .edit-toolbar {
+    display: flex;
+    align-items: center;
+    gap: $spacing-unit * 1.5;
+    padding: $spacing-unit * 1.25 $spacing-unit * 1.5;
+    background: var(--color-bg-sunken);
+    border-bottom: 1px solid var(--color-border-light);
+    flex-wrap: wrap;
+
+    .tool-section {
+      display: flex;
+      align-items: center;
+      gap: $spacing-unit;
+
+      &.tool-section-right {
+        margin-left: auto;
+      }
+    }
+
+    .tool-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+
+      svg {
+        color: var(--color-text-tertiary);
+      }
+    }
+
+    .tool-divider {
+      width: 1px;
+      height: 18px;
+      background: var(--color-border-light);
+    }
+
+    // 颜色圆点按钮
+    .color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      padding: 0;
+      transition: all var(--duration-fast) var(--ease-out-expo);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      position: relative;
+
+      &:hover {
+        transform: scale(1.15);
+      }
+
+      &.active {
+        border-color: #fff;
+        // 外圈描边 + 内圈阴影，模拟双层选中效果
+        box-shadow:
+          0 0 0 2px var(--color-primary),
+          0 2px 6px rgba(0, 0, 0, 0.2);
+        transform: scale(1.1);
+      }
+    }
+
+    .box-count-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border-light);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+
+      svg {
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  /* ------------- 画布区（图片 + 选框） ------------- */
+  .edit-canvas {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    // 限定最大高度，避免图片超高撑破视口
+    max-width: 100%;
+    max-height: 60vh;
+    // 画布底色（防止透明 PNG 出现白底违和感）
+    background:
+      linear-gradient(45deg, #f4f4f5 25%, transparent 25%) 0 0 / 16px 16px,
+      linear-gradient(-45deg, #f4f4f5 25%, transparent 25%) 0 8px / 16px 16px,
+      linear-gradient(45deg, transparent 75%, #f4f4f5 75%) 8px -8px / 16px 16px,
+      linear-gradient(-45deg, transparent 75%, #f4f4f5 75%) -8px 0 / 16px 16px;
+    background-color: #fafafa;
+    overflow: hidden;
+    cursor: crosshair;
+    user-select: none;
+    // 防止拖拽选中时出现文本光标
+    -webkit-user-drag: none;
+
+    .edit-canvas-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 60vh;
+      // 保持图片比例居中，空白处显示棋盘格底
+      object-fit: contain;
+      margin: 0 auto;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none; // 避免 img 原生拖拽干扰鼠标事件
+    }
+
+    /* 单个选框通用样式 */
+    .selection-box {
+      position: absolute;
+      border-width: 2px;
+      border-style: solid;
+      border-radius: 3px;
+      box-sizing: border-box;
+      cursor: default;
+      transition: box-shadow var(--duration-fast) ease;
+      animation: boxAppear 0.2s var(--ease-out-expo) both;
+
+      &.drawing {
+        // 绘制中的选框使用虚线 + 更弱的动画反馈
+        border-style: dashed;
+        animation: none;
+        opacity: 0.85;
+      }
+
+      // 选框角标：显示尺寸（百分比）
+      .box-label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: translateY(calc(-100% - 2px));
+        padding: 1px 6px;
+        border-radius: 4px 4px 4px 0;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1.5;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+
+      // 选框删除按钮（右上角）
+      .box-remove-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        border-radius: 50%;
+        border: 1.5px solid #fff;
+        background: #ef4444;
+        color: #fff;
+        cursor: pointer;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: scale(0.7);
+        transition: all var(--duration-fast) var(--ease-out-expo);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        z-index: 10;
+
+        &:hover {
+          background: #dc2626;
+          transform: scale(1.05);
+        }
+      }
+
+      // hover 选框时显示删除按钮
+      &:hover .box-remove-btn {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  }
+
+  /* ------------- 底部提示 ------------- */
+  .edit-hint {
+    padding: $spacing-unit $spacing-unit * 1.5;
+    border-top: 1px solid var(--color-border-light);
+    font-size: 12px;
+    color: var(--color-text-quaternary);
+    background: var(--color-bg-sunken);
+    text-align: center;
+    line-height: 1.5;
+  }
+}
+
+@keyframes boxAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

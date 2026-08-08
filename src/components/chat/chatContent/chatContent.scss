@@ -1,72 +1,536 @@
 // 聊天内容区域
-.chat-content-wrapper {
+.chat-content {
   flex: 1;
   width: 100%;
-  max-width: 700px;
   overflow-y: auto;
-  padding: 16px 0;
+  padding: 24px 0;
+  display: flex;
+  justify-content: center;
+  // 滚动条样式
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
 
-  .chat-content {
-    .message-list {
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #d4d4d8;
+    border-radius: 3px;
+
+    &:hover {
+      background: #a1a1aa;
+    }
+  }
+
+  .message-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 80%;
+    padding: 0 24px;
+  }
+
+  // 单条消息组：一个问题 + 一个回答（左右角色结构）
+  .message-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  // 单条消息
+  .message-item {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    animation: messageFadeIn 0.3s ease-out;
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .message-body {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 6px;
+      max-width: 70%;
+      min-width: 0;
+    }
 
-      .message {
-        display: flex;
-        gap: 12px;
-        max-width: 100%;
+    .message-content {
+      padding: 6px 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      word-break: break-word;
+      white-space: pre-wrap;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
 
-        &.user {
-          flex-direction: row-reverse;
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: #a1a1aa;
+      cursor: pointer;
+      border-radius: 4px;
+      opacity: 0;
+      transition: all 0.2s;
+      padding: 0;
+      align-self: flex-start;
 
-          .message-avatar {
-            background: #18181b;
-            color: #fff;
-          }
+      &:hover {
+        background: #f4f4f5;
+        color: #52525b;
+      }
+    }
 
-          .message-content {
-            background: #18181b;
-            color: #fff;
-            border-radius: 16px 16px 4px 16px;
-          }
+    // AI 回答操作栏：复制 / 重新生成 / 删除
+    .message-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      align-self: flex-start;
+      opacity: 0;
+      transition: opacity 0.2s;
+
+      .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border: none;
+        background: transparent;
+        color: #a1a1aa;
+        font-size: 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s;
+
+        &:hover:not(:disabled) {
+          background: #f4f4f5;
+          color: #52525b;
         }
 
-        &.ai {
-          .message-avatar {
-            background: #f4f4f5;
-            color: #52525b;
-          }
-
-          .message-content {
-            background: #f4f4f5;
-            color: #18181b;
-            border-radius: 16px 16px 16px 4px;
-
-            &.error {
-              color: #dc2626;
-            }
-          }
+        &.danger:hover:not(:disabled) {
+          background: #fef2f2;
+          color: #dc2626;
         }
 
-        .message-avatar {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .message-content {
-          padding: 10px 14px;
-          font-size: 14px;
-          line-height: 1.6;
-          max-width: 70%;
-          word-break: break-word;
+        &:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
         }
       }
     }
+  }
+
+  // AI 回答 Markdown 内容样式
+  .markdown-body {
+    white-space: normal;
+    font-size: 14px;
+    line-height: 1.7;
+    word-break: break-word;
+
+    > *:first-child {
+      margin-top: 0;
+    }
+
+    > *:last-child {
+      margin-bottom: 0;
+    }
+
+    // 标题
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin: 1em 0 0.5em;
+      font-weight: 600;
+      color: var(--color-text);
+      line-height: 1.4;
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+
+    h1 {
+      font-size: 1.5em;
+      padding-bottom: 0.3em;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    h2 {
+      font-size: 1.3em;
+      padding-bottom: 0.25em;
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    h3 {
+      font-size: 1.15em;
+    }
+
+    h4,
+    h5,
+    h6 {
+      font-size: 1em;
+    }
+
+    // 段落
+    p {
+      margin: 0.5em 0;
+    }
+
+    // 列表
+    ul,
+    ol {
+      margin: 0.5em 0;
+      padding-left: 1.5em;
+
+      li {
+        margin: 0.25em 0;
+
+        &::marker {
+          color: var(--color-text-tertiary);
+        }
+      }
+
+      ul,
+      ol {
+        margin: 0.25em 0;
+      }
+    }
+
+    // 任务列表（GFM）
+    li:has(> input[type="checkbox"]) {
+      list-style: none;
+      margin-left: -1.5em;
+
+      input {
+        margin-right: 0.4em;
+      }
+    }
+
+    // 行内代码
+    code {
+      padding: 0.15em 0.4em;
+      background: var(--color-bg-sunken);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+    }
+
+    // 代码块
+    pre {
+      margin: 0.75em 0;
+      padding: 12px 16px;
+      background: var(--color-bg-sunken);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      line-height: 1.6;
+
+      code {
+        padding: 0;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        font-size: 13px;
+      }
+    }
+
+    // 表格
+    table {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      margin: 0.75em 0;
+      border-collapse: collapse;
+      overflow-x: auto;
+      font-size: 13px;
+
+      th,
+      td {
+        padding: 8px 12px;
+        border: 1px solid var(--color-border);
+        text-align: left;
+      }
+
+      th {
+        background: var(--color-bg-sunken);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      tr:nth-child(2n) {
+        background: var(--color-primary-muted);
+      }
+    }
+
+    // 引用
+    blockquote {
+      margin: 0.75em 0;
+      padding: 8px 12px;
+      border-left: 3px solid var(--color-gray-300);
+      background: var(--color-bg-sunken);
+      color: var(--color-text-secondary);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+
+      p {
+        margin: 0.25em 0;
+      }
+    }
+
+    // 链接
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--duration-fast);
+
+      &:hover {
+        border-bottom-color: var(--color-primary);
+      }
+    }
+
+    // 图片
+    img {
+      max-width: 100%;
+      border-radius: var(--radius-sm);
+    }
+
+    // 分隔线
+    hr {
+      margin: 1em 0;
+      border: none;
+      border-top: 1px solid var(--color-border);
+    }
+
+    // 加粗/斜体
+    strong {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+  }
+
+  // hover 消息项显示复制按钮与操作栏
+  .message-item:hover .copy-btn,
+  .message-item:hover .message-actions {
+    opacity: 1;
+  }
+
+  // 用户消息：右侧
+  .message-item.user {
+    justify-content: flex-end;
+
+    .message-avatar {
+      background: #18181b;
+      color: #fff;
+      order: 1;
+    }
+
+    .message-body {
+      align-items: flex-end;
+    }
+
+    .message-actions {
+      align-self: flex-end;
+    }
+
+    .message-content {
+      background: #18181b;
+      color: #fff;
+      border-radius: 16px 16px 4px 16px;
+    }
+
+    .copy-btn {
+      align-self: flex-end;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #d4d4d8;
+      }
+    }
+  }
+
+  // AI 消息：左侧
+  .message-item.assistant {
+    justify-content: flex-start;
+
+    .message-avatar {
+      background: #f4f4f5;
+      color: #52525b;
+    }
+
+    .message-content {
+      background: #f4f4f5;
+      color: #18181b;
+      border-radius: 16px 16px 16px 4px;
+
+      &.error {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+    }
+  }
+
+  // 加载中打字动画
+  .typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 0;
+
+    span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #a1a1aa;
+      animation: typingBounce 1.4s infinite ease-in-out both;
+
+      &:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+
+      &:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+    }
+  }
+
+  // 思考过程区域：agent 执行步骤展示（SSE step_* 事件驱动）
+  .thinking-process {
+    width: 100%;
+    padding: 12px 16px;
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    animation: messageFadeIn 0.3s ease-out;
+
+    .thinking-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #52525b;
+
+      svg {
+        color: var(--color-primary);
+      }
+    }
+
+    .thinking-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .thinking-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      font-size: 12px;
+      color: #a1a1aa;
+      transition: color 0.2s;
+
+      .step-icon {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      .step-spin {
+        animation: stepSpin 1s linear infinite;
+      }
+
+      .step-label {
+        flex-shrink: 0;
+        font-weight: 500;
+      }
+
+      .step-status {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      // 已完成：绿色对勾
+      &.done {
+        color: #71717a;
+
+        .step-icon {
+          color: var(--color-success);
+        }
+      }
+
+      // 执行中：主色图标 + 旋转动画
+      &.running {
+        color: #52525b;
+
+        .step-icon {
+          color: var(--color-primary);
+        }
+
+        .step-status {
+          color: #52525b;
+        }
+      }
+    }
+  }
+}
+
+// 思考步骤执行中图标旋转动画
+@keyframes stepSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 消息淡入动画
+@keyframes messageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 打字跳动动画
+@keyframes typingBounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
   }
 }

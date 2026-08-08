@@ -1,6 +1,6 @@
 import { Masonry, Image, Button } from "antd";
 import { formatDate } from "@/utils/timeUtils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 // ==================== 优秀案例组件 ====================
 import "./example.scss";
 
@@ -89,14 +89,14 @@ export const ExampleContent = ({ activeKey }: { activeKey: string }) => {
   };
 
   const pageObj = { currentPage: 1, pageSize: 10 };
-  const getWorkList = async () => {
+  const getWorkList = useCallback(async () => {
     const res = await generateAllData();
     setWorkList(res);
-  };
+  }, []);
 
   useEffect(() => {
     getWorkList();
-  }, [activeKey, pageObj.currentPage]);
+  }, [activeKey, pageObj.currentPage, getWorkList]);
 
   return (
     <div className="example-content">
@@ -106,8 +106,8 @@ export const ExampleContent = ({ activeKey }: { activeKey: string }) => {
           <WorkList workList={workList} />
         ) : (
           <div className="empty-message">
-            <p className="empty-title">还没有优秀案例哦</p>
-            <p className="empty-desc">快来创作你的第一幅作品吧</p>
+            <span className="empty-title">还没有优秀案例哦</span>
+            <span className="empty-desc">快来创作你的第一幅作品吧</span>
           </div>
         )}
       </div>

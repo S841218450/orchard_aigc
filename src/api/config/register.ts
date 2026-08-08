@@ -3,8 +3,21 @@ import authModule from "../module/auth";
 import userModule from "../module/user";
 import commonModule from "../module/common";
 import workModule from "../module/work";
+import knowledgeModule from "../module/knowledge";
+import assetModule from "../module/asset";
+import userCenterModule from "../module/userCenter";
+
 // 注册 API 模块
-const modules = [aiModule, authModule, userModule, commonModule, workModule];
+const modules = [
+  aiModule,
+  authModule,
+  userModule,
+  commonModule,
+  workModule,
+  knowledgeModule,
+  assetModule,
+  userCenterModule,
+];
 
 // 检查 API 重复
 const checkApiDuplicates = (apiList: { url: string; name: string }[]) => {

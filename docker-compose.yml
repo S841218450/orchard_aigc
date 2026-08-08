@@ -1,0 +1,30 @@
+# 前端 orchard_aigc 容器编排（可在 1Panel「容器编排」中直接导入）
+# 后端服务均在 1Panel 的 Docker 中运行，已把 48080 / 3000 发布到宿主机，
+# 因此前端容器通过 host.docker.internal 访问宿主机端口，无需和后端同网络。
+services:
+  orchard-aigc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: orchard-aigc:latest
+    container_name: orchard-aigc
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      # 代理目标：走宿主机网关访问后端容器已发布的端口
+      ADMIN_API_TARGET: http://host.docker.internal:48080
+      AI_API_TARGET: http://host.docker.internal:3000
+    extra_hosts:
+      # Linux 上启用 host.docker.internal 指向宿主机
+      - "host.docker.internal:host-gateway"
+    # 若后端与前端加入同一个 docker 网络，可将上面两个 TARGET 改为服务名直连：
+    # ADMIN_API_TARGET: http://admin-api:48080
+    # AI_API_TARGET: http://ai-api:3000
+    networks:
+      - orchard-net
+
+networks:
+  orchard-net:
+    name: orchard-net

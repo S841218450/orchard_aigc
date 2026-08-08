@@ -1,163 +1,47 @@
 "use client";
 
-import { Image, Skeleton, Input, Masonry, Segmented, Spin } from "antd";
-import { Search, FolderOpen } from "lucide-react";
-import { useRequest, useScroll } from "ahooks";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { Image, Skeleton, Masonry, Spin } from "antd";
+import { FolderOpen, AlertCircle } from "lucide-react";
+import type { MaterialItem, ImageProportion } from "@/actions/home";
 import Loading from "@/components/core/loadding/loading";
 
 import "./materialList.scss";
 
-interface MaterialItem {
-  id: string;
-  image: string;
-  title: string;
-  time: string;
+// 组件 Props 接口
+export interface MaterialListProps {
+  list: MaterialItem[];
+  loading: boolean;
+  loadingMore: boolean;
+  hasMore: boolean;
+  error: Error | null;
+  onRetry: () => void;
 }
 
-const MaterialList = () => {
-  const [currentTab, setCurrentTab] = useState(1);
-  const [materialList, setMaterialList] = useState<MaterialItem[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const pageSize = 16;
+const defaultImg = "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png";
 
-  const segmentedOptions = [
-    { label: "发现", value: 1 },
-    { label: "图片", value: 2 },
-    { label: "短片", value: 3 },
-    { label: "活动", value: 4 },
-  ];
+// 固定比例字符串 -> 宽高比数值（宽 / 高），骨架屏据此占位防止图片加载后重排
+const PROPORTION_RATIO: Record<ImageProportion, number> = {
+  "1:1": 1,
+  "9:16": 9 / 16,
+  "16:9": 16 / 9,
+  "24:3": 24 / 3,
+};
 
-  const defaultImg =
-    "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png";
+// 骨架屏占位卡片循环使用的比例（与 mock 数据分配顺序一致，首屏骨架位置接近真实数据）
+const SKELETON_PROPORTIONS: ImageProportion[] = ["1:1", "9:16", "16:9", "24:3"];
 
-  const generateAllData = (keyword: string = "") => {
-    const imageList = [
-      "https://images.unsplash.com/photo-1510001618818-4b4e3d86bf0f",
-      "https://images.unsplash.com/photo-1507513319174-e556268bb244",
-      "https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2",
-      "https://images.unsplash.com/photo-1492778297155-7be4c83960c7",
-      "https://images.unsplash.com/photo-1508062878650-88b52897f298",
-      "https://images.unsplash.com/photo-1506158278516-d720e72406fc",
-      "https://images.unsplash.com/photo-1552203274-e3c7bd771d26",
-      "https://images.unsplash.com/photo-1528163186890-de9b86b54b51",
-      "https://images.unsplash.com/photo-1727423304224-6d2fd99b864c",
-      "https://images.unsplash.com/photo-1675090391405-432434e23595",
-      "https://images.unsplash.com/photo-1554196967-97a8602084d9",
-      "https://images.unsplash.com/photo-1491961865842-98f7befd1a60",
-      "https://images.unsplash.com/photo-1721728613411-d56d2ddda959",
-      "https://images.unsplash.com/photo-1731901245099-20ac7f85dbaa",
-      "https://images.unsplash.com/photo-1617694455303-59af55af7e58",
-      "https://images.unsplash.com/photo-1709198165282-1dab551df890",
-    ];
+// 比例字符串转 aspect-ratio 数值，无法识别时回退 1:1
+const getAspectRatio = (proportion?: ImageProportion): number =>
+  proportion ? PROPORTION_RATIO[proportion] : PROPORTION_RATIO["1:1"];
 
-    // 模拟更多数据：重复数据但使用不同的 id
-    const allImages = [];
-    for (let i = 0; i < 5; i++) {
-      allImages.push(...imageList);
-    }
-
-    return allImages
-      .map((image, index) => ({
-        id: `${index + 1}`,
-        image,
-        title: `AI 生成插画 - 科技未来城市${(index % 16) + 1}`,
-        time: `2023-08-${String((index % 28) + 1).padStart(2, "0")} 10:00`,
-      }))
-      .filter((item) =>
-        item.title.toLowerCase().includes(keyword.toLowerCase()),
-      );
-  };
-
-  //加载素材数据
-  const fetchMaterialList = async (
-    keyword: string = "",
-    pageNum: number = 1,
-  ) => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const allData = generateAllData(keyword);
-    const start = (pageNum - 1) * pageSize;
-    const end = start + pageSize;
-    const pageData = allData.slice(start, end);
-    return {
-      list: pageData,
-      hasMore: end < allData.length,
-    };
-  };
-
-  //防抖
-  const { loading, error, run } = useRequest(
-    (keyword: string = "") => fetchMaterialList(keyword, 1),
-    {
-      debounceWait: 700,
-      manual: true,
-      defaultParams: [""],
-      onSuccess: (result) => {
-        setMaterialList(result.list);
-        setHasMore(result.hasMore);
-        setPage(1);
-      },
-      onError: () => {},
-    },
-  );
-
-  //向下滚动时触发接口加载更多
-  const loadMore = useCallback(async () => {
-    console.log("loadMore", "加载更多");
-
-    if (loadingMore || !hasMore || loading) return;
-    setLoadingMore(true);
-    try {
-      const nextPage = page + 1;
-      const result = await fetchMaterialList("", nextPage);
-      setMaterialList((prev) => [...prev, ...result.list]);
-      setHasMore(result.hasMore);
-      setPage(nextPage);
-    } catch (e) {
-      // ignore
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [page, hasMore, loadingMore]);
-
-  const scrollPosition = useScroll(containerRef); //监听容器滚动位置
-  useEffect(() => {
-    console.log("scrollPosition", scrollPosition);
-    if (!scrollPosition || !containerRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-    console.log("scrollTop", scrollTop);
-    console.log("scrollHeight", scrollHeight);
-    console.log("clientHeight", clientHeight);
-    if (scrollHeight - scrollTop - clientHeight < 200) {
-      loadMore();
-    }
-  }, [scrollPosition, loadMore]);
-
-  //渲染骨架屏
-  const renderSkeleton = () => (
-    <div className="material-grid">
-      {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="material-card skeleton-card">
-          <div className="skeleton-img">
-            <Skeleton.Avatar
-              shape="square"
-              size="large"
-              active
-              className="skeleton-avatar"
-            />
-          </div>
-          <div className="skeleton-content">
-            <Skeleton.Input size="small" active />
-            <Skeleton.Input size="small" active style={{ width: "60%" }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
+const MaterialList = ({
+  list,
+  loading,
+  loadingMore,
+  hasMore,
+  error,
+  onRetry,
+}: MaterialListProps) => {
   //渲染空状态
   const renderEmpty = () => (
     <div className="empty-state">
@@ -165,8 +49,7 @@ const MaterialList = () => {
         <FolderOpen size={48} />
       </div>
       <h3 className="empty-title">暂无素材</h3>
-      <p className="empty-desc">快去创作你的第一个作品吧</p>
-      <button className="empty-action">开始创作</button>
+      <p className="empty-desc">试试搜索其他关键词吧</p>
     </div>
   );
 
@@ -174,11 +57,11 @@ const MaterialList = () => {
   const renderError = () => (
     <div className="error-state">
       <div className="error-icon">
-        <Search size={48} />
+        <AlertCircle size={48} />
       </div>
       <h3 className="error-title">加载失败</h3>
       <p className="error-desc">{error?.message || "加载失败，请稍后重试"}</p>
-      <button className="error-action" onClick={() => run("")}>
+      <button className="error-action" onClick={onRetry}>
         重新加载
       </button>
     </div>
@@ -190,64 +73,65 @@ const MaterialList = () => {
       <Masonry
         columns={4}
         gutter={10}
-        items={materialList?.map((item) => ({
+        items={list.map((item) => ({
           key: item.id,
           data: item,
         }))}
         itemRender={({ data }) => (
           <div className="material-card">
-            <Image
-              src={data.image || defaultImg}
-              alt={data.title}
-              className="card-image"
-              fallback={defaultImg}
-            />
-            <div className="card-content">
-              <div className="card-title">{data.title}</div>
-              <div className="card-time">{data.time}</div>
+            <div
+              className="card-image-wrapper"
+              style={{ aspectRatio: getAspectRatio(data.imageProportion) }}
+            >
+              <div className="card-skeleton-placeholder" />
+              <Image
+                src={data.image || defaultImg}
+                alt={data.title}
+                preview={{
+                  open: false,
+                  cover: (
+                    <div className="card-overlay">
+                      <div className="card-info">
+                        <div className="card-title">{data.title}</div>
+                        <div className="card-time">{data.time}</div>
+                      </div>
+                    </div>
+                  ),
+                }}
+                className="card-image"
+                fallback={defaultImg}
+                placeholder={
+                  <div className="card-skeleton-placeholder">
+                    <Skeleton.Image active className="card-skeleton-img" />
+                  </div>
+                }
+              />
             </div>
           </div>
         )}
       />
       {loadingMore && (
-        <div className="loading-more flex-1">
-          <Loading />
+        <div className="loading-more">
+          <Spin size="small" />
+          <span className="loading-more-text">加载中...</span>
         </div>
       )}
-      {!hasMore && materialList.length > 0 && (
-        <div className="no-more">没有更多了</div>
-      )}
+      {!hasMore && list.length > 0 && <div className="no-more">没有更多了</div>}
     </>
   );
 
   return (
-    <div className="material-list-wrapper" ref={containerRef}>
-      <div className="search-box">
-        <Input
-          prefix={<Search size={16} className="search-icon" />}
-          onInput={(e) => run((e.target as HTMLInputElement).value)}
-          placeholder="搜索素材..."
-          className="search-input w-300"
-        />
-        <Segmented<string>
-          options={segmentedOptions.map((item) => item.label)}
-          value={currentTab.toString()}
-          onChange={(value) => {
-            setCurrentTab(Number(value));
-            setMaterialList([]);
-            run("");
-          }}
-        />
-      </div>
-
+    <div className="material-list-wrapper">
       <div className="material-content">
-        {loading
-          ? renderSkeleton()
-          : error
-            ? renderError()
-            : materialList.length > 0
-              ? renderContent()
-              : renderEmpty()}
+        {loading ? (
+          <Loading />
+        ) : error ? (
+          renderError()
+        ) : list.length > 0 ? (
+          renderContent()
+        ) : (
+          renderEmpty()
+        )}
       </div>
     </div>
   );

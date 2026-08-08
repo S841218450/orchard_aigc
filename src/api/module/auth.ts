@@ -3,8 +3,8 @@ const apiList = [
   // 登录
   { url: "/login/password", apiName: "loginPassword", type: "post" }, // 密码登录
   { url: "/login/sms", apiName: "loginSms", type: "post" }, // 手机号验证码登录
-  { url: "/login/sendSms", apiName: "sendSms", type: "post" }, // 发送验证码
-
+  { url: "/sms/send", apiName: "sendSms", type: "post" }, // 发送验证码
+  { url: "/public-key", apiName: "getPublicKey", type: "get" }, // 获取公钥
   // 注册
   { url: "/register", apiName: "register", type: "post" },
   // 登出

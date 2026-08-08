@@ -1,0 +1,489 @@
+.about-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background: #000000;
+  overflow: hidden;
+  color: #f1f1f1;
+
+  /* ========== 背景动画层 ========== */
+  .about-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+
+    .about-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.45;
+      will-change: transform;
+    }
+
+    .about-glow-1 {
+      width: 480px;
+      height: 480px;
+      left: 6%;
+      top: 8%;
+      background: radial-gradient(
+        circle,
+        rgba(64, 120, 255, 0.4) 0%,
+        transparent 70%
+      );
+    }
+
+    .about-glow-2 {
+      width: 420px;
+      height: 420px;
+      right: 12%;
+      top: 30%;
+      background: radial-gradient(
+        circle,
+        rgba(150, 80, 255, 0.35) 0%,
+        transparent 70%
+      );
+    }
+
+    .about-glow-3 {
+      width: 380px;
+      height: 380px;
+      left: 38%;
+      bottom: 6%;
+      background: radial-gradient(
+        circle,
+        rgba(30, 160, 255, 0.3) 0%,
+        transparent 70%
+      );
+    }
+
+    .about-dots {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(
+        rgba(255, 255, 255, 0.16) 1px,
+        transparent 1px
+      );
+      background-size: 26px 26px;
+      opacity: 0.25;
+      mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 72%);
+      -webkit-mask-image: radial-gradient(
+        ellipse at 50% 50%,
+        #000 0%,
+        transparent 72%
+      );
+    }
+
+    .about-vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        ellipse at 50% 50%,
+        transparent 40%,
+        rgba(0, 0, 0, 0.65) 100%
+      );
+    }
+  }
+
+  /* ========== 主内容 ========== */
+  .about-content {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    padding: 32px 56px;
+    min-height: 0;
+  }
+
+  /* --- 品牌介绍（靠中间一点） --- */
+  .about-brand-card {
+    position: relative;
+    flex-shrink: 0;
+    width: min(420px, 34vw);
+    margin-left: clamp(2%, 6%, 10%);
+    padding: 44px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    transition:
+      transform var(--duration-normal) var(--ease-out-expo),
+      border-color var(--duration-normal);
+
+    &:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .brand-card-shine {
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: radial-gradient(
+        80% 60% at 50% 0%,
+        rgba(255, 255, 255, 0.08) 0%,
+        transparent 60%
+      );
+      pointer-events: none;
+    }
+
+    .brand-logo {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 22px;
+      background: #fff;
+      margin-bottom: 20px;
+
+      img {
+        position: relative;
+        z-index: 2;
+        border-radius: 14px;
+      }
+
+      .brand-logo-orb {
+        position: absolute;
+        inset: -14px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(122, 168, 255, 0.35) 0%,
+          transparent 68%
+        );
+        filter: blur(16px);
+        animation: about-orb-breathe 5s ease-in-out infinite;
+      }
+
+      .brand-logo-ring {
+        position: absolute;
+        inset: -26px;
+        border: 1px dashed rgba(122, 168, 255, 0.45);
+        border-radius: 50%;
+        animation: about-ring-spin 22s linear infinite;
+
+        &::after {
+          content: "";
+          position: absolute;
+          top: 2px;
+          left: 50%;
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #7aa8ff;
+          box-shadow: 0 0 10px rgba(122, 168, 255, 0.9);
+        }
+      }
+    }
+
+    .brand-name {
+      position: relative;
+      z-index: 1;
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      letter-spacing: 2px;
+      background: linear-gradient(
+        120deg,
+        #ffffff 15%,
+        #f0dcc8 50%,
+        #d4a574 85%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    .brand-tag {
+      font-size: 12px;
+      margin-bottom: 18px;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .brand-intro {
+      max-width: 340px;
+      font-size: 14px;
+      line-height: 1.9;
+      color: rgba(255, 255, 255, 0.72);
+      margin: 0 0 24px;
+    }
+
+    .brand-meta {
+      display: flex;
+      gap: 24px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.45);
+    }
+  }
+
+  /* --- 平台特色（右侧半圆弧形） --- */
+  .about-section {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0 0 12px;
+      padding-right: 6px;
+      text-align: right;
+      letter-spacing: 1px;
+    }
+
+    .features-grid {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      gap: 24px;
+      flex-direction: column;
+      justify-content: space-evenly;
+      align-items: flex-end;
+
+      .feature-card {
+        display: flex;
+        position: relative;
+        transform: translateX(var(--translate-x, 0px));
+        width: 500px;
+
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+        transition:
+          transform var(--duration-normal) var(--ease-out-expo),
+          border-color var(--duration-normal),
+          box-shadow var(--duration-normal);
+        will-change: opacity;
+
+        &::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 18px;
+          right: 18px;
+          height: 1.5px;
+          border-radius: 2px;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(122, 168, 255, 0.55),
+            transparent
+          );
+          opacity: 0.6;
+          transition: opacity var(--duration-normal);
+        }
+
+        &:nth-child(3) {
+          transform: translateX(var(--translate-x, 0px)) translateY(-12px)
+            scale(1.04);
+          z-index: 2;
+        }
+        &:hover {
+          transform: translateX(var(--translate-x, 10px)) translateY(-5px)
+            scale(1.03);
+          border-color: rgba(255, 255, 255, 0.28);
+          box-shadow: 0 22px 50px rgba(0, 0, 0, 0.6);
+          z-index: 2;
+
+          &::before {
+            opacity: 1;
+          }
+        }
+
+        .feature-icon {
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
+          background: rgba(64, 120, 255, 0.18);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 12px;
+
+          svg {
+            color: #7aa8ff;
+          }
+        }
+
+        .feature-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: #ffffff;
+          margin: 0 0 6px;
+        }
+
+        .feature-desc {
+          font-size: 12.5px;
+          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.6);
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  /* ========== 页脚 ========== */
+  .about-footer {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0 22px;
+
+    .contact-card {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 10px;
+
+      .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        cursor: default;
+        transition:
+          transform var(--duration-normal) var(--ease-out-expo),
+          background var(--duration-normal),
+          border-color var(--duration-normal);
+
+        &:hover {
+          transform: translateY(-2px);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .contact-icon {
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          svg {
+            color: rgba(255, 255, 255, 0.75);
+          }
+        }
+
+        .contact-value {
+          display: flex;
+          flex-direction: column;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.8);
+
+          .contact-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.45);
+          }
+        }
+      }
+    }
+
+    .copyright {
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.4);
+      margin: 0;
+    }
+  }
+}
+
+@keyframes about-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes about-orb-breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-page .brand-logo-ring,
+  .about-page .brand-logo-orb {
+    animation: none;
+  }
+}
+
+/* 小屏降级：卡片改为网格排列 */
+@media (max-width: 1100px) {
+  .about-page {
+    .about-content {
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      gap: 32px;
+
+      .about-brand-card {
+        width: min(420px, 88vw);
+        margin-left: 0;
+      }
+
+      .about-section {
+        width: 100%;
+        height: auto;
+
+        .section-title {
+          text-align: center;
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 16px;
+          position: static;
+
+          .feature-card {
+            position: relative;
+            transform: translateX(10px);
+            width: 100%;
+
+            &:hover {
+              transform: translateY(-4px);
+            }
+          }
+        }
+      }
+    }
+
+    .about-footer {
+      .contact-card {
+        gap: 16px;
+      }
+    }
+  }
+}

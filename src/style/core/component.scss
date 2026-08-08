@@ -1,0 +1,24 @@
+.empty-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+  gap: 16px;
+  padding: 60px 0;
+
+  .empty-title {
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .empty-desc {
+    color: var(--color-text-quaternary);
+    margin: 0;
+  }
+}

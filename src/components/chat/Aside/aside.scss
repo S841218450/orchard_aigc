@@ -115,12 +115,12 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 10px 12px;
+      padding: 4px 12px;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.15s;
       margin-bottom: 2px;
-
+      background-color: #fbfbfb;
       &:hover {
         background: #f0f0f0;
 
@@ -130,7 +130,7 @@
       }
 
       &.active {
-        background: #f0f0f2;
+        background: #f2f2fa;
 
         .session-title {
           color: #18181b;

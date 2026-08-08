@@ -1,0 +1,345 @@
+/* ========================================
+   用户中心 · 浮光绘卷装饰背景
+   分层：基底色洗 / 柔光团 / 光点网格 / 装饰环 / 明暗遮罩
+   tone 切换页面主题色（warm / gold / green / cyan）
+   ======================================== */
+.user-center-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  /* 第一层：基底 —— 轻透色洗 */
+  .uc-bg-base {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        120% 90% at 50% 115%,
+        rgba(82, 183, 136, 0.08),
+        transparent 58%
+      ),
+      radial-gradient(
+        90% 70% at 90% 0%,
+        rgba(96, 196, 196, 0.09),
+        transparent 55%
+      ),
+      radial-gradient(
+        80% 80% at 4% 20%,
+        rgba(212, 165, 116, 0.12),
+        transparent 60%
+      );
+  }
+
+  /* 第二层：柔光团 —— 缓慢漂移呼吸 */
+  .uc-bg-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    will-change: transform;
+    animation: uc-glow-drift 16s ease-in-out infinite alternate;
+  }
+
+  .uc-bg-glow-1 {
+    width: 46vmax;
+    height: 46vmax;
+    left: -12%;
+    top: -14%;
+    background: radial-gradient(
+      circle,
+      rgba(240, 220, 200, 0.62),
+      rgba(240, 220, 200, 0) 70%
+    );
+  }
+
+  .uc-bg-glow-2 {
+    width: 40vmax;
+    height: 40vmax;
+    right: -10%;
+    top: 30%;
+    animation-delay: -6s;
+    background: radial-gradient(
+      circle,
+      rgba(96, 196, 196, 0.4),
+      rgba(96, 196, 196, 0) 70%
+    );
+  }
+
+  .uc-bg-glow-3 {
+    width: 44vmax;
+    height: 44vmax;
+    left: 30%;
+    bottom: -18%;
+    animation-delay: -11s;
+    background: radial-gradient(
+      circle,
+      rgba(82, 183, 136, 0.38),
+      rgba(82, 183, 136, 0) 70%
+    );
+  }
+
+  /* 第三层：光点网格（径向渐隐） */
+  .uc-bg-dots {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(17, 17, 17, 0.1) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.45;
+    mask-image: radial-gradient(ellipse at 50% 40%, #000 0%, transparent 70%);
+    -webkit-mask-image: radial-gradient(
+      ellipse at 50% 40%,
+      #000 0%,
+      transparent 70%
+    );
+  }
+
+  /* 第四层：装饰环（细线椭圆 + 暖色微粒绕行） */
+  .uc-bg-rings {
+    position: absolute;
+    inset: 0;
+
+    .uc-ring {
+      position: absolute;
+      border: 1px solid rgba(17, 17, 17, 0.06);
+      border-radius: 50%;
+      animation: uc-ring-spin 50s linear infinite;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: -3px;
+        left: 50%;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(212, 165, 116, 0.6);
+        box-shadow: 0 0 8px rgba(212, 165, 116, 0.5);
+      }
+    }
+
+    .uc-ring-1 {
+      width: 56vmin;
+      height: 38vmin;
+      left: 4%;
+      top: 6%;
+    }
+
+    .uc-ring-2 {
+      width: 40vmin;
+      height: 28vmin;
+      right: 6%;
+      bottom: 12%;
+      animation-direction: reverse;
+      animation-duration: 40s;
+    }
+
+    .uc-ring-3 {
+      width: 24vmin;
+      height: 24vmin;
+      right: 14%;
+      top: -4vmin;
+      border-style: dashed;
+      animation-duration: 60s;
+    }
+
+    .uc-ring-4 {
+      width: 18vmin;
+      height: 18vmin;
+      left: 16%;
+      bottom: 4%;
+      border-style: dashed;
+      animation-direction: reverse;
+      animation-duration: 70s;
+
+      &::after {
+        background: rgba(96, 196, 196, 0.6);
+        box-shadow: 0 0 8px rgba(96, 196, 196, 0.5);
+      }
+    }
+  }
+
+  /* 第五层：明暗遮罩，保证头部与底部内容可读 */
+  .uc-bg-vignette {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.72) 0%,
+        rgba(255, 255, 255, 0) 18%
+      ),
+      linear-gradient(
+        to top,
+        rgba(255, 255, 255, 0.82) 0%,
+        rgba(255, 255, 255, 0) 14%
+      );
+  }
+
+  /* ---- 各页面主题色调 ---- */
+  &[data-tone="gold"] {
+    .uc-bg-base {
+      background:
+        radial-gradient(
+          120% 90% at 50% 115%,
+          rgba(255, 214, 0, 0.06),
+          transparent 58%
+        ),
+        radial-gradient(
+          90% 70% at 90% 0%,
+          rgba(212, 165, 116, 0.12),
+          transparent 55%
+        ),
+        radial-gradient(
+          80% 80% at 4% 20%,
+          rgba(240, 220, 200, 0.16),
+          transparent 60%
+        );
+    }
+
+    .uc-bg-glow-1 {
+      background: radial-gradient(
+        circle,
+        rgba(255, 214, 0, 0.32),
+        rgba(255, 214, 0, 0) 70%
+      );
+    }
+
+    .uc-bg-glow-2 {
+      background: radial-gradient(
+        circle,
+        rgba(212, 165, 116, 0.5),
+        rgba(212, 165, 116, 0) 70%
+      );
+    }
+
+    .uc-bg-glow-3 {
+      background: radial-gradient(
+        circle,
+        rgba(255, 224, 150, 0.4),
+        rgba(255, 224, 150, 0) 70%
+      );
+    }
+
+    .uc-ring {
+      border-color: rgba(212, 165, 116, 0.22);
+
+      &::after {
+        background: rgba(255, 214, 0, 0.65);
+        box-shadow: 0 0 8px rgba(255, 214, 0, 0.55);
+      }
+    }
+  }
+
+  &[data-tone="green"] {
+    .uc-bg-glow-1 {
+      background: radial-gradient(
+        circle,
+        rgba(82, 183, 136, 0.32),
+        rgba(82, 183, 136, 0) 70%
+      );
+    }
+
+    .uc-bg-glow-2 {
+      background: radial-gradient(
+        circle,
+        rgba(96, 196, 196, 0.42),
+        rgba(96, 196, 196, 0) 70%
+      );
+    }
+
+    .uc-bg-glow-3 {
+      background: radial-gradient(
+        circle,
+        rgba(212, 165, 116, 0.4),
+        rgba(212, 165, 116, 0) 70%
+      );
+    }
+
+    .uc-ring-1::after {
+      background: rgba(82, 183, 136, 0.6);
+      box-shadow: 0 0 8px rgba(82, 183, 136, 0.5);
+    }
+  }
+
+  &[data-tone="cyan"] {
+    .uc-bg-base {
+      background:
+        radial-gradient(
+          120% 90% at 50% 115%,
+          rgba(82, 183, 136, 0.07),
+          transparent 58%
+        ),
+        radial-gradient(
+          90% 70% at 90% 0%,
+          rgba(96, 196, 196, 0.14),
+          transparent 55%
+        ),
+        radial-gradient(
+          80% 80% at 4% 20%,
+          rgba(212, 165, 116, 0.1),
+          transparent 60%
+        );
+    }
+
+    .uc-bg-glow-1 {
+      background: radial-gradient(
+        circle,
+        rgba(96, 196, 196, 0.45),
+        rgba(96, 196, 196, 0) 70%
+      );
+    }
+
+    .uc-bg-glow-2 {
+      background: radial-gradient(
+        circle,
+        rgba(212, 165, 116, 0.42),
+        rgba(212, 165, 116, 0) 70%
+      );
+    }
+
+    .uc-bg-glow-3 {
+      background: radial-gradient(
+        circle,
+        rgba(82, 183, 136, 0.32),
+        rgba(82, 183, 136, 0) 70%
+      );
+    }
+
+    .uc-ring-1::after {
+      background: rgba(96, 196, 196, 0.65);
+      box-shadow: 0 0 8px rgba(96, 196, 196, 0.55);
+    }
+
+    .uc-ring-4::after {
+      background: rgba(212, 165, 116, 0.6);
+      box-shadow: 0 0 8px rgba(212, 165, 116, 0.5);
+    }
+  }
+}
+
+@keyframes uc-glow-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, -5%, 0) scale(1.08);
+  }
+}
+
+@keyframes uc-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 降低动态偏好：停用持续动画 */
+@media (prefers-reduced-motion: reduce) {
+  .user-center-bg .uc-bg-glow,
+  .user-center-bg .uc-ring {
+    animation: none;
+  }
+}

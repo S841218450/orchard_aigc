@@ -1,12 +1,11 @@
 import { useRouter } from "next/navigation";
 import API from "@/api";
 import { useUserStore } from "@/store";
-import { App } from "antd";
+import messageManager from "@/utils/messageManager";
 
 export const useAuth = () => {
   const router = useRouter();
   const userStore = useUserStore();
-  const { message } = App.useApp();
 
   // 登录
   const login = async (data: { username: string; password: string }) => {
@@ -17,7 +16,7 @@ export const useAuth = () => {
         userStore.setUserInfo(res.data.data);
         router.push("/");
       } else {
-        message.error(res.msg || "登录失败");
+        messageManager.error(res.msg || "登录失败");
       }
     } catch (e) {
       console.error("login|", e);

@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import { Button, App } from "antd";
-import { GithubOutlined, WechatOutlined, AlipayOutlined } from "@ant-design/icons";
+import { Button } from "antd";
+import {
+  GithubOutlined,
+  WechatOutlined,
+  AlipayOutlined,
+} from "@ant-design/icons";
 import API from "@/api";
+import messageManager from "@/utils/messageManager";
 
 type ThirdPartyType = "wechat" | "alipay" | "github";
 
@@ -41,13 +46,11 @@ export default function ThirdPartyLogin({
   isLoading,
   setIsLoading,
 }: ThirdPartyLoginProps) {
-  const { message: messageApi } = App.useApp();
-
   const handleThirdPartyLogin = useCallback(async (type: ThirdPartyType) => {
     try {
       const res = await API.thirdPartyLogin({ oauthType: type });
       if (!res.success) {
-        messageApi.error(res.msg || "获取授权链接失败");
+        messageManager.error(res.msg || "获取授权链接失败");
         return;
       }
       const authUrl = res.data;
@@ -63,11 +66,11 @@ export default function ThirdPartyLogin({
       );
 
       if (!popup) {
-        messageApi.warning("弹窗被浏览器拦截，请允许弹出窗口");
+        messageManager.warning("弹窗被浏览器拦截，请允许弹出窗口");
       }
     } catch (error) {
       console.error("第三方登录失败:", error);
-      messageApi.error("暂不支持该登录方式");
+      messageManager.error("暂不支持该登录方式");
     }
   }, []);
 
@@ -111,7 +114,11 @@ export default function ThirdPartyLogin({
           (typeof THIRD_PARTY_CONFIG)[ThirdPartyType],
         ][]
       ).map(([key, config]) => (
-        <Button key={key} onClick={() => handleThirdPartyLogin(key)} disabled={isLoading}>
+        <Button
+          key={key}
+          onClick={() => handleThirdPartyLogin(key)}
+          disabled={isLoading}
+        >
           <span style={{ color: config.color }}>{config.icon}</span>
           {config.label}
         </Button>

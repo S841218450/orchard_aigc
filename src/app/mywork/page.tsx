@@ -2,7 +2,7 @@
 
 import "./mywork.scss";
 import { useState } from "react";
-import { Image, Button, Input, Select, Dropdown, App, Empty, Spin } from "antd";
+import { Image, Button, Input, Select, Dropdown, Empty, Spin } from "antd";
 import {
   Search,
   FolderOpen,
@@ -18,6 +18,7 @@ import {
   SlidersHorizontal,
   Plus,
 } from "lucide-react";
+import messageManager from "@/utils/messageManager";
 
 interface WorkItem {
   id: string;
@@ -29,7 +30,6 @@ interface WorkItem {
 }
 
 const MyWorkPage = () => {
-  const { message } = App.useApp();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filterType, setFilterType] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -127,15 +127,15 @@ const MyWorkPage = () => {
   };
 
   const handleDownload = (item: WorkItem) => {
-    message.success(`开始下载: ${item.title}`);
+    messageManager.success(`开始下载: ${item.title}`);
   };
 
   const handleDelete = (item: WorkItem) => {
-    message.success(`已删除: ${item.title}`);
+    messageManager.success(`已删除: ${item.title}`);
   };
 
   const handlePreview = (item: WorkItem) => {
-    message.info(`预览功能开发中`);
+    messageManager.info(`预览功能开发中`);
   };
 
   const filteredList = workList.filter((item) => {

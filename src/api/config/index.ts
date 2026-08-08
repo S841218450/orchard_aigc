@@ -18,18 +18,18 @@ export const createApiCallerObject = (apiConfigList: Record<string, any>) => {
       }
 
       // 路径参数模式：将参数拼接到 URL 末尾
-      let url = api.url;
-      if (api.pathParams && params !== undefined) {
-        url = `${api.url}${params}`;
-      }
-
+      const url = api.url;
       if (method === "get") {
-        return instance.get(url, { ...extraConfig, params });
+        return instance.get(url, {
+          ...extraConfig,
+          params: api.pathParams ? undefined : params,
+        });
       }
+      const hasBody = !api.pathParams;
       return instance.request({
         url,
         method: method.toUpperCase(),
-        data: api.pathParams ? undefined : params,
+        data: hasBody ? params : undefined,
         ...extraConfig,
       });
     };

@@ -1,6 +1,8 @@
 "use client";
 
 import { ConfigProvider, App } from "antd";
+import { useEffect } from "react";
+import { messageManager } from "@/utils/messageManager";
 
 const theme = {
   token: {
@@ -318,7 +320,19 @@ const theme = {
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ConfigProvider theme={theme}>
-      <App>{children}</App>
+      <App>
+        <MessageProvider>{children}</MessageProvider>
+      </App>
     </ConfigProvider>
   );
+}
+
+function MessageProvider({ children }: { children: React.ReactNode }) {
+  const { message } = App.useApp();
+
+  useEffect(() => {
+    messageManager.setMessageApi(message);
+  }, [message]);
+
+  return <>{children}</>;
 }

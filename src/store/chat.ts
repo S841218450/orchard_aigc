@@ -15,7 +15,7 @@ interface Session {
   updatedAt: Date;
 }
 
-type ActiveView = "chat" | "myproject";
+type ActiveView = "chat" | "myproject" | "knowledge";
 
 interface ChatState {
   sessions: Session[];
@@ -57,7 +57,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   updateSession: (sessionId, updates) =>
     set((state) => ({
       sessions: state.sessions.map((s) =>
-        s.id === sessionId ? { ...s, ...updates } : s
+        s.id === sessionId ? { ...s, ...updates } : s,
       ),
     })),
 
@@ -77,14 +77,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
               messages: [...s.messages, message],
               updatedAt: new Date(),
             }
-          : s
+          : s,
       ),
     })),
 
   getCurrentSession: () => {
     const state = get();
-    return (
-      state.sessions.find((s) => s.id === state.currentSessionId) || null
-    );
+    return state.sessions.find((s) => s.id === state.currentSessionId) || null;
   },
 }));
