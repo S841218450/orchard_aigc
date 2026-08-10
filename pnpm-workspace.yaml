@@ -1,3 +1,7 @@
+# 单包项目：声明工作区仅包含根目录（pnpm 9 要求 packages 字段必填）
+packages:
+  - "."
+
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
