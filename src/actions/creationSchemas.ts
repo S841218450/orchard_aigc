@@ -34,11 +34,24 @@ export const textToImageSchema = z.object({
   }),
 });
 
+/** 图生图提交入参 */
+export const imageToImageSchema = z.object({
+  prompt: z.string().min(1, "请输入创作描述"),
+  model: z.string(),
+  params: z.object({
+    imageQty: z.number(),
+    referenceIntensity: z.number(),
+  }),
+  originImageList: z
+    .array(z.object({ id: z.number(), url: z.string() }))
+    .optional(),
+});
+
 // ==================== 接口入参类型 ====================
 
 export type CreateWorkInput = z.infer<typeof createWorkSchema>;
 export type SubmitTextToImageInput = z.infer<typeof textToImageSchema>;
-
+export type SubmitImageToImageInput = z.infer<typeof imageToImageSchema>;
 // ==================== 创作表单提交数据类型 ====================
 
 /** 文生图表单提交数据 */
@@ -67,7 +80,6 @@ export interface ImageToImageFormData {
 
 /** 营销图表单提交数据 */
 export interface MarketingImageFormData {
-  activeKey: string;
   title: string;
   subtitle: string;
   style: string;

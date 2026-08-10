@@ -96,6 +96,16 @@
           background: transparent;
         }
 
+        .history-load-more {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px 0;
+          color: var(--color-text-tertiary);
+          font-size: 13px;
+        }
+
         .message-item {
           position: relative;
           display: flex;
@@ -201,21 +211,106 @@
               }
             }
           }
+          .message-info-wrap {
+            display: flex;
+            gap: 12px;
+            /* 提示词内容 */
+            .message-content-wrap {
+              position: relative;
+              margin-bottom: 14px;
 
-          /* 提示词内容 */
-          .message-content-wrap {
-            position: relative;
-            margin-bottom: 14px;
+              .prompt-quote {
+                position: absolute;
+                top: -4px;
+                left: -2px;
+                font-size: 32px;
+                font-family: Georgia, serif;
+                color: var(--color-text);
+                line-height: 1;
+                pointer-events: none;
+              }
+            }
+          }
 
-            .prompt-quote {
-              position: absolute;
-              top: -4px;
-              left: -2px;
-              font-size: 32px;
-              font-family: Georgia, serif;
-              color: var(--color-text);
-              line-height: 1;
-              pointer-events: none;
+          /* 生成产出区：参考图 → 结果图 */
+          .generation-result {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+
+            .ref-block {
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+
+              .ref-label {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 12px;
+                color: var(--color-text-tertiary);
+              }
+
+              /* 参考图扇形列表：默认半折叠（叠放 + 微旋转），hover 像扇子一样展开 */
+              .ref-list {
+                display: flex;
+                align-items: center;
+                height: 88px;
+                // 收拢宽度：第一张全显 + 后续各露出 20px 边角
+                width: calc(80px + (var(--n) - 1) * 20px);
+                transition: width var(--duration-normal) var(--ease-out-expo);
+
+                .ref-image-item {
+                  position: relative;
+                  flex-shrink: 0;
+                  width: 80px;
+                  height: 80px;
+                  margin-left: -60px;
+                  border-radius: 8px;
+                  overflow: hidden;
+                  border: 1px solid var(--color-border-light);
+                  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+                  transform-origin: center bottom;
+                  // 以中间为轴做扇形微张（两侧向中心收拢的弧线）
+                  transform: rotate(
+                    calc((var(--i) - (var(--n) - 1) / 2) * -5deg)
+                  );
+                  transition:
+                    margin-left var(--duration-normal) var(--ease-out-expo),
+                    transform var(--duration-normal) var(--ease-out-expo);
+
+                  &:first-child {
+                    margin-left: 0;
+                  }
+
+                  .ref-image {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    display: block;
+                  }
+                }
+
+                /* hover 展开：铺满横排、旋转归零 */
+                &:hover {
+                  width: calc(var(--n) * 88px - 8px);
+
+                  .ref-image-item {
+                    margin-left: 8px;
+                    transform: rotate(0deg);
+
+                    &:first-child {
+                      margin-left: 0;
+                    }
+                  }
+                }
+              }
+            }
+
+            .result-arrow {
+              color: var(--color-text-tertiary);
+              flex-shrink: 0;
             }
           }
 
@@ -476,7 +571,16 @@
               transform: scale(1.03);
             }
           }
-
+          .message-image-cover {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+            gap: 8px;
+          }
           // 补充问题选择样式
           .supplementary-section {
             margin-top: 16px;

@@ -162,6 +162,14 @@ $spacing-unit: 8px;
       pointer-events: none; // 避免 img 原生拖拽干扰鼠标事件
     }
 
+    /* 图片内容定位层：与图片实际显示内容对齐（消除 letterbox 空白），未测量时铺满容器 */
+    .edit-canvas-stage {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      // 不裁切：选框角标与删除按钮会略超出选框边缘，裁切会导致贴边选框无法删除
+    }
+
     /* 单个选框通用样式 */
     .selection-box {
       position: absolute;

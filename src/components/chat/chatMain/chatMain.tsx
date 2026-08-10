@@ -149,21 +149,9 @@ export const ChatMain = ({
   }
 
   return (
-    <div className="chat-main animate__animated animate__fadeIn">
-      <h2>
-        开始你的
-        <span>
-          <NextImage
-            width={100}
-            height={50}
-            src="/logo_opcity.png"
-            alt="logo"
-          />
-        </span>
-        创作之旅
-      </h2>
+    <div className="chat-main animate__animated animate__fadeIn flex-center">
       <p className="chat-main-desc">
-        我是你的 AI 创作助手，可以帮你生成文案、图片、代码等内容
+        我是你的 AI 智能助手，可以根据知识库中的信息，回答你的问题哦
       </p>
     </div>
   );

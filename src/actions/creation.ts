@@ -19,11 +19,11 @@ type ActionResult<T = void> =
  * 获取历史作品列表
  */
 export async function getWorkList(
-  currentPage: number = 1,
+  pageNum: number = 1,
   pageSize: number = 10,
 ): Promise<ActionResult<WorkMessage[]>> {
   try {
-    const res = await API.getWorkList({ currentPage, pageSize });
+    const res = await API.getWorkList({ pageNum, pageSize });
     return { success: true, data: res.data?.list || [] };
   } catch (e) {
     return {

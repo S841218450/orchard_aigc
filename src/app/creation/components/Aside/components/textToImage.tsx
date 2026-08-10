@@ -79,7 +79,6 @@ const StyleSelect = ({
 export const TextToImage = ({
   generateImage,
 }: {
-  activeKey: string;
   generateImage: (data: TextToImageFormData) => void;
 }) => {
   const { TextArea } = Input;

@@ -88,7 +88,7 @@ export const ExampleContent = ({ activeKey }: { activeKey: string }) => {
       );
   };
 
-  const pageObj = { currentPage: 1, pageSize: 10 };
+  const pageObj = { pageNum: 1, pageSize: 10 };
   const getWorkList = useCallback(async () => {
     const res = await generateAllData();
     setWorkList(res);
@@ -96,7 +96,7 @@ export const ExampleContent = ({ activeKey }: { activeKey: string }) => {
 
   useEffect(() => {
     getWorkList();
-  }, [activeKey, pageObj.currentPage, getWorkList]);
+  }, [activeKey, pageObj.pageNum, getWorkList]);
 
   return (
     <div className="example-content">

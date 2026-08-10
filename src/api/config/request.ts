@@ -44,7 +44,13 @@ function onTokenRefreshed(newToken: string): void {
 // 安全跳转登录（兼容Node/浏览器）
 const jumpToLogin = () => {
   if (typeof window === "undefined") return;
-  useUserStore.setState({ token: null, refreshToken: null });
+  useUserStore.setState({
+    token: null,
+    refreshToken: null,
+    expiresIn: null,
+    userInfo: null,
+    isLoggedIn: false,
+  });
   window.location.href = "/login";
 };
 

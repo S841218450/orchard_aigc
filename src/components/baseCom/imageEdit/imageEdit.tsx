@@ -4,7 +4,7 @@ import { Button, Popconfirm, Space, Tooltip, Image } from "antd";
 import { Paintbrush, Trash2, Square, X } from "lucide-react";
 import "./imageEdit.scss";
 
-// 单个选框的数据结构（坐标为相对于图片容器的百分比，保证缩放不变形）
+// 单个选框的数据结构（坐标为相对于图片实际显示内容的百分比，烘焙进原图时可等比换算像素）
 export interface SelectionBox {
   id: string;
   x: number; // 0 ~ 100
@@ -13,7 +13,10 @@ export interface SelectionBox {
   height: number; // 0 ~ 100
   color: string;
 }
-
+export interface SelectionBoxPrompt {
+  pageIndex: number; // 图片索引
+  color: string; // 颜色
+}
 interface ImageEditProps {
   /** 待编辑的图片地址 */
   imageUrl: string;
@@ -49,6 +52,13 @@ export const ImageEdit = ({
   const [drawingBox, setDrawingBox] = useState<SelectionBox | null>(null);
   // 图片画布容器的 DOM 引用（用于计算鼠标相对坐标）
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  // 图片实际显示区域在容器内的几何信息（消除 max-height 截断导致的 letterbox 坐标偏移）
+  const [stageRect, setStageRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
   // 绘制起点（百分比）
   const drawStartRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -63,21 +73,71 @@ export const ImageEdit = ({
     onBoxesChangeRef.current?.(boxes);
   }, [boxes]);
 
-  // 根据鼠标事件计算当前位置相对于画布的百分比坐标
+  // 测量图片实际显示区域在容器内的几何位置，供绘制坐标与选框定位共用
+  const measureStageRect = useCallback(() => {
+    const container = canvasRef.current;
+    const img = container?.querySelector<HTMLImageElement>(".edit-canvas-img");
+    if (!container || !img) return;
+    const containerRect = container.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+    const { naturalWidth, naturalHeight } = img;
+    let left = imgRect.left;
+    let top = imgRect.top;
+    let width = imgRect.width;
+    let height = imgRect.height;
+    // 图片元素可能被 max-height 约束压缩（object-fit: contain 产生 letterbox），
+    // 按原始宽高比还原图片实际内容区域
+    if (naturalWidth > 0 && naturalHeight > 0) {
+      const scale = Math.min(
+        imgRect.width / naturalWidth,
+        imgRect.height / naturalHeight,
+      );
+      width = naturalWidth * scale;
+      height = naturalHeight * scale;
+      left = imgRect.left + (imgRect.width - width) / 2;
+      top = imgRect.top + (imgRect.height - height) / 2;
+    }
+    setStageRect({
+      left: left - containerRect.left,
+      top: top - containerRect.top,
+      width,
+      height,
+    });
+  }, []);
+
+  // 图片加载 / 容器尺寸变化时重新测量
+  useEffect(() => {
+    measureStageRect();
+    const container = canvasRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => measureStageRect());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [measureStageRect]);
+
+  // 根据鼠标事件计算当前位置相对于图片内容的百分比坐标
   const getRelativePercent = useCallback(
     (e: React.MouseEvent<HTMLDivElement>): { x: number; y: number } => {
       const container = canvasRef.current;
       if (!container) return { x: 0, y: 0 };
-      const rect = container.getBoundingClientRect();
-      const rawX = ((e.clientX - rect.left) / rect.width) * 100;
-      const rawY = ((e.clientY - rect.top) / rect.height) * 100;
+      const containerRect = container.getBoundingClientRect();
+      const rect = stageRect ?? {
+        left: 0,
+        top: 0,
+        width: containerRect.width,
+        height: containerRect.height,
+      };
+      const originX = containerRect.left + rect.left;
+      const originY = containerRect.top + rect.top;
+      const rawX = ((e.clientX - originX) / rect.width) * 100;
+      const rawY = ((e.clientY - originY) / rect.height) * 100;
       // 限制在 0 ~ 100 之间，防止拖出画布
       return {
         x: Math.max(0, Math.min(100, rawX)),
         y: Math.max(0, Math.min(100, rawY)),
       };
     },
-    [],
+    [stageRect],
   );
 
   // 鼠标按下：开始绘制
@@ -226,60 +286,77 @@ export const ImageEdit = ({
           preview={false}
         />
 
-        {/* 已保存的选框 */}
-        {boxes.map((box) => (
-          <div
-            key={box.id}
-            className="selection-box"
-            style={{
-              left: `${box.x}%`,
-              top: `${box.y}%`,
-              width: `${box.width}%`,
-              height: `${box.height}%`,
-              borderColor: box.color,
-              background: `${box.color}15`, // 15 ≈ 8% 透明度
-              boxShadow: `0 0 0 1px ${box.color}40 inset`,
-            }}
-          >
-            {/* 选框标题角标 */}
-            <span
-              className="box-label"
+        {/* 图片内容定位层：与图片实际显示内容对齐，选框在此按百分比绝对定位 */}
+        <div
+          className="edit-canvas-stage"
+          style={
+            stageRect
+              ? {
+                  left: stageRect.left,
+                  top: stageRect.top,
+                  width: stageRect.width,
+                  height: stageRect.height,
+                }
+              : undefined
+          }
+        >
+          {/* 已保存的选框 */}
+          {boxes.map((box) => (
+            <div
+              key={box.id}
+              className="selection-box"
               style={{
-                background: box.color,
+                left: `${box.x}%`,
+                top: `${box.y}%`,
+                width: `${box.width}%`,
+                height: `${box.height}%`,
+                borderColor: box.color,
+                background: `${box.color}15`, // 15 ≈ 8% 透明度
+                boxShadow: `0 0 0 1px ${box.color}40 inset`,
               }}
             >
-              {box.width.toFixed(0)}×{box.height.toFixed(0)}
-            </span>
-            {/* 删除按钮 */}
-            <button
-              type="button"
-              className="box-remove-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemoveBox(box.id);
-              }}
-              aria-label="删除选框"
-            >
-              <X size={10} />
-            </button>
-          </div>
-        ))}
+              {/* 选框标题角标 */}
+              <span
+                className="box-label"
+                style={{
+                  background: box.color,
+                }}
+              >
+                {box.width.toFixed(0)}×{box.height.toFixed(0)}
+              </span>
+              {/* 删除按钮 */}
+              <button
+                type="button"
+                className="box-remove-btn"
+                onMouseDown={(e) => e.stopPropagation()}
+                onMouseUp={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveBox(box.id);
+                }}
+                aria-label="删除选框"
+              >
+                <X size={10} />
+              </button>
+            </div>
+          ))}
 
-        {/* 正在绘制中的临时选框 */}
-        {drawingBox && (
-          <div
-            className="selection-box drawing"
-            style={{
-              left: `${drawingBox.x}%`,
-              top: `${drawingBox.y}%`,
-              width: `${drawingBox.width}%`,
-              height: `${drawingBox.height}%`,
-              borderColor: drawingBox.color,
-              background: `${drawingBox.color}15`,
-              boxShadow: `0 0 0 1px ${drawingBox.color}40 inset`,
-            }}
-          />
-        )}
+          {/* 正在绘制中的临时选框 */}
+          {drawingBox && (
+            <div
+              className="selection-box drawing"
+              style={{
+                left: `${drawingBox.x}%`,
+                top: `${drawingBox.y}%`,
+                width: `${drawingBox.width}%`,
+                height: `${drawingBox.height}%`,
+                borderColor: drawingBox.color,
+                background: `${drawingBox.color}15`,
+                boxShadow: `0 0 0 1px ${drawingBox.color}40 inset`,
+              }}
+            />
+          )}
+        </div>
       </div>
 
       {/* 底部提示 */}

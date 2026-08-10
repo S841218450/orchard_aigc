@@ -1,4 +1,8 @@
-import { LoadingOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  LoadingOutlined,
+  ReloadOutlined,
+  DownloadOutlined,
+} from "@ant-design/icons";
 import { formatDate } from "@/utils/timeUtils";
 import {
   Image,
@@ -13,7 +17,9 @@ import {
   Input,
 } from "antd";
 import Loading from "@/components/core/loadding/loading";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import type { CSSProperties } from "react";
+import { useScroll } from "ahooks";
 import {
   Copy,
   Trash2,
@@ -26,6 +32,8 @@ import {
   Loader2,
   X,
   ChevronDown,
+  Images,
+  MoveRight,
 } from "lucide-react";
 import type {
   SelectListItem,
@@ -35,6 +43,7 @@ import type {
 } from "@/actions/types";
 import { WORK_STATUS_MAP } from "@/actions/types";
 import messageManager from "@/utils/messageManager";
+import { useCreationEditStore } from "@/store/creation";
 
 /** 补充问题选项 */
 export type { SelectListItem, SelectAnswer, WorkMessage };
@@ -245,6 +254,7 @@ interface StepProgressProps {
   status: WorkMessage["status"];
 }
 
+// 步骤流进度组件
 const StepProgress = ({ steps, status }: StepProgressProps) => {
   const [expanded, setExpanded] = useState(true);
 
@@ -337,13 +347,23 @@ const MessageItem = ({
     status,
     sseStatus,
     resultUrl,
+    resultImageList,
     operationData,
+    originImageList,
     steps,
   } = message;
 
   const selectList = operationData?.selectList || [];
   // 删除动画状态
   const [removing, setRemoving] = useState(false);
+
+  // 结果图列表：优先多图列表，无则退化为单张 resultUrl
+  const resultImages =
+    resultImageList && resultImageList.length > 0
+      ? resultImageList
+      : resultUrl
+        ? [{ id: "", url: resultUrl }]
+        : [];
 
   // 处理删除（先播放淡出动画，再调用回调）
   const handleDelete = useCallback(() => {
@@ -370,11 +390,26 @@ const MessageItem = ({
 
   const statusInfo = WORK_STATUS_MAP[status] || WORK_STATUS_MAP[0];
   const imgSize = getImgSize(params?.imageProportion || "1:1");
-  const downloadImage = (url: string) => {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = url.split("/").pop() || "image.jpg";
-    a.click();
+  const downloadImage = async (url: string) => {
+    const fileName = url.split("/").pop() || "image.jpg";
+    try {
+      // 先 fetch 转 blob 再下载：避免 a.download 对跨域图片失效（被浏览器直接打开）
+      const res = await fetch(url, { mode: "cors" });
+      if (!res.ok) throw new Error("download failed");
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = fileName;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch {
+      // fetch 受限（如服务器未开放 CORS）时退回 a 标签直接下载
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+    }
   };
   const copyPrompt = (prompt: string) => {
     messageManager.success("已复制到剪贴板");
@@ -387,7 +422,10 @@ const MessageItem = ({
 
   // 状态对应的类名
   const statusClass = `status-${status}`;
-
+  // 处理修改图片：切换到图生图并把该图片传入参考图列表
+  const handleEditImage = (url: string) => {
+    useCreationEditStore.getState().requestEditImage(url);
+  };
   return (
     <div
       className={`message-item ${statusClass} ${
@@ -459,9 +497,11 @@ const MessageItem = ({
         </div>
 
         {/* 提示词内容 */}
-        <div className="message-content-wrap">
-          <span className="prompt-quote">&quot;</span>
-          <p className="message-content">{prompt}</p>
+        <div className="message-info-wrap">
+          <div className="message-content-wrap">
+            <span className="prompt-quote">&quot;</span>
+            <p className="message-content">{prompt}</p>
+          </div>
         </div>
 
         {/* 参数 chip 标签 */}
@@ -505,40 +545,100 @@ const MessageItem = ({
           />
         )}
 
-        {/* 生成结果图片 */}
-        {resultUrl && (
-          <div className="image-list">
-            <div className="message-image-wrap">
-              <Image
-                className="message-image"
-                src={resultUrl}
-                alt="生成素材"
-                fallback={errImg}
-                preview={{
-                  mask: { blur: true },
-                  cover: (
-                    <div className="flex-column-gap-5">
-                      <Button onClick={() => window.open(resultUrl)}>
-                        预览
-                      </Button>
-                      <Button
-                        type="primary"
-                        onClick={() => downloadImage(resultUrl)}
-                      >
-                        下载图片
-                      </Button>
+        {/* 生成产出区：参考图 → 结果图（仅图生图展示参考图，无参考图时退化为普通结果图） */}
+        {(originImageList?.length || 0) > 0 || resultImages.length > 0 ? (
+          <div className="generation-result">
+            {/* 参考图缩略图 */}
+            {originImageList && originImageList.length > 0 && (
+              <div className="ref-block">
+                <span className="ref-label">
+                  <Images size={14} />
+                  参考图
+                </span>
+                <div
+                  className="ref-list"
+                  style={{ "--n": originImageList.length } as CSSProperties}
+                >
+                  {originImageList.map((item, index) => (
+                    <div
+                      key={item.id + index}
+                      className="ref-image-item"
+                      style={{ "--i": index } as CSSProperties}
+                    >
+                      <Image
+                        className="ref-image"
+                        src={item.url}
+                        alt={`参考图${index + 1}`}
+                        fallback={errImg}
+                      />
                     </div>
-                  ),
-                }}
-                style={{
-                  width: imgSize.width,
-                  height: imgSize.height,
-                  objectFit: "cover",
-                }}
-              />
-            </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 箭头：参考图 → 结果图 */}
+            {resultImages.length > 0 &&
+              originImageList &&
+              originImageList.length > 0 && (
+                <MoveRight className="result-arrow" size={20} />
+              )}
+
+            {/* 生成结果图片（支持多张，预览可切换） */}
+            {resultImages.length > 0 && (
+              <Image.PreviewGroup>
+                <div className="image-list">
+                  {resultImages.map((img, index) => (
+                    <div
+                      className="message-image-wrap"
+                      key={`${img.id}-${index}`}
+                    >
+                      <Image
+                        className="message-image"
+                        src={img.url}
+                        alt={`生成素材${index + 1}`}
+                        fallback={errImg}
+                        preview={{
+                          mask: { blur: true },
+                          // 注意：cover 内的按钮必须阻止冒泡，否则会触发图片自身的 preview 打开
+                          cover: (
+                            <div className="message-image-cover">
+                              <Button
+                                className="W80"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditImage(img.url);
+                                }}
+                              >
+                                修改图片
+                              </Button>
+                              <Button
+                                icon={<DownloadOutlined size={14} />}
+                                type="primary"
+                                className="W80"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  downloadImage(img.url);
+                                }}
+                              >
+                                下载图片
+                              </Button>
+                            </div>
+                          ),
+                        }}
+                        style={{
+                          width: imgSize.width,
+                          height: imgSize.height,
+                          objectFit: "cover",
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </Image.PreviewGroup>
+            )}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -551,24 +651,47 @@ export const HistoryContent = ({
   onSwitchTab,
   messageList,
   loading,
+  loadingMore,
+  hasMore,
+  loadMoreError,
   error,
   onRetry,
   onRegenerate,
   onSelectSubmit,
   onDelete,
   onRetryHistory,
+  onLoadMore,
+  onRetryLoadMore,
 }: {
   activeKey: string;
   onSwitchTab: () => void;
   messageList: WorkMessage[];
   loading?: boolean;
+  loadingMore?: boolean;
+  hasMore?: boolean;
+  loadMoreError?: boolean;
   error?: Error | null;
   onRetry?: (message: WorkMessage) => void;
   onRegenerate?: (message: WorkMessage) => void;
   onSelectSubmit?: (message: WorkMessage, answers: SelectAnswer[]) => void;
   onDelete?: (message: WorkMessage) => void;
   onRetryHistory?: () => void;
+  onLoadMore?: () => void;
+  onRetryLoadMore?: () => void;
 }) => {
+  // 滚动容器（.message-list 为实际可滚动区域）
+  const messageListRef = useRef<HTMLDivElement>(null);
+
+  // 滚动到底部自动触发加载下一页（hooks 需在条件 return 之前声明）
+  const scrollPosition = useScroll(messageListRef);
+  useEffect(() => {
+    if (!scrollPosition || !messageListRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messageListRef.current;
+    if (scrollHeight - scrollTop - clientHeight < 200) {
+      onLoadMore?.();
+    }
+  }, [scrollPosition, onLoadMore]);
+
   // 加载中
   if (loading) {
     return (
@@ -606,7 +729,7 @@ export const HistoryContent = ({
   return (
     <div className="history-content">
       {messageList.length > 0 ? (
-        <div className="message-list">
+        <div className="message-list" ref={messageListRef}>
           {messageList.map((item) => (
             <MessageItem
               key={item.id}
@@ -617,6 +740,30 @@ export const HistoryContent = ({
               onDelete={onDelete}
             />
           ))}
+          {/* 底部加载更多状态 */}
+          {loadingMore && (
+            <div className="history-load-more">
+              <Spin size="small" />
+              <span>加载中...</span>
+            </div>
+          )}
+          {loadMoreError && !loadingMore && (
+            <div className="history-load-more">
+              <Button
+                type="link"
+                size="small"
+                icon={<ReloadOutlined />}
+                onClick={onRetryLoadMore}
+              >
+                加载失败，点击重试
+              </Button>
+            </div>
+          )}
+          {!hasMore && !loadingMore && !loadMoreError && (
+            <div className="history-load-more">
+              <span>没有更多了</span>
+            </div>
+          )}
         </div>
       ) : (
         <div className="empty-message">

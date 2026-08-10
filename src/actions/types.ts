@@ -13,6 +13,12 @@ export interface SelectAnswer {
   options: string;
 }
 
+/** 参考图项（图生图输入） */
+export interface OriginImageItem {
+  id: number;
+  url: string;
+}
+
 /** SSE 执行步骤（前端根据 SSE 事件补充） */
 export interface WorkStep {
   seqId: number;
@@ -36,9 +42,13 @@ export interface WorkMessage {
     imageCount: string;
   };
   resultUrl: string | null;
+  /** SSE 生成的多张结果图列表（前端补充，step_generate 返回 imageList/url 数组） */
+  resultImageList?: { id: string; url: string }[];
   operationData: {
     selectList: SelectListItem[];
   } | null;
+  /** 参考图列表（图生图输入，前端补充透传） */
+  originImageList?: OriginImageItem[];
   status: WorkStatus;
   createTime: number;
   sseStatus?: string;

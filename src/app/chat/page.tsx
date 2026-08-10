@@ -104,7 +104,6 @@ export const ChatPage = () => {
     return history;
   };
   const streamAnswer = async (messageId: string, question: string) => {
-    console.log(getHistortList());
     await sendChatMessage(messageId, userId!, question, getHistortList(), {});
   };
 

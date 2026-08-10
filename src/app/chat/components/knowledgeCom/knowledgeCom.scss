@@ -285,6 +285,7 @@
 .knowledge-right {
   flex: 1;
   min-width: 0;
+  padding: 0 12px;
   display: flex;
   flex-direction: column;
   background: #fff;
@@ -293,7 +294,7 @@
 
 // 右侧头部（面包屑）
 .right-header {
-  padding: 16px 24px;
+  padding: 16px 0px;
   border-bottom: 1px solid #f4f4f5;
   flex-shrink: 0;
 }
@@ -549,7 +550,7 @@
 .file-section {
   flex: 1;
   min-height: 0;
-  padding: 20px 24px 24px;
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
   overflow: hidden;

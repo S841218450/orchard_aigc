@@ -6,10 +6,8 @@ import type { MarketingImageFormData } from "@/actions/creationSchemas";
 
 // 营销图
 export const MarketingImage = ({
-  activeKey,
   generateImage,
 }: {
-  activeKey: string;
   generateImage: (data: MarketingImageFormData) => void;
 }) => {
   const [title, setTitle] = useState("");
@@ -17,7 +15,7 @@ export const MarketingImage = ({
   const [style, setStyle] = useState("modern");
 
   const handleSubmit = () => {
-    generateImage({ activeKey, title, subtitle, style });
+    generateImage({ title, subtitle, style });
   };
 
   return (

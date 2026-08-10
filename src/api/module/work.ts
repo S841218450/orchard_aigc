@@ -3,7 +3,7 @@ const apiList = [
   // 创建作品
   { url: "/api/ai/work/create", apiName: "createWork", type: "post" },
   // 获取作品列表
-  { url: "/api/ai/work/list", apiName: "getWorkList", type: "get" },
+  { url: "/api/ai/work/page", apiName: "getWorkList", type: "post" },
   // 更新作品
   { url: "/api/ai/work/update", apiName: "updateWork", type: "post" },
   // 删除作品（路径参数）

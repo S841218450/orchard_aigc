@@ -1,26 +1,29 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Upload, Image, Popconfirm, Popover, Segmented } from "antd";
 import type { UploadProps } from "antd";
 import RadioGraph from "@/components/baseCom/radio/radioGraph";
 import { ImageIcon, Loader2, Sparkles, Plus, X, Square } from "lucide-react";
 import API from "@/api";
 import messageManager from "@/utils/messageManager";
+import { useCreationEditStore } from "@/store/creation";
 import type { ImageToImageFormData } from "@/actions/creationSchemas";
 import TextArea from "antd/es/input/TextArea";
 import { ImageEdit } from "@/components/baseCom/imageEdit/imageEdit";
 import type { SelectionBox } from "@/components/baseCom/imageEdit/imageEdit";
+import { bakeBoxesToImage } from "@/utils/imageBake";
 
 // 最多允许上传的图片数量
 const MAX_IMAGES = 4;
 
 // 图生图
 export const ImageToImage = ({
-  activeKey,
   generateImage,
+  editImageUrl,
 }: {
-  activeKey: string;
   generateImage: (data: ImageToImageFormData) => void;
+  // 历史记录"修改图片"传入的图片 URL（消费后自动清除）
+  editImageUrl?: string | null;
 }) => {
   const { Dragger } = Upload;
   const [imagePrompt, setImagePrompt] = useState("");
@@ -41,12 +44,25 @@ export const ImageToImage = ({
     },
   ]); // 参考图片URL列表
   const [uploading, setUploading] = useState(false);
+  // 提交处理中（烘焙选框并重新上传）
+  const [submitting, setSubmitting] = useState(false);
   const [referenceStrength, setReferenceStrength] = useState(2); // 图片参考强度
   const [imageQty, setImageQty] = useState(1); // 生成张数
   // 每张图片独立维护自己的选框集合（key 是图片 URL，value 是选框数组）
   const [boxesMap, setBoxesMap] = useState<Record<string, SelectionBox[]>>({});
   // 当前在 Popover 中打开的图片索引
   const [openPopoverIndex, setOpenPopoverIndex] = useState<number | null>(null);
+
+  // 历史记录"修改图片"传入的图片：加入参考图列表并清除待处理标记
+  useEffect(() => {
+    if (!editImageUrl) return;
+    setReferenceImages((prev) =>
+      prev.some((img) => img.url === editImageUrl)
+        ? prev
+        : [...prev, { id: Date.now(), url: editImageUrl }],
+    );
+    useCreationEditStore.getState().clearEditImage();
+  }, [editImageUrl]);
 
   // ================ 上传图片配置 ================
   const uploadProps: UploadProps = {
@@ -104,20 +120,58 @@ export const ImageToImage = ({
   // 4 项及以上启用堆叠效果，否则平铺等宽铺满
   const isStacked = itemsCount >= 4;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (referenceImages.length === 0) {
       messageManager.warning("请先上传参考图片");
       return;
     }
-    generateImage({
-      type: "image",
-      prompt: imagePrompt,
-      params: {
-        imageQty,
-        referenceIntensity: Number(referenceStrength),
-      },
-      originImageList: referenceImages,
-    });
+    setSubmitting(true);
+    try {
+      // 有选框的图片：把选框烘焙进原图像素后重新上传，用烘焙图替换提交列表中的原图
+      const originImageList: { id: number; url: string }[] = [];
+      let fallbackCount = 0;
+      for (const img of referenceImages) {
+        const boxes = boxesMap[img.url];
+        if (!boxes || boxes.length === 0) {
+          originImageList.push(img);
+          continue;
+        }
+        try {
+          const blob = await bakeBoxesToImage(img.url, boxes);
+          if (!blob) {
+            fallbackCount += 1;
+            originImageList.push(img);
+            continue;
+          }
+          const formData = new FormData();
+          formData.append("file", blob, `baked-${Date.now()}.png`);
+          const res = await API.uploadFile(formData);
+          originImageList.push({ id: img.id, url: res.data.fileUrl });
+        } catch {
+          fallbackCount += 1;
+          originImageList.push(img);
+        }
+      }
+      if (fallbackCount > 0) {
+        messageManager.warning(
+          `${fallbackCount} 张图片的选框未能写入原图，将按原图提交`,
+        );
+      }
+      generateImage({
+        type: "image",
+        prompt: imagePrompt,
+        params: {
+          imageQty,
+          referenceIntensity: Number(referenceStrength),
+        },
+        originImageList,
+      });
+    } catch (e) {
+      console.error("提交失败:", e);
+      messageManager.error("提交失败，请重试");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -298,7 +352,7 @@ export const ImageToImage = ({
         </div>
         <TextArea
           value={imagePrompt}
-          autoSize={{ minRows: 4, maxRows: 8 }}
+          autoSize={{ minRows: 4, maxRows: 15 }}
           onChange={(e) => setImagePrompt(e.target.value)}
           placeholder="描述你想要生成的图片..."
         />
@@ -309,6 +363,7 @@ export const ImageToImage = ({
         size="large"
         block
         onClick={handleSubmit}
+        loading={submitting}
         icon={<Sparkles size={16} />}
         className="generate-btn"
       >

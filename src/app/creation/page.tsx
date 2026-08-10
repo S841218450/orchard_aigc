@@ -23,6 +23,13 @@ const CreationPage = () => {
   const [activeMenu, setActiveMenu] = useState("textToImage");
   const [activeTab, setActiveTab] = useState("1");
   const [messageList, setMessageList] = useState<WorkMessage[]>([]);
+  // 分页状态（与首页素材列表滚动加载保持一致）
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  // 加载更多失败标志：失败后停止自动加载，避免服务器异常时无限重试
+  const [loadMoreFailed, setLoadMoreFailed] = useState(false);
+  const PAGE_SIZE = 10;
   const userId = useUserStore((state) => state.userInfo)?.userId;
 
   // 更新指定消息的状态
@@ -40,24 +47,66 @@ const CreationPage = () => {
     onUpdateMessage: updateMessage,
   });
 
-  // 获取历史对话记录
+  // 获取历史对话记录（第一页，加载结果直接替换列表）
   const {
     loading: historyLoading,
     error: historyError,
     run: fetchHistory,
   } = useRequest(
     async () => {
-      const result = await getWorkList(1, 10);
+      const result = await getWorkList(1, PAGE_SIZE);
       if (result.success) {
         return result.data;
       }
       throw new Error(result.error ?? "获取历史记录失败");
     },
     {
-      onSuccess: (list) => setMessageList(list),
+      onSuccess: (list) => {
+        setMessageList(list);
+        setPage(1);
+        setHasMore(list.length >= PAGE_SIZE);
+        setLoadMoreFailed(false);
+      },
       onError: (e) => console.log("获取历史记录报错", e),
     },
   );
+
+  // 实际加载下一页逻辑（不拦截 loadMoreFailed，供失败后手动重试复用）
+  const doLoadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || historyLoading) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const result = await getWorkList(nextPage, PAGE_SIZE);
+      if (result.success) {
+        const list = result.data;
+        setMessageList((prev) => [...prev, ...list]);
+        setHasMore(list.length >= PAGE_SIZE);
+        setPage(nextPage);
+        setLoadMoreFailed(false);
+      } else {
+        setLoadMoreFailed(true);
+        messageManager.error("加载更多失败，请检查网络后重试");
+      }
+    } catch (e) {
+      setLoadMoreFailed(true);
+      messageManager.error("加载更多失败，请检查网络后重试");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [page, hasMore, loadingMore, historyLoading]);
+
+  // 滚动到底部自动加载更多（失败后停止自动加载）
+  const loadMoreHistory = useCallback(() => {
+    if (loadMoreFailed) return;
+    doLoadMore();
+  }, [doLoadMore, loadMoreFailed]);
+
+  // 加载更多失败后手动重试
+  const handleRetryLoadMore = useCallback(() => {
+    setLoadMoreFailed(false);
+    doLoadMore();
+  }, [doLoadMore]);
 
   // 删除指定消息
   const handleDelete = useCallback(async (message: WorkMessage) => {
@@ -76,11 +125,13 @@ const CreationPage = () => {
       // 先将消息加入列表
       setMessageList((prev) => [workData, ...prev]);
 
-      // 建立 SSE 连接
+      // 建立 SSE 连接（携带参考图时自动走图生图接口）
       submitCreation(workData.id, userId!, {
+        type: workData.type,
         model: workData.model,
         prompt: workData.prompt,
         params: workData.params,
+        originImageList: workData.originImageList,
       });
     },
     [userId, submitCreation],
@@ -92,6 +143,7 @@ const CreationPage = () => {
       regenerate(message.id, userId!, {
         prompt: message.prompt,
         params: message.params,
+        originImageList: message.originImageList,
       });
     },
     [userId, regenerate],
@@ -105,10 +157,10 @@ const CreationPage = () => {
     [userId, submitSelect],
   );
 
-  // 重试
+  // 重试（根据是否携带参考图选择图生图/文生图重试接口）
   const handleRetry = useCallback(
     (message: WorkMessage) => {
-      retry(message.id, userId!);
+      retry(message.id, userId!, !!message.originImageList?.length);
     },
     [userId, retry],
   );
@@ -124,12 +176,17 @@ const CreationPage = () => {
           onSwitchTab={() => setActiveTab("2")}
           messageList={messageList}
           loading={historyLoading}
+          loadingMore={loadingMore}
+          hasMore={hasMore}
+          loadMoreError={loadMoreFailed}
           error={historyError}
           onRetry={handleRetry}
           onRegenerate={handleRegenerate}
           onSelectSubmit={handleSelectSubmit}
           onDelete={handleDelete}
           onRetryHistory={fetchHistory}
+          onLoadMore={loadMoreHistory}
+          onRetryLoadMore={handleRetryLoadMore}
         />
       ),
     },
