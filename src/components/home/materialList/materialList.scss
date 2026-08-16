@@ -20,11 +20,42 @@
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-sizing: border-box;
+    position: relative;
     border: 1px solid var(--color-border-light);
-    transition: all var(--duration-normal) var(--ease-out-expo);
+    transition:
+      border-color var(--duration-normal) var(--ease-out-expo),
+      box-shadow var(--duration-normal) var(--ease-out-expo),
+      transform 0.12s ease;
     cursor: pointer;
 
-    // 骨架屏占位卡片：无 hover 交互
+    // 游标光斑：跟随鼠标的柔和高亮（hover 时可见）
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background: radial-gradient(
+        220px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+        rgba(17, 17, 17, 0.16),
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity var(--duration-normal) ease;
+      pointer-events: none;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask: linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask-composite: xor;
+    }
+
+    // 按压反馈：物理点击感
+    &:active {
+      transform: scale(0.985);
+    }
+
+    // 骨架屏占位卡片：无 hover/交互
     &.material-card-skeleton {
       cursor: default;
 
@@ -32,11 +63,19 @@
         border-color: var(--color-border-light);
         box-shadow: none;
       }
+
+      &:active {
+        transform: none;
+      }
     }
 
     &:hover {
       border-color: var(--color-border);
       box-shadow: var(--shadow-md);
+
+      &::after {
+        opacity: 1;
+      }
     }
 
     .card-image-wrapper {
@@ -63,15 +102,23 @@
         }
       }
 
+      // 遮罩信息层：hover 时在图片上浮现，底部渐变压暗 + 白色信息
       .card-overlay {
+        position: absolute;
+        inset: 0;
         display: flex;
-        height: 100%;
-        width: 100%;
-        justify-content: flex-start;
         align-items: flex-end;
-        // 遮罩层背景：hover 显示时轻微压暗图片，保证信息区可读
-        background: rgba(0, 0, 0, 0.1) !important;
+        justify-content: flex-start;
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.55) 0%,
+          rgba(0, 0, 0, 0.2) 45%,
+          transparent 100%
+        );
+        opacity: 0;
+        transition: opacity var(--duration-normal) ease;
       }
+
       .card-image {
         width: 100%;
         height: 100%;
@@ -86,7 +133,6 @@
 
         .card-overlay {
           opacity: 1;
-          transform: translateY(0);
         }
       }
     }
@@ -114,16 +160,17 @@
       }
     }
 
-    // 卡片信息区：作者头像/名字（左）+ 复制/点赞操作（右）
+    // 遮罩信息条：作者（左）+ 复制/点赞（右），叠在图片底部渐变压暗之上
     .card-info-panel {
-      padding: 10px 12px;
+      padding: 8px 12px;
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      // 相对遮罩层更深的背景，通栏铺满形成区分条
-      background: rgba(0, 0, 0, 0.55);
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(6px) saturate(1.4);
+      -webkit-backdrop-filter: blur(6px) saturate(1.4);
 
       .card-author {
         display: flex;
@@ -159,9 +206,15 @@
           &:hover {
             color: rgba(255, 255, 255, 0.85);
           }
+
+          &:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55);
+            border-radius: var(--radius-sm);
+          }
         }
 
-        // 已点赞：爱心填充为错误色（品牌红色系），数量文字保持白色
+        // 已点赞：爱心填充为错误色（品牌红色系）
         .card-like-btn.liked {
           color: var(--color-error);
 

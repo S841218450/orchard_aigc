@@ -241,6 +241,12 @@ export const BackGround = ({
         <div className="bg-ring bg-ring-3" />
         <div className="bg-ring bg-ring-2" />
         <div className="bg-ring bg-ring-4" />
+        {/* 编辑体例水印：拉丁衬线大字，极低透明度，随视差轻微移动 */}
+        <div
+          className="bg-watermark"
+          aria-hidden="true"
+          data-watermark="create"
+        />
       </div>
 
       {/* 第五层：明暗遮罩，保证内容可读 */}

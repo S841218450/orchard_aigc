@@ -7,8 +7,6 @@ import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Input, Segmented } from "antd";
 import { Search, Lightbulb, Images, Video, MessageCircle } from "lucide-react";
-import NextImage from "next/image";
-import { DEFAULT_IMAGES } from "@/constants/assets";
 import { BackGround } from "@/components/home/backGround/backGround";
 import { getAssetDataList } from "@/actions/asset";
 import { useInfiniteList } from "@/hooks/useInfiniteList";
@@ -43,7 +41,11 @@ const fetchAssetList = async (
     pageSize: PAGE_SIZE,
   });
   if (!result.success) {
-    messageManager.error(result.error ?? "获取素材列表失败");
+    if (!result.canceled) {
+      messageManager.error(result.error ?? "获取素材列表失败");
+    }
+    // success 为 false 或请求被取消：无数据返回空列表
+    return { list: [], hasMore: false };
   }
   const list = (result.data ?? []).map((item) => ({
     id: item.id,
@@ -82,17 +84,51 @@ const TitleText = () => {
       gsap.set(chars, {
         display: "inline-block",
         transformOrigin: "center bottom",
+        y: 40,
+        opacity: 0,
+        rotate: 4,
       });
 
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      // 入场：逐字错落自下而上 + 回正，营造编辑部式的排印张力
+      const entranceTl = gsap.timeline({ delay: 0.25 });
+      entranceTl.to(chars, {
+        y: 0,
+        rotate: 0,
+        opacity: 1,
+        duration: 0.85,
+        ease: "power3.out",
+        stagger: { each: 0.06, from: "start" },
+      });
+
+      // 柔和副标：紧随标题落定后淡入
+      const sub =
+        titleRef.current.parentElement?.querySelector<HTMLElement>(
+          ".title-eyebrow",
+        );
+      if (sub) {
+        gsap.fromTo(
+          sub,
+          { y: 12, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.7, ease: "power2.out", delay: 0.7 },
+        );
+      }
+
+      if (reduced) return;
+
+      // 周期性的「呼吸波浪」：保留原有灵动感，但只在落定后轻微起伏
       const waveTl = gsap.timeline({
         repeat: -1,
-        repeatDelay: 7, //间隔7秒
-        delay: 5, //延迟五秒执行
+        repeatDelay: 7,
+        delay: 5.4,
       });
 
       waveTl.to(chars, {
-        y: -12,
-        scale: 1.1,
+        y: -6,
+        scale: 1.02,
         color: "#ffac79",
         duration: 0.4,
         ease: "power2.out",
@@ -113,6 +149,7 @@ const TitleText = () => {
       );
 
       return () => {
+        entranceTl.kill();
         waveTl.kill();
       };
     },
@@ -120,19 +157,23 @@ const TitleText = () => {
   );
   return (
     <div className="chat-main">
+      <span className="title-eyebrow">
+        <em className="title-eyebrow-lat">巧&nbsp;思</em>
+        <span className="title-eyebrow-cn">创作的另一种可能</span>
+      </span>
       <h1 ref={titleRef}>
         <span className="title-char">开</span>
         <span className="title-char">始</span>
         <span className="title-char">你</span>
         <span className="title-char">的</span>
-        <span className="title-char logo-char">
+        {/* <span className="title-char logo-char">
           <NextImage
             width={100}
             height={50}
             src={DEFAULT_IMAGES.logo}
             alt="logo"
           />
-        </span>
+        </span> */}
         <span className="title-char">创</span>
         <span className="title-char">作</span>
         <span className="title-char">之</span>
@@ -142,19 +183,15 @@ const TitleText = () => {
   );
 };
 
-// 输入类型
+// 输入类型（受控组件：active 由父级 Home 统一持有，消除多处 state 不同步）
 const InputType = ({
+  active,
   onTabChange,
 }: {
+  active: number;
   onTabChange: (value: number) => void;
 }) => {
-  const [activeTab, setActiveTab] = useState(1);
   const inputTypeRef = useRef<HTMLDivElement>(null);
-
-  const handleTabChange = (value: number) => {
-    setActiveTab(value);
-    onTabChange(value);
-  };
 
   // 选中时播放渐变扫光动画
   // 用 scope + CSS 选择器定位，避开 ref 时序 + ref 规则双问题
@@ -186,7 +223,7 @@ const InputType = ({
         },
       );
     },
-    { dependencies: [activeTab], scope: inputTypeRef },
+    { dependencies: [active], scope: inputTypeRef },
   );
 
   const inputTypeList = [
@@ -215,9 +252,9 @@ const InputType = ({
       {inputTypeList.map((item) => (
         <div
           data-value={item.value}
-          className={`input-type-item ${activeTab === item.value ? "active" : ""}`}
+          className={`input-type-item ${active === item.value ? "active" : ""}`}
           key={item.value}
-          onClick={() => handleTabChange(item.value)}
+          onClick={() => onTabChange(item.value)}
         >
           <div className="shimmer-layer" />
           <div className="input-type-icon">{item.icon}</div>
@@ -240,7 +277,6 @@ export default function Home() {
   const inputRef = useRef(input);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [type, setType] = useState(1);
   const { setInitialMessage } = useChatStore();
 
   useEffect(() => {
@@ -266,9 +302,9 @@ export default function Home() {
     containerRef,
   });
 
-  // 切换输入类型
-  const handleTabChange = (value: string | number) => {
-    setActiveTab(Number(value));
+  // 切换输入类型 / 素材分类（activeTab 单一数据源，驱动输入卡 + 工具栏 Segmented + 路由）
+  const handleTabChange = (value: number) => {
+    setActiveTab(value);
   };
 
   // 发送消息
@@ -298,15 +334,18 @@ export default function Home() {
           rightOpration={null}
         />
         {/* 输入类型 */}
-        <InputType onTabChange={handleTabChange} />
+        <InputType active={activeTab} onTabChange={handleTabChange} />
       </div>
+
+      {/* 编辑条：分类 Tab + 搜索 + 结果计数（与输入类型共用同一 activeTab 状态） */}
       <div className="search-bar-wrapper">
-        <div className="search-box ml20">
+        <div className="search-toolbar">
           <Segmented<string>
             options={segmentedOptions.map((item) => item.label)}
             value={activeTab.toString()}
-            onChange={(value) => setType(Number(value))}
+            onChange={(value) => setActiveTab(Number(value))}
           />
+          <span className="search-toolbar-divider" aria-hidden="true" />
           <Input
             prefix={<Search size={16} />}
             onInput={(e) =>
@@ -314,6 +353,15 @@ export default function Home() {
             }
             placeholder="搜索素材..."
           />
+          <span className="search-toolbar-count">
+            {searchKeyword ? (
+              <>
+                “{searchKeyword}” · {materialList.length} 件
+              </>
+            ) : (
+              <>灵感图库 · {materialList.length} 件</>
+            )}
+          </span>
         </div>
       </div>
 
@@ -326,6 +374,7 @@ export default function Home() {
           error={error}
           onLoadMore={loadMore}
           onRetry={retry}
+          scrollerRef={containerRef}
         />
       </div>
     </div>

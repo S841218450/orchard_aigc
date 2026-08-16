@@ -39,19 +39,22 @@ export default function PromptInput({
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="描述你想要生成的图片..."
       />
-      <div className="prompt-btn">
-        <Button
-          size={size}
-          type="text"
-          className="prompt-optimize-btn"
-          icon={
-            loading ? <LoadingOutlined size={12} /> : <Sparkles size={12} />
-          }
-          disabled={loading}
-          onClick={handleOptimize}
-        >
-          {prompt ? "优化提示词" : "灵机一动"}
-        </Button>
+      <div className="prompt-footer">
+        <span className="prompt-count">{prompt.length} 字</span>
+        <div className="prompt-btn">
+          <Button
+            size={size}
+            type="primary"
+            className="prompt-optimize-btn"
+            icon={
+              loading ? <LoadingOutlined size={12} /> : <Sparkles size={12} />
+            }
+            disabled={loading}
+            onClick={handleOptimize}
+          >
+            {prompt ? "优化提示词" : "灵机一动"}
+          </Button>
+        </div>
       </div>
     </div>
   );

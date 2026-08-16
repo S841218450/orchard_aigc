@@ -43,6 +43,23 @@ import {
 // 最多允许上传的图片数量
 const MAX_IMAGES = 4;
 
+// ==================== 分区标题（编辑排印式） ====================
+const SectionHead = ({
+  index,
+  label,
+  hint,
+}: {
+  index: string;
+  label: string;
+  hint?: string;
+}) => (
+  <div className="aside-section-head">
+    <span className="aside-section-index">{index}</span>
+    <span className="aside-section-label">{label}</span>
+    {hint && <span className="aside-section-hint">{hint}</span>}
+  </div>
+);
+
 // 图生图
 export const ImageToImage = forwardRef<
   FormSubmitHandle,
@@ -223,113 +240,131 @@ export const ImageToImage = forwardRef<
 
   return (
     <>
-      {/* 参考图片（独立区块，不再嵌套） */}
-      <div className="aside-content">
-        <div className="aside-title">
-          <ImageIcon size={16} />
-          <span>参考图片</span>
-          <span className="image-count-hint">
-            （{referenceImages.length}/{MAX_IMAGES}）
-          </span>
-          <span className="image-annotate-hint">点击缩略图可进行标注</span>
+      {/* 第一节：灵感与参考（素材输入为主角） */}
+      <div className="aside-section">
+        <SectionHead index="01" label="灵感与参考" hint="Reference" />
+
+        <div className="aside-content">
+          <div className="aside-title">
+            <span className="aside-title-icon">
+              <ImageIcon />
+            </span>
+            <span>参考图片</span>
+            <span className="image-count-hint">
+              （{referenceImages.length}/{MAX_IMAGES}）
+            </span>
+            <span className="image-annotate-hint">点击缩略图可进行标注</span>
+          </div>
+          <BaseUpload
+            type="image"
+            images={referenceImages}
+            onChange={setReferenceImages}
+            maxImages={MAX_IMAGES}
+            renderThumbnail={renderThumbnail}
+            onRemove={handleRemoveImage}
+          />
         </div>
-        <BaseUpload
-          type="image"
-          images={referenceImages}
-          onChange={setReferenceImages}
-          maxImages={MAX_IMAGES}
-          renderThumbnail={renderThumbnail}
-          onRemove={handleRemoveImage}
-        />
+
+        <div className="aside-content">
+          <div className="aside-title">
+            <span className="aside-title-icon">
+              <Sparkles />
+            </span>
+            <span>创作描述</span>
+          </div>
+          <TextArea
+            value={imagePrompt}
+            autoSize={{ minRows: 4, maxRows: 10 }}
+            onChange={(e) => setImagePrompt(e.target.value)}
+            placeholder={
+              !referenceImages.length
+                ? "请先上传参考图"
+                : "你可以说：" +
+                  (referenceImages.length == 1
+                    ? "将图中红色标注区域替换为xx"
+                    : "将图1的xx替换成图二的图案")
+            }
+          />
+        </div>
+
+        <div className="aside-content">
+          <div className="aside-title">
+            <span className="aside-title-icon">
+              <Gauge />
+            </span>
+            <span>参考强度</span>
+          </div>
+          <RadioGraph
+            name="referenceStrength"
+            options={[
+              { value: 1, label: "弱" },
+              { value: 2, label: "中" },
+              { value: 3, label: "强" },
+            ]}
+            value={referenceStrength}
+            onChange={(v) => setReferenceStrength(Number(v))}
+          />
+        </div>
       </div>
-      {/* 创作描述（独立区块） */}
-      <div className="aside-content">
-        <div className="aside-title">
-          <Sparkles size={16} />
-          <span>创作描述</span>
+
+      {/* 第二节：画面与输出（保留原样：antd Select + RadioGraph） */}
+      <div className="aside-section">
+        <SectionHead index="02" label="画面与输出" hint="参数" />
+
+        <div className="aside-content">
+          <div className="aside-title">
+            <Box size={16} />
+            <span>生图模型</span>
+          </div>
+          <Select
+            value={model}
+            size="large"
+            onChange={setModel}
+            options={CREATION_MODEL_LIST}
+          />
         </div>
-        <TextArea
-          value={imagePrompt}
-          autoSize={{ minRows: 4, maxRows: 10 }}
-          onChange={(e) => setImagePrompt(e.target.value)}
-          placeholder={
-            !referenceImages.length
-              ? "请先上传参考图"
-              : "你可以说：" +
-                (referenceImages.length == 1
-                  ? "将图中红色标注区域替换为xx"
-                  : "将图1的xx替换成图二的图案")
-          }
-        />
-      </div>
-      {/* 参考强度（独立区块，与参考图平级） */}
-      <div className="aside-content">
-        <div className="aside-title">
-          <Gauge size={16} />
-          <span>参考强度</span>
+
+        <div className="aside-content">
+          <div className="aside-title">
+            <Scaling size={16} />
+            <span>图片比例</span>
+          </div>
+          <Select
+            value={imageProportion}
+            size="large"
+            onChange={setImageProportion}
+            options={PROPORTION_LIST.map((item) => {
+              const Icon = getRatioIcon(item.label);
+              return {
+                value: item.value,
+                label: (
+                  <span className="ratio-option">
+                    <Icon size={14} />
+                    {item.label} {getRatioDesc(item.label)}
+                  </span>
+                ),
+              };
+            })}
+          />
         </div>
-        <RadioGraph
-          name="referenceStrength"
-          options={[
-            { value: 1, label: "弱" },
-            { value: 2, label: "中" },
-            { value: 3, label: "强" },
-          ]}
-          value={referenceStrength}
-          onChange={(v) => setReferenceStrength(Number(v))}
-        />
-      </div>
-      <div className="aside-content">
-        <div className="aside-title">
-          <Box size={16} />
-          <span>生图模型</span>
+
+        <div className="aside-content">
+          <div className="aside-title">
+            <Images size={16} />
+            <span>生图张数</span>
+          </div>
+          <RadioGraph
+            name="imageQty"
+            options={[
+              { value: 1, label: "1张" },
+              { value: 2, label: "2张" },
+              { value: 3, label: "3张" },
+              { value: 4, label: "4张" },
+            ]}
+            value={imageQty}
+            onChange={(v) => setImageQty(Number(v))}
+          />
         </div>
-        <Select
-          value={model}
-          size="large"
-          onChange={setModel}
-          options={CREATION_MODEL_LIST}
-        />
-      </div>
-      <div className="aside-content">
-        <div className="aside-title">
-          <Scaling size={16} />
-          <span>图片比例</span>
-        </div>
-        <Select
-          value={imageProportion}
-          size="large"
-          onChange={setImageProportion}
-          options={PROPORTION_LIST.map((item) => {
-            const Icon = getRatioIcon(item.label);
-            return {
-              value: item.value,
-              label: (
-                <span className="ratio-option">
-                  <Icon size={14} />
-                  {item.label} {getRatioDesc(item.label)}
-                </span>
-              ),
-            };
-          })}
-        />
-      </div>
-      <div className="aside-content">
-        <div className="aside-title">
-          <Images size={16} />
-          <span>生图张数</span>
-        </div>
-        <RadioGraph
-          name="imageQty"
-          options={[
-            { value: 1, label: "1张" },
-            { value: 2, label: "2张" },
-            { value: 3, label: "3张" },
-            { value: 4, label: "4张" },
-          ]}
-          value={imageQty}
-          onChange={(v) => setImageQty(Number(v))}
-        />
       </div>
     </>
   );

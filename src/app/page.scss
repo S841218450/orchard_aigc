@@ -24,9 +24,44 @@
     z-index: 1;
 
     .chat-main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+
+      // 编辑体例副标：拉丁衬线点缀 + 中文副题
+      .title-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        letter-spacing: 0.3em;
+        color: var(--color-text-tertiary);
+        transform-origin: center;
+        user-select: none;
+
+        .title-eyebrow-lat {
+          font-family: var(--font-display-lat);
+          font-size: 15px;
+          font-weight: 500;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--color-warm-500);
+          font-style: italic;
+        }
+
+        .title-eyebrow-cn {
+          letter-spacing: 0.5em;
+          padding-left: 0.5em;
+        }
+      }
+
       h1 {
-        font-size: 36px;
-        font-weight: 600;
+        font-family: var(--font-display-cn);
+        font-size: clamp(44px, 8vw, 88px);
+        font-weight: 700;
+        line-height: 1.02;
+        letter-spacing: 0.02em;
         color: var(--color-text);
         display: flex;
         align-items: center;
@@ -34,16 +69,23 @@
         flex-wrap: wrap;
         justify-content: center;
         user-select: none;
+        margin: 4px 0 0;
 
         .title-char {
           display: inline-block;
           color: var(--color-text);
           transition: color 0.3s ease;
+          transform-origin: center bottom;
 
           &.logo-char {
             display: inline-flex;
             align-items: center;
             vertical-align: bottom;
+            margin: 0 0.1em;
+
+            img {
+              filter: drop-shadow(0 2px 8px rgba(17, 17, 17, 0.06));
+            }
           }
         }
       }
@@ -59,34 +101,67 @@
     letter-spacing: 0.2px;
   }
 
-  /* ---- 搜索栏 ---- */
+  /* ---- 编辑条（分类 Tab + 搜索 + 结果计数） ---- */
   .search-bar-wrapper {
     width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
     display: flex;
-    justify-content: flex-start;
     position: sticky;
     top: 10px;
     z-index: 2;
-    backdrop-filter: blur(20px) saturate(1.6);
-    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    box-sizing: border-box;
 
-    .search-box {
+    .search-toolbar {
       width: 100%;
-      height: 48px;
-      max-width: 900px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 8px 24px;
-      border-radius: var(--radius-md);
-      background: rgba(255, 255, 255, 0.45);
+      gap: 14px;
+      padding: 10px 18px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(17, 17, 17, 0.05);
+      backdrop-filter: blur(22px) saturate(1.6);
+      -webkit-backdrop-filter: blur(22px) saturate(1.6);
+      box-shadow: var(--shadow-sm);
+
+      .search-toolbar-divider {
+        flex-shrink: 0;
+        width: 1px;
+        height: 24px;
+        background: var(--color-border);
+      }
+
+      // 搜索结果计数：编辑体例，向右对齐
+      .search-toolbar-count {
+        margin-left: auto;
+        flex-shrink: 0;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: var(--color-text-tertiary);
+        white-space: nowrap;
+      }
+
+      // 搜索输入框：无边框底样式，融入工具条
+      .ant-input-affix-wrapper {
+        flex: 1;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 4px 8px;
+
+        .ant-input {
+          background: transparent;
+        }
+      }
     }
   }
-  /* ---- 输入类型选择器 ---- */
+  /* ---- 输入类型选择器：一行等宽，左图标 + 右标题/描述（简约高级） ---- */
   .input-type {
     display: flex;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 14px;
+    margin-bottom: 28px;
     position: relative;
     z-index: 1;
     box-sizing: border-box;
@@ -95,45 +170,49 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      width: 250px;
       padding: 12px 16px;
       border-radius: var(--radius-md);
       background: rgba(255, 255, 255, 0.55);
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid transparent;
+      transform: translateZ(0);
       transition:
         background 0.25s ease,
         box-shadow 0.25s ease,
+        border-color 0.25s ease,
         transform var(--duration-normal) ease;
-      width: 250px;
-      position: relative;
-      overflow: hidden;
-      border: 0;
-      transform: translateZ(0);
 
       &:hover {
         background: rgba(240, 240, 240, 0.7);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 18px rgba(30, 60, 80, 0.1);
+        border-color: rgba(17, 17, 17, 0.08);
       }
 
+      // 选中态：近黑「墨块」高反差切换，呼应品牌黑主色，避免彩色违和
       &.active {
-        background: rgba(248, 251, 252, 0.98);
+        background: var(--color-gray-950);
         transform: translateY(-2px);
-        box-shadow:
-          0 10px 28px rgba(60, 110, 140, 0.18),
-          0 4px 12px rgba(60, 110, 140, 0.1),
-          0 0 0 1px rgba(140, 180, 200, 0.28) inset;
+        box-shadow: 0 10px 26px rgba(17, 17, 17, 0.2);
 
         .input-type-icon {
-          background: linear-gradient(
-            135deg,
-            rgba(180, 210, 225, 0.9),
-            rgba(190, 220, 215, 0.9)
-          );
-          color: #1a3342;
+          background: transparent;
+          color: #fff;
+        }
+
+        .input-type-content {
+          h3 {
+            color: #fff;
+          }
+
+          p {
+            color: rgba(255, 255, 255, 0.66);
+          }
         }
       }
 
-      // GSAP 渐变扫光层 — 加强亮度和范围，让扫光肉眼可见
+      // GSAP 渐变扫光层 — 选中态在墨块底上演进出微妙扫光
       .shimmer-layer {
         pointer-events: none;
         position: absolute;
@@ -141,10 +220,10 @@
         background: linear-gradient(
           105deg,
           transparent 15%,
-          rgba(255, 255, 255, 0.35) 32%,
-          rgba(190, 220, 232, 0.85) 46%,
-          rgba(205, 230, 222, 0.85) 54%,
-          rgba(255, 255, 255, 0.4) 68%,
+          rgba(255, 255, 255, 0.06) 32%,
+          rgba(255, 255, 255, 0.16) 46%,
+          rgba(255, 255, 255, 0.1) 54%,
+          rgba(255, 255, 255, 0.05) 68%,
           transparent 85%
         );
         background-size: 200% 100%;
@@ -153,6 +232,7 @@
       }
 
       .input-type-icon {
+        flex-shrink: 0;
         width: 40px;
         height: 40px;
         display: flex;
@@ -162,9 +242,12 @@
         background: var(--color-gray-100);
         color: var(--color-text);
         font-size: 20px;
+        transition: all var(--duration-normal) var(--ease-out-expo);
       }
 
       .input-type-content {
+        min-width: 0;
+
         h3 {
           font-size: 14px;
           font-weight: 600;
@@ -176,6 +259,9 @@
           font-size: 12px;
           color: var(--color-text-secondary);
           margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
     }

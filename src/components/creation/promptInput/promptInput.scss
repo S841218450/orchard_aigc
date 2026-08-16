@@ -1,21 +1,36 @@
+/* 创作描述输入框：表单主角，放大 + 底部动作条 + 字数反馈 */
 .prompt-input {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  gap: 4px;
   width: 100%;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: var(--color-bg-sunken);
   box-sizing: border-box;
-  padding: 10px;
+  padding: 12px 12px 8px;
+  border: 1px solid var(--color-border-light);
+  transition:
+    border-color var(--duration-normal) var(--ease-out-expo),
+    box-shadow var(--duration-normal) var(--ease-out-expo);
+
+  &:focus-within {
+    border-color: var(--color-gray-950);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+
   .prompt-textarea {
     width: 100%;
-    padding: 10px;
+    padding: 6px 4px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-text);
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
     resize: none;
     background: transparent;
+    border-radius: var(--radius-sm);
+
     &:focus,
     &:hover,
     &:focus-within {
@@ -23,25 +38,59 @@
       outline: none !important;
       box-shadow: none !important;
     }
+
+    &::placeholder {
+      color: var(--color-text-quaternary);
+    }
   }
-  .prompt-btn {
-    width: 100%;
+
+  /* 底部动作条：优化按钮 + 字数统计，两端对齐 */
+  .prompt-footer {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--color-border);
   }
-  .prompt-optimize-btn {
+
+  .prompt-count {
+    font-size: 11px;
+    color: var(--color-text-quaternary);
+    user-select: none;
+    padding-left: 4px;
+  }
+
+  .prompt-btn {
+    display: flex;
+  }
+  .prompt-optimize-btn,
+  .prompt-input .prompt-optimize-btn.ant-btn-primary {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    height: 26px;
-    padding: 0 12px;
+    gap: 6px;
+    height: 30px;
+    padding: 0 14px;
     font-size: 12px;
-    border-radius: 999px;
-    background: var(--color-gray-300);
-    color: var(--color-gray-800);
+    font-weight: 500;
+    border-radius: var(--radius-full);
+    background: var(--color-gray-950);
+    color: #fff;
+    transition: all var(--duration-fast) var(--ease-out-expo);
+
+    svg {
+      color: var(--color-warm-500);
+    }
+
     &:hover {
-      background: var(--color-gray-400);
-      color: var(--color-gray-800);
+      background: #27272a !important;
+      color: #fff !important;
+      box-shadow: 0 4px 12px rgba(17, 17, 17, 0.18);
+    }
+
+    &:disabled {
+      background: var(--color-gray-300) !important;
+      color: var(--color-gray-600) !important;
     }
   }
 }

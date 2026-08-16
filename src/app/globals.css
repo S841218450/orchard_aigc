@@ -6,6 +6,11 @@
 @import "../style/core/text.scss";
 @import "../style/core/component.scss";
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+/* 中文宋体标题：Google Fonts 以 unicode-range 分片服务，浏览器仅下载实际用到的字形切片，
+   避免中文全量字体体积过大；仅用于 --font-display-cn 的中文标题场景 */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&display=swap");
+/* 拉丁衬线标题：用于英文水印 / 点缀词（--font-display-lat） */
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300;1,500&display=swap");
 
 :root {
   /* ========================================
@@ -86,6 +91,10 @@
   --font-sans:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
+  /* 中文衬线标题：Noto Serif SC（来自 globals.css 顶部的 Google Fonts import） */
+  --font-display-cn: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  /* 拉丁衬线标题：Cormorant Garamond（来自 globals.css 顶部的 Google Fonts import） */
+  --font-display-lat: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
 }
 

@@ -192,6 +192,30 @@
       right: 12vmin;
       bottom: 11.5vmin;
     }
+
+    /* 编辑体例水印：拉丁衬线大字，仅作视觉锚点，不抢内容 */
+    .bg-watermark {
+      position: absolute;
+      right: 6vmin;
+      bottom: 4vmin;
+      font-family: var(--font-display-lat);
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(120px, 22vmin, 300px);
+      line-height: 1;
+      letter-spacing: 0.02em;
+      color: var(--color-gray-950);
+      opacity: 0.035;
+      user-select: none;
+      pointer-events: none;
+      z-index: 1;
+      transform-origin: bottom right;
+
+      &::before {
+        content: attr(data-watermark);
+        text-transform: lowercase;
+      }
+    }
   }
 
   /* 第五层：明暗遮罩，保证标题区与素材列表区可读 */

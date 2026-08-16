@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useState,
+  useRef,
+  useCallback,
+  type RefObject,
+} from "react";
 import { useRequest } from "ahooks";
 import { Avatar, Button, Image, Skeleton, Masonry, Spin } from "antd";
 import { Heart, Copy } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import type { MaterialItem } from "@/actions/home";
 import { likeAsset } from "@/actions/asset";
 import { DEFAULT_IMAGES, DEFAULT_ICONS } from "@/constants/assets";
@@ -22,11 +30,23 @@ export interface MaterialListProps {
   error: Error | null | undefined;
   onLoadMore: () => void;
   onRetry: () => void;
+  // 滚动容器 ref（Home 页为 .home-page）：用于卡片滚入视口入场 + 游标光斑定位
+  scrollerRef?: RefObject<HTMLDivElement | null>;
 }
+
+// ScrollTrigger 注册（模块级只注册一次）
+gsap.registerPlugin(ScrollTrigger);
 
 // 单张素材卡片：列宽固定，图片按自身比例自然撑高形成瀑布流；
 // 信息区展示作者头像/名字与点赞，prompt 提示词不展示，通过复制按钮获取
-const MaterialCard = ({ item }: { item: MaterialItem }) => {
+const MaterialCard = ({
+  item,
+  scrollerRef,
+}: {
+  item: MaterialItem;
+  scrollerRef?: RefObject<HTMLDivElement | null>;
+}) => {
+  const cardRef = useRef<HTMLDivElement>(null);
   // 点赞状态（初始来自列表数据，点赞成功后本地更新）
   const [liked, setLiked] = useState(item.liked);
   const [likeCount, setLikeCount] = useState(item.likeCount);
@@ -62,8 +82,51 @@ const MaterialCard = ({ item }: { item: MaterialItem }) => {
     }
   };
 
+  // 游标光斑：跟随鼠标在卡片内亮起高光（用于 hover 时描边/高光定位）
+  const handleSpot = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    el.style.setProperty("--spot-x", `${x.toFixed(1)}px`);
+    el.style.setProperty("--spot-y", `${y.toFixed(1)}px`);
+  }, []);
+
+  // 卡片滚入视口时交错上浮入场（绑定在 Home 滚动容器上）
+  useGSAP(
+    () => {
+      const el = cardRef.current;
+      if (!el) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      gsap.fromTo(
+        el,
+        { y: 26, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          ease: "power3.out",
+          delay: 0.05,
+          scrollTrigger: {
+            trigger: el,
+            scroller: scrollerRef?.current ?? undefined,
+            start: "top 96%",
+            once: true,
+          },
+        },
+      );
+    },
+    { scope: cardRef, dependencies: [scrollerRef] },
+  );
+
   return (
-    <div className="material-card">
+    <div
+      className="material-card"
+      ref={cardRef}
+      onPointerMove={handleSpot}
+    >
       <div className="card-image-wrapper">
         <div className="card-skeleton-placeholder" />
         <Image
@@ -72,53 +135,7 @@ const MaterialCard = ({ item }: { item: MaterialItem }) => {
           // 懒加载 + 异步解码：避免全部图片并发下载、解码阻塞主线程导致滚动卡顿
           loading="lazy"
           decoding="async"
-          preview={{
-            open: false,
-            cover: (
-              <div className="card-overlay">
-                {/* 信息区：作者头像/名字 + 复制提示词 + 点赞 */}
-                <div className="card-info-panel">
-                  <div className="card-author">
-                    <Avatar
-                      size={26}
-                      src={item.authorAvatar || undefined}
-                      className="card-avatar"
-                    >
-                      {item.authorName?.[0] ?? "?"}
-                    </Avatar>
-                    <span className="card-author-name" title={item.authorName}>
-                      {item.authorName || "匿名作者"}
-                    </span>
-                  </div>
-                  <div className="card-actions">
-                    <Button
-                      type="text"
-                      size="small"
-                      title="复制提示词"
-                      className="card-action-btn card-copy-btn"
-                      icon={<Copy size={15} />}
-                      onClick={copyPrompt}
-                    />
-                    <Button
-                      type="text"
-                      size="small"
-                      loading={liking}
-                      className={`card-action-btn card-like-btn${liked ? " liked" : ""}`}
-                      icon={
-                        <Heart
-                          size={15}
-                          fill={liked ? "currentColor" : "none"}
-                        />
-                      }
-                      onClick={handleLike}
-                    >
-                      {likeCount}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ),
-          }}
+          preview={{ open: false }}
           className="card-image"
           fallback={DEFAULT_IMAGES.fallback}
           placeholder={
@@ -127,6 +144,45 @@ const MaterialCard = ({ item }: { item: MaterialItem }) => {
             </div>
           }
         />
+        {/* 遮罩层信息：hover 图片时浮现作者 + 复制/点赞 */}
+        <div className="card-overlay">
+          <div className="card-info-panel">
+            <div className="card-author">
+              <Avatar
+                size={26}
+                src={item.authorAvatar || undefined}
+                className="card-avatar"
+              >
+                {item.authorName?.[0] ?? "?"}
+              </Avatar>
+              <span className="card-author-name" title={item.authorName}>
+                {item.authorName || "匿名作者"}
+              </span>
+            </div>
+            <div className="card-actions">
+              <Button
+                type="text"
+                size="small"
+                title="复制提示词"
+                className="card-action-btn card-copy-btn"
+                icon={<Copy size={15} />}
+                onClick={copyPrompt}
+              />
+              <Button
+                type="text"
+                size="small"
+                loading={liking}
+                className={`card-action-btn card-like-btn${liked ? " liked" : ""}`}
+                icon={
+                  <Heart size={15} fill={liked ? "currentColor" : "none"} />
+                }
+                onClick={handleLike}
+              >
+                {likeCount}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -140,6 +196,7 @@ const MaterialList = ({
   error,
   onLoadMore,
   onRetry,
+  scrollerRef,
 }: MaterialListProps) => {
   //渲染空状态
   const renderEmpty = () => (
@@ -228,7 +285,9 @@ const MaterialList = ({
           key: item.id,
           data: item,
         }))}
-        itemRender={({ data }) => <MaterialCard item={data} />}
+        itemRender={({ data }) => (
+          <MaterialCard item={data} scrollerRef={scrollerRef} />
+        )}
       />
       {loadingMore && (
         <div className="loading-more">

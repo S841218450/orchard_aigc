@@ -1,4 +1,11 @@
 import API from "@/api";
+import { isCancel } from "axios";
+
+// ==================== Action 结果类型 ====================
+
+type ActionResult<T = void> =
+  | { success: true; data: T }
+  | { success: false; error?: string; canceled?: boolean };
 
 //获取素材列表
 interface AssetListRequest {
@@ -29,12 +36,19 @@ interface AssetType {
   liked: boolean; //是否点赞过
   createTime: string; //创建时间
 }
-export const getAssetDataList = async (params: AssetListRequest) => {
+export const getAssetDataList = async (
+  params: AssetListRequest,
+): Promise<ActionResult<AssetType[]>> => {
   const apiName = "getAssetList"; //接口名
   try {
     const res = await API[apiName](params);
     return { success: true, data: (res.data?.list as AssetType[]) || [] };
   } catch (e) {
+    // 请求被去重/卸载主动取消（CanceledError），非真实失败，不提示也不打印
+    if (isCancel(e)) {
+      return { success: false, canceled: true };
+    }
+    console.error("获取素材列表失败", e);
     return {
       success: false,
       error: "获取素材列表失败",

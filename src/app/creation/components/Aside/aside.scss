@@ -1,76 +1,92 @@
 /* 设计系统：使用 8px 间距系统 */
 $spacing-unit: 8px;
 
+/* 创建操作台外壳：整体为「顶部功能条 + 主卡片 + 底部签名操作」三段式 */
 .creation-aside {
   width: 20vw;
   min-width: 400px;
-  max-width: 600px;
+  max-width: 620px;
   height: 100%;
   display: flex;
   flex-direction: column;
+  gap: $spacing-unit * 1.5;
   overflow: visible;
   font-family: var(--font-sans);
 
-  /* ==================== 顶部悬浮胶囊（功能切换，与表单区错位隔离） ==================== */
+  /* ==================== 顶部功能切换（固定居上，后续承载视频生成） ====================
+     采用「墨黑功能区」：深底承载，选中项为衬线加粗 + 琥珀下划线，
+     避免与下方白卡混在一起，也更有「工作台控制台」的层级。 */
   .aside-toolbar {
-    /* 收窄 + 左侧错位，悬浮在主卡片顶部边缘上方 */
-    align-self: flex-start;
-    position: relative;
-    z-index: 2;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: $spacing-unit * 0.5;
-    margin: $spacing-unit 0 (-$spacing-unit * 2.5) $spacing-unit * 2;
+    gap: $spacing-unit * 0.25;
     padding: $spacing-unit * 0.5;
-    background: var(--color-bg-sunken);
-    border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-md);
+    background: var(--color-gray-950);
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
+    position: relative;
 
     .toolbar-item {
+      flex: 1;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: $spacing-unit * 0.75;
-      height: 32px;
-      padding: 0 $spacing-unit * 1.75;
+      height: 38px;
+      padding: 0 $spacing-unit * 1.5;
       font-size: 13px;
       font-weight: 500;
-      color: var(--color-text-tertiary);
-      border-radius: var(--radius-sm);
+      color: rgba(255, 255, 255, 0.62);
+      border-radius: var(--radius-md);
       transition: all var(--duration-normal) var(--ease-out-expo);
+      position: relative;
 
       &:hover {
-        color: var(--color-text);
-        background: var(--color-bg-elevated);
-      }
-
-      &.active {
-        color: var(--color-primary);
-        background: var(--color-bg-elevated);
-        font-weight: 600;
-        box-shadow: var(--shadow-sm);
-
-        svg {
-          color: var(--color-primary);
-        }
+        color: rgba(255, 255, 255, 0.92);
+        background: rgba(255, 255, 255, 0.06);
       }
 
       svg {
-        color: var(--color-text-quaternary);
+        color: rgba(255, 255, 255, 0.5);
         flex-shrink: 0;
+        transition: color var(--duration-normal) var(--ease-out-expo);
       }
 
       span {
         white-space: nowrap;
         line-height: 1;
+        letter-spacing: 0.01em;
+      }
+
+      &.active {
+        color: #fff;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.1);
+
+        svg {
+          color: var(--color-warm-500);
+        }
+
+        /* 选中项底部一道暖琥珀短线，作为热区锚点 */
+        &::after {
+          content: "";
+          position: absolute;
+          left: 20%;
+          right: 20%;
+          bottom: -3px;
+          height: 2px;
+          border-radius: 2px;
+          background: var(--color-warm-500);
+        }
       }
     }
   }
 
-  /* ==================== 右侧主区：可滚动表单 + 固定底部按钮 ==================== */
+  /* ==================== 主卡片：可滚动表单 + 固定底部签名操作 ==================== */
   .aside-main {
     flex: 1;
-    min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -90,9 +106,8 @@ $spacing-unit: 8px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: $spacing-unit * 2;
-      /* 顶部留白给悬浮胶囊（胶囊下探进主卡片约 20px） */
-      padding: $spacing-unit * 4 $spacing-unit * 2.5 $spacing-unit * 2.5;
+      gap: $spacing-unit * 2.5;
+      padding: $spacing-unit * 2.5 $spacing-unit * 2.5 $spacing-unit * 2;
       animation: fadeIn 200ms cubic-bezier(0.16, 1, 0.3, 1);
 
       &::-webkit-scrollbar {
@@ -104,6 +119,44 @@ $spacing-unit: 8px;
       }
       &::-webkit-scrollbar-track {
         background: transparent;
+      }
+
+      /* 表单分区标题（灵感描述 / 画面与输出）：衬线编号 + 无衬线标题，编辑排印式 */
+      .aside-section {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-unit * 1.5;
+
+        .aside-section-head {
+          display: flex;
+          align-items: baseline;
+          gap: $spacing-unit;
+          padding-bottom: $spacing-unit * 0.75;
+          border-bottom: 1px solid var(--color-border-light);
+
+          .aside-section-index {
+            font-family: var(--font-display-lat);
+            font-style: italic;
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--color-warm-500);
+            line-height: 1;
+          }
+
+          .aside-section-label {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            color: var(--color-text);
+            text-transform: uppercase;
+          }
+
+          .aside-section-hint {
+            margin-left: auto;
+            font-size: 11px;
+            color: var(--color-text-quaternary);
+          }
+        }
       }
     }
 
@@ -139,6 +192,7 @@ $spacing-unit: 8px;
     }
   }
 
+  /* ---------- 通用：参数分区内容 ---------- */
   .aside-content {
     display: flex;
     flex-direction: column;
@@ -156,7 +210,23 @@ $spacing-unit: 8px;
         color: #606060;
       }
 
-      // 参考图数量提示（标题行右侧）
+      /* 灵感描述区标题的暖琥珀图标（仅灵感/描述区使用） */
+      .aside-title-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        background: var(--color-primary-soft);
+
+        svg {
+          width: 14px;
+          height: 14px;
+          color: var(--color-warm-500);
+        }
+      }
+
       .image-count-hint {
         font-size: 12px;
         color: var(--color-text-quaternary);
@@ -164,7 +234,6 @@ $spacing-unit: 8px;
         margin-left: 4px;
       }
 
-      // 参考图标注操作提示（标题行右侧）
       .image-annotate-hint {
         font-size: 12px;
         color: var(--color-text-quaternary);
@@ -200,7 +269,7 @@ $spacing-unit: 8px;
   }
 }
 
-// 画面风格选择器
+/* 画面风格 Popover 气泡内容：经 portal 渲染到 body，必须为顶层（全局）选择器 */
 .style-popover {
   min-width: 280px;
 
@@ -345,9 +414,7 @@ $spacing-unit: 8px;
   }
 }
 
-/* 图片编辑面板（Popover 内容）样式已抽取至 @/components/baseCom/imageEdit/imageEdit.scss */
-
-// 图片比例下拉选项：图标 + 文字水平排列（下拉面板经 portal 渲染到 body，需全局选择器）
+/* 图片比例下拉选项：图标 + 文字水平排列（下拉面板经 portal 渲染到 body，需全局选择器） */
 .ratio-option {
   display: inline-flex;
   align-items: center;
@@ -358,3 +425,4 @@ $spacing-unit: 8px;
     flex-shrink: 0;
   }
 }
+

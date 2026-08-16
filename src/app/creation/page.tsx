@@ -167,14 +167,17 @@ const CreationPage = () => {
     [userId, retry],
   );
 
-  // 标签页
+  // 标签页（编辑排印式 Tab：衬线编号 + 中文名）
   const items: TabsProps["items"] = [
     {
       key: "1",
-      label: "生成历史",
+      label: (
+        <span className="creation-tab-label">
+          <em className="creation-tab-index">01</em>生成历史
+        </span>
+      ),
       children: (
         <HistoryContent
-          activeKey={activeMenu}
           onSwitchTab={() => setActiveTab("2")}
           messageList={messageList}
           loading={historyLoading}
@@ -194,7 +197,11 @@ const CreationPage = () => {
     },
     {
       key: "2",
-      label: "优秀案例",
+      label: (
+        <span className="creation-tab-label">
+          <em className="creation-tab-index">02</em>优秀案例
+        </span>
+      ),
       children: <ExampleContent />,
     },
   ];
