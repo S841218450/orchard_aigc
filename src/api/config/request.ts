@@ -134,8 +134,14 @@ instance.interceptors.response.use(
     useLoadingStore.getState().hide();
 
     const res = response.data;
-    // 拦截业务错误码
-    if (res.code !== 200) {
+    // 拦截业务错误码：仅当响应明确携带 code 且非 200 时视为失败；
+    // 未返回 code 的接口（如 { success, message } 结构）信任 HTTP 200
+    if (
+      res &&
+      typeof res.code === "number" &&
+      res.code !== 200 &&
+      res.code !== 1001
+    ) {
       messageManager.error(res.msg || "请求异常");
       return Promise.reject(res);
     }

@@ -1,22 +1,43 @@
-import { useState } from "react";
-import { Button, Select } from "antd";
-import { Megaphone, Palette, Sparkles } from "lucide-react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
+import { Select } from "antd";
+import { Megaphone, Palette } from "lucide-react";
 import ChatInput from "@/components/chat/chatInput/chatInput";
 import type { MarketingImageFormData } from "@/actions/creationSchemas";
+import type {
+  FormSubmitHandle,
+  FormSubmitState,
+} from "@/app/creation/components/Aside/aside";
 
 // 营销图
-export const MarketingImage = ({
-  generateImage,
-}: {
-  generateImage: (data: MarketingImageFormData) => void;
-}) => {
+export const MarketingImage = forwardRef<
+  FormSubmitHandle,
+  {
+    generateImage: (data: MarketingImageFormData) => void;
+    // 上报提交能力（驱动布局层底部按钮禁用/加载态）
+    onStateChange?: (state: FormSubmitState) => void;
+  }
+>(({ generateImage, onStateChange }, ref) => {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [style, setStyle] = useState("modern");
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     generateImage({ title, subtitle, style });
-  };
+  }, [title, subtitle, style, generateImage]);
+
+  // 暴露提交方法给布局层底部按钮
+  useImperativeHandle(ref, () => ({ submit: handleSubmit }), [handleSubmit]);
+
+  // 上报提交能力（营销图无必填前置条件，始终可提交）
+  useEffect(() => {
+    onStateChange?.({ canSubmit: true, submitting: false });
+  }, [onStateChange]);
 
   return (
     <>
@@ -60,16 +81,7 @@ export const MarketingImage = ({
           ]}
         />
       </div>
-      <Button
-        type="primary"
-        size="large"
-        block
-        onClick={handleSubmit}
-        icon={<Sparkles size={16} />}
-        className="generate-btn"
-      >
-        开始生成
-      </Button>
     </>
   );
-};
+});
+MarketingImage.displayName = "MarketingImage";

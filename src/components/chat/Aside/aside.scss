@@ -25,6 +25,17 @@
       border-radius: 8px;
       height: 36px;
       font-size: 13px;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 100%) !important;
+      position: relative;
+      overflow: hidden;
+      padding: 0 14px 0 20px !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+      transition: all var(--duration-normal) var(--ease-out-expo);
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
+      }
     }
 
     .collapse-btn {
@@ -66,9 +77,26 @@
       }
 
       &.active {
-        background: #f0f0f2;
-        color: #18181b;
+        background: rgba(96, 196, 196, 0.1);
+        color: var(--color-gray-950);
         font-weight: 500;
+        position: relative;
+
+        &::before {
+          content: "";
+          position: absolute;
+          left: -2px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 18px;
+          border-radius: 3px;
+          background: var(--color-ai-cyan);
+        }
+
+        svg {
+          color: var(--color-ai-cyan);
+        }
       }
 
       svg {
@@ -84,7 +112,8 @@
     border-color: #e4e4e7;
 
     &:focus-within {
-      border-color: #18181b;
+      border-color: #18181b !important;
+      box-shadow: 0 0 0 3px rgba(96, 196, 196, 0.14) !important;
     }
   }
 
@@ -118,11 +147,20 @@
       padding: 4px 12px;
       border-radius: 8px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all var(--duration-fast) var(--ease-out-expo);
       margin-bottom: 2px;
-      background-color: #fbfbfb;
+      background-color: transparent;
+      position: relative;
+      overflow: hidden;
+      // stagger 入场动画
+      opacity: 0;
+      transform: translateY(6px);
+      animation: sessionItemIn var(--duration-normal) var(--ease-out-expo)
+        forwards;
+      animation-delay: calc(var(--i, 0) * 35ms);
+
       &:hover {
-        background: #f0f0f0;
+        background: #f4f4f5;
 
         .session-delete {
           opacity: 1;
@@ -130,10 +168,23 @@
       }
 
       &.active {
-        background: #f2f2fa;
+        background: rgba(96, 196, 196, 0.08);
+        // 左侧激活竖条
+        &::before {
+          content: "";
+          position: absolute;
+          left: -2px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 20px;
+          border-radius: 3px;
+          background: var(--color-ai-cyan);
+          box-shadow: 0 0 0 3px rgba(96, 196, 196, 0.12);
+        }
 
         .session-title {
-          color: #18181b;
+          color: var(--color-gray-950);
           font-weight: 500;
         }
       }
@@ -161,5 +212,17 @@
         }
       }
     }
+  }
+}
+
+/* ===== 会话项 stagger 入场动画 ===== */
+@keyframes sessionItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

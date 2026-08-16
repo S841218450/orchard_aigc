@@ -41,7 +41,8 @@ export const formatDate = (
       return `${diffMinutes}分钟前`;
     }
 
-    if (diffHours < 24) {
+    // 仅同一天才显示时分，跨天（即使 24 小时内）也要带上日期
+    if (now.isSame(targetDate, "day")) {
       return targetDate.format("HH:mm");
     }
 

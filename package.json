@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "~6.3.2",
+    "@ant-design/x": "^2.9.0",
+    "@ant-design/x-markdown": "^2.9.0",
     "@gsap/react": "^2.1.2",
     "ahooks": "^3.9.7",
     "animate.css": "^4.1.1",

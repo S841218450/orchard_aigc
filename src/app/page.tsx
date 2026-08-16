@@ -7,10 +7,11 @@ import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Input, Segmented } from "antd";
 import { Search, Lightbulb, Images, Video, MessageCircle } from "lucide-react";
-import { useScroll, useRequest } from "ahooks";
 import NextImage from "next/image";
+import { DEFAULT_IMAGES } from "@/constants/assets";
 import { BackGround } from "@/components/home/backGround/backGround";
 import { getAssetDataList } from "@/actions/asset";
+import { useInfiniteList } from "@/hooks/useInfiniteList";
 import { messageManager } from "@/utils/messageManager";
 
 import MaterialList from "@/components/home/materialList/materialList";
@@ -42,14 +43,25 @@ const fetchAssetList = async (
     pageSize: PAGE_SIZE,
   });
   if (!result.success) {
-    throw new Error(result.error ?? "获取素材列表失败");
+    messageManager.error(result.error ?? "获取素材列表失败");
   }
   const list = (result.data ?? []).map((item) => ({
     id: item.id,
+    authorName: item.authorName,
+    authorAvatar: item.authorAvatar ?? "",
+    url: item.url,
+    userId: item.userId,
     image: item.url,
     title: item.prompt,
-    time: item.createTime,
-    imageProportion: item.params?.imageProportion ?? "1:1",
+    prompt: item.prompt,
+    createTime: item.createTime,
+    likeCount: item.likeCount,
+    liked: item.liked,
+    params: {
+      style: item.params?.style ?? "",
+      imageQuality: item.params?.imageQuality ?? "",
+      imageProportion: item.params?.imageProportion ?? "1:1",
+    },
   }));
   return {
     list,
@@ -117,7 +129,7 @@ const TitleText = () => {
           <NextImage
             width={100}
             height={50}
-            src="/logo_opcity.png"
+            src={DEFAULT_IMAGES.logo}
             alt="logo"
           />
         </span>
@@ -228,13 +240,6 @@ export default function Home() {
   const inputRef = useRef(input);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 素材列表状态
-  const [materialList, setMaterialList] = useState<MaterialItem[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  // 加载更多失败标志：失败后停止自动加载，避免服务器异常时无限重试
-  const [loadMoreFailed, setLoadMoreFailed] = useState(false);
   const [type, setType] = useState(1);
   const { setInitialMessage } = useChatStore();
 
@@ -242,56 +247,24 @@ export default function Home() {
     inputRef.current = input;
   }, [input]);
 
-  // 初始加载素材数据（manual:false 挂载自动执行，loading 期间展示按固定比例排布的骨架屏）
-  const { loading, error, run } = useRequest(
-    (keyword: string = "") => fetchAssetList(keyword, 1),
-    {
-      manual: false,
-      defaultParams: [searchKeyword, type],
-      onSuccess: (result) => {
-        setMaterialList(result.list);
-        setHasMore(result.hasMore);
-        setPage(1);
-        setLoadMoreFailed(false);
-      },
-    },
+  // 素材列表滚动分页：首屏自动加载，滚动到底部加载下一页，关键词变化自动重置
+  const fetchByPage = useCallback(
+    (pageNum: number) => fetchAssetList(searchKeyword, pageNum),
+    [searchKeyword],
   );
-
-  // 加载更多
-  const loadMore = useCallback(async () => {
-    // 失败后停止自动加载，避免服务器异常时无限重试
-    if (loadingMore || !hasMore || loading || loadMoreFailed) return;
-    setLoadingMore(true);
-    try {
-      const nextPage = page + 1;
-      const result = await fetchAssetList(searchKeyword, nextPage);
-      setMaterialList((prev) => [...prev, ...result.list]);
-      setHasMore(result.hasMore);
-      setPage(nextPage);
-      setLoadMoreFailed(false);
-    } catch (e) {
-      setLoadMoreFailed(true);
-      messageManager.error("加载更多失败，请检查网络后重试");
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [page, hasMore, loadingMore, loading, searchKeyword, loadMoreFailed]);
-
-  // 重新加载
-  const handleRetry = useCallback(() => {
-    setLoadMoreFailed(false);
-    run(searchKeyword);
-  }, [run, searchKeyword]);
-
-  // 滚动到底部自动触发接口加载更多
-  const scrollPosition = useScroll(containerRef);
-  useEffect(() => {
-    if (!scrollPosition || !containerRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-    if (scrollHeight - scrollTop - clientHeight < 200) {
-      loadMore();
-    }
-  }, [scrollPosition, loadMore]);
+  const {
+    list: materialList,
+    loading,
+    error,
+    hasMore,
+    loadingMore,
+    loadMore,
+    retry,
+  } = useInfiniteList<MaterialItem>({
+    fetcher: fetchByPage,
+    refreshDeps: [searchKeyword],
+    containerRef,
+  });
 
   // 切换输入类型
   const handleTabChange = (value: string | number) => {
@@ -352,7 +325,7 @@ export default function Home() {
           hasMore={hasMore}
           error={error}
           onLoadMore={loadMore}
-          onRetry={handleRetry}
+          onRetry={retry}
         />
       </div>
     </div>

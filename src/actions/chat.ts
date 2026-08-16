@@ -1,4 +1,5 @@
 import { z } from "zod";
+import axios from "axios";
 import API from "@/api";
 
 // ==================== 类型定义 ====================
@@ -46,6 +47,7 @@ export interface SendMessageParams {
 // ==================== 验证 Schema ====================
 
 const createSessionSchema = z.object({
+  question: z.string().min(1, "问题不能为空"),
   title: z.string().optional(),
 });
 
@@ -70,9 +72,27 @@ const updateSessionSchema = z.object({
 
 // ==================== Action 结果类型 ====================
 
+/** 通用返回结构：成功携带业务数据，失败携带可直接展示的错误文案 */
 type ActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string };
+
+/**
+ * 消息分页结果
+ * 对应后端 /api/ai/message/page 分页接口返回 { list, total, page, pageSize }
+ */
+export interface MessagePageResult {
+  list: Message[];
+  total?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * 是否为请求被取消（路由切换/重复请求去重触发）。
+ * 取消属于预期行为，不应作为业务错误提示，调用方应返回空结果而非报错。
+ */
+const isCanceledError = (e: unknown): boolean => axios.isCancel(e);
 
 // ==================== 会话管理 Actions ====================
 
@@ -84,7 +104,7 @@ export async function createSession(
 ): Promise<ActionResult<Session>> {
   const parsed = createSessionSchema.safeParse(data || {});
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0].message };
+    return { success: false, error: parsed.error.issues[0].message };
   }
 
   try {
@@ -106,6 +126,8 @@ export async function getSessionList(): Promise<ActionResult<Session[]>> {
     const res = await API.getSessionList();
     return { success: true, data: res.data || [] };
   } catch (e) {
+    // 请求被取消（路由切换/去重）视为空结果，不弹错
+    if (isCanceledError(e)) return { success: true, data: [] };
     return {
       success: false,
       error: e instanceof Error ? e.message : "获取会话列表失败",
@@ -121,7 +143,7 @@ export async function updateSession(
 ): Promise<ActionResult<void>> {
   const parsed = updateSessionSchema.safeParse(data);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0].message };
+    return { success: false, error: parsed.error.issues[0].message };
   }
 
   try {
@@ -155,16 +177,27 @@ export async function deleteSession(
 // ==================== 消息管理 Actions ====================
 
 /**
- * 获取消息列表
+ * 获取消息列表（服务端分页）
  */
 export async function getMessageList(
   sessionId: string,
-): Promise<ActionResult<Message[]>> {
+): Promise<ActionResult<MessagePageResult>> {
   try {
     const res = await API.getMsgList({ sessionId });
-    console.log("获取消息列表成功:", res.data || []);
-    return { success: true, data: res.data || [] };
+    const raw = res?.data;
+    // 兼容：后端可能直接返回数组（旧逻辑）或 { list, total, page, pageSize } 分页对象
+    const data: MessagePageResult = Array.isArray(raw)
+      ? { list: raw }
+      : {
+          list: raw?.list ?? [],
+          total: raw?.total,
+          page: raw?.page,
+          pageSize: raw?.pageSize,
+        };
+    return { success: true, data };
   } catch (e) {
+    // 请求被取消（路由切换/去重）视为空结果，不弹错
+    if (isCanceledError(e)) return { success: true, data: { list: [] } };
     return {
       success: false,
       error: e instanceof Error ? e.message : "获取消息列表失败",
@@ -181,7 +214,7 @@ export async function sendMessage(
 ): Promise<ActionResult<Message>> {
   const parsed = sendMessageSchema.safeParse(data);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0].message };
+    return { success: false, error: parsed.error.issues[0].message };
   }
 
   try {

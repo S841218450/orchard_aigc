@@ -21,7 +21,7 @@ import messageManager from "@/utils/messageManager";
 
 const CreationPage = () => {
   const [activeMenu, setActiveMenu] = useState("textToImage");
-  const [activeTab, setActiveTab] = useState("1");
+  const [activeTab, setActiveTab] = useState("2"); //默认展示案例
   const [messageList, setMessageList] = useState<WorkMessage[]>([]);
   // 分页状态（与首页素材列表滚动加载保持一致）
   const [page, setPage] = useState(1);
@@ -122,6 +122,8 @@ const CreationPage = () => {
   // 提交创作
   const setChatMessage = useCallback(
     async (workData: WorkMessage) => {
+      // 提交创作后，切换到生成历史标签页
+      if (activeTab === "2") setActiveTab("1");
       // 先将消息加入列表
       setMessageList((prev) => [workData, ...prev]);
 
@@ -193,7 +195,7 @@ const CreationPage = () => {
     {
       key: "2",
       label: "优秀案例",
-      children: <ExampleContent activeKey={activeMenu} />,
+      children: <ExampleContent />,
     },
   ];
 
@@ -210,6 +212,7 @@ const CreationPage = () => {
           activeKey={activeTab}
           items={items}
           onChange={changeTab}
+          destroyOnHidden={false}
         />
       </div>
     </div>

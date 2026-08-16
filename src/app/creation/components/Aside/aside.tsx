@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { Wand2, Sparkles, ImageIcon, Megaphone } from "lucide-react";
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { Sparkles, ImageIcon, Megaphone } from "lucide-react";
+import { Button } from "antd";
 import "./aside.scss";
 import { createWork } from "@/actions/creation";
 import type {
   CreateWorkInput,
   GenerateWorkData,
-  SubmitImageToImageInput,
 } from "@/actions/creationSchemas";
 import type { WorkMessage } from "@/actions/types";
 import messageManager from "@/utils/messageManager";
@@ -13,6 +14,17 @@ import { useCreationEditStore } from "@/store/creation";
 import { TextToImage } from "@/app/creation/components/Aside/components/textToImage";
 import { ImageToImage } from "@/app/creation/components/Aside/components/imageToImage";
 import { MarketingImage } from "@/app/creation/components/Aside/components/marketingImage";
+
+// 表单组件向布局层上报的提交能力状态（驱动底部按钮禁用/加载态）
+export interface FormSubmitState {
+  canSubmit: boolean;
+  submitting: boolean;
+}
+
+// 表单组件通过 forwardRef 暴露的提交句柄（底部按钮点击时调用）
+export interface FormSubmitHandle {
+  submit: () => void;
+}
 
 const menuItems = [
   { key: "textToImage", label: "文生图", icon: Sparkles },
@@ -30,11 +42,19 @@ export const Aside = ({
   const [menu, setMenu] = useState("textToImage");
   // 历史记录点击"修改图片"时携带的待处理图片 URL
   const editImageUrl = useCreationEditStore((s) => s.editImageUrl);
+  // 当前表单的提交句柄（点击底部按钮时调用）
+  const formRef = useRef<FormSubmitHandle>(null);
+  // 当前表单上报的提交能力，切换菜单时重置，由新挂载的表单重新上报
+  const [submitState, setSubmitState] = useState<FormSubmitState>({
+    canSubmit: false,
+    submitting: false,
+  });
 
   // 切换菜单
   const handleMenuChange = (key: string) => {
     setMenu(key);
     onMenuChange?.(key);
+    setSubmitState({ canSubmit: false, submitting: false });
   };
 
   // 历史记录点击"修改图片"时自动切换到图生图
@@ -42,6 +62,7 @@ export const Aside = ({
     if (!editImageUrl) return;
     setMenu("imageToImage");
     onMenuChange?.("imageToImage");
+    setSubmitState({ canSubmit: false, submitting: false });
   }, [editImageUrl, onMenuChange]);
 
   // 提交创作描述
@@ -64,43 +85,78 @@ export const Aside = ({
   const getPage = () => {
     switch (menu) {
       case "textToImage":
-        return <TextToImage generateImage={generateImage} />;
+        return (
+          <TextToImage
+            ref={formRef}
+            generateImage={generateImage}
+            onStateChange={setSubmitState}
+          />
+        );
       case "imageToImage":
         return (
           <ImageToImage
+            ref={formRef}
             generateImage={generateImage}
             editImageUrl={editImageUrl}
+            onStateChange={setSubmitState}
           />
         );
       case "marketingImage":
-        return <MarketingImage generateImage={generateImage} />;
+        return (
+          <MarketingImage
+            ref={formRef}
+            generateImage={generateImage}
+            onStateChange={setSubmitState}
+          />
+        );
       default:
-        return <TextToImage generateImage={generateImage} />;
+        return (
+          <TextToImage
+            ref={formRef}
+            generateImage={generateImage}
+            onStateChange={setSubmitState}
+          />
+        );
     }
   };
 
   return (
     <div className="creation-aside">
-      <div className="aside-header">
-        <Wand2 size={20} />
-        <span>创作助手</span>
-      </div>
+      {/* 顶部悬浮胶囊：功能切换（与生图输入区错位隔离） */}
       <div className="aside-toolbar">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
-            <button
+            <Button
               key={item.key}
+              type="text"
               className={`toolbar-item ${menu === item.key ? "active" : ""}`}
               onClick={() => handleMenuChange(item.key)}
             >
-              <Icon size={18} />
+              <Icon size={16} />
               <span>{item.label}</span>
-            </button>
+            </Button>
           );
         })}
       </div>
-      <div className="aside-body">{getPage()}</div>
+      {/* 右侧主区：可滚动表单 + 固定底部提交按钮 */}
+      <div className="aside-main">
+        <div className="aside-body">{getPage()}</div>
+        <div className="aside-footer">
+          <Button
+            type="primary"
+            size="large"
+            block
+            disabled={!submitState.canSubmit}
+            loading={submitState.submitting}
+            onClick={() => formRef.current?.submit()}
+            icon={<Sparkles size={16} />}
+            className="generate-btn"
+          >
+            开始生成
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

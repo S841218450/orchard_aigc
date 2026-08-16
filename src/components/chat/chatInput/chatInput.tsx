@@ -1,18 +1,18 @@
 "use client";
 
 import "./chatInput.scss";
-import { Input, Button, Image } from "antd";
-import { useState, useRef, useCallback } from "react";
-const { TextArea } = Input;
-import {
-  ArrowUp,
-  Paperclip,
-  X,
-  Square,
-  FileText,
-  Image as ImageIcon,
-} from "lucide-react";
+import { Button, Upload } from "antd";
+import type { UploadFile, UploadProps } from "antd";
+import { useRef, useState } from "react";
+import { ArrowUp, Paperclip, Square } from "lucide-react";
+import { Sender, Attachments } from "@ant-design/x";
 import messageManager from "@/utils/messageManager";
+
+/**
+ * Attachments 的 items 类型（Attachment = UploadFile & FileCardProps 可选字段），
+ * @ant-design/x 主入口未导出 Attachment 类型，此处用 UploadFile 兼容结构代替
+ */
+type AttachmentLike = UploadFile & { description?: React.ReactNode };
 
 export interface FileItem {
   id: string;
@@ -36,6 +36,23 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
+/** 单个附件最大 10MB */
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+/** 文件选择 accept（与扩展名白名单保持一致） */
+const FILE_ACCEPT = "image/*,.pdf,.txt,.doc,.docx";
+/** 允许的扩展名白名单（Windows 下 Office 文件 type 为空，扩展名优先） */
+const ALLOWED_EXTENSIONS = [
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "webp",
+  "pdf",
+  "txt",
+  "doc",
+  "docx",
+];
+
 const ChatInput = ({
   isStreaming = false,
   stopChat = () => {},
@@ -54,253 +71,135 @@ const ChatInput = ({
     }
     onChange?.(text);
   };
-  const [isLoading, setIsLoading] = useState(false);
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [uploadList, setUploadList] = useState<UploadFile[]>([]);
+  const [attachmentsOpen, setAttachmentsOpen] = useState(false);
+  const attachmentsRef = useRef<React.ElementRef<typeof Attachments>>(null);
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const processFiles = useCallback((fileList: FileList) => {
-    const newFiles: FileItem[] = [];
-    const maxSize = 10 * 1024 * 1024;
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "application/pdf",
-      "text/plain",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-
-    Array.from(fileList).forEach((file) => {
-      if (file.size > maxSize) {
-        messageManager.error(`${file.name} 超过 10MB 限制`);
-        return;
-      }
-
-      if (!allowedTypes.includes(file.type)) {
-        messageManager.error(`${file.name} 格式不支持`);
-        return;
-      }
-
-      const isImage = file.type.startsWith("image/");
-      const item: FileItem = {
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        file,
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: isImage ? "image" : "file",
-      };
-
-      if (isImage) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          item.preview = e.target?.result as string;
-          setFiles((prev) => [...prev, item]);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        newFiles.push(item);
-      }
-    });
-
-    if (newFiles.length > 0) {
-      setFiles((prev) => [...prev, ...newFiles]);
+  // 附件校验：超限或扩展名不在白名单内的直接忽略；
+  // 合法文件返回 false 仅本地展示，阻止 antd Upload 实际上传
+  const beforeUpload: UploadProps["beforeUpload"] = (file) => {
+    if (file.size > MAX_FILE_SIZE) {
+      messageManager.error(`${file.name} 超过 10MB 限制`);
+      return Upload.LIST_IGNORE;
     }
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // 只有当鼠标真正离开容器时才取消高亮
-    const rect = e.currentTarget.getBoundingClientRect();
-    const { clientX: x, clientY: y } = e;
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      setIsDragging(false);
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      messageManager.error(`${file.name} 格式不支持`);
+      return Upload.LIST_IGNORE;
     }
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-
-      if (e.dataTransfer.files.length > 0) {
-        processFiles(e.dataTransfer.files);
-      }
-    },
-    [processFiles],
-  );
-
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files.length > 0) {
-        processFiles(e.target.files);
-        e.target.value = "";
-      }
-    },
-    [processFiles],
-  );
-
-  const removeFile = useCallback((id: string) => {
-    setFiles((prev) => prev.filter((f) => f.id !== id));
-  }, []);
-
-  const handleSend = async () => {
-    if (messageText.trim() === "" && files.length === 0) {
-      return;
-    }
-
-    const currentMessage = messageText.trim();
-    setIsLoading(true);
-
-    try {
-      sendMessage(currentMessage, files.length > 0 ? files : undefined);
-      setMessageText("");
-      setFiles([]);
-    } catch (e) {
-      console.error("handleSend error:", e);
-    } finally {
-      setIsLoading(false);
-    }
+    return false;
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+  // 发送时把 UploadFile 列表映射为页面约定的 FileItem
+  const buildFileItems = (files: UploadFile[]): FileItem[] | undefined => {
+    if (files.length === 0) return undefined;
+    return files
+      .filter((f) => f.originFileObj instanceof File)
+      .map((f) => ({
+        id: f.uid,
+        file: f.originFileObj as File,
+        name: f.name,
+        size: formatFileSize(f.size ?? 0),
+        type: (f.type?.startsWith("image/")
+          ? "image"
+          : "file") as FileItem["type"],
+      }));
   };
 
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case "image":
-        return <ImageIcon size={16} />;
-      case "file":
-        return <FileText size={16} />;
-      default:
-        return <FileText size={16} />;
-    }
+  const handleSend = () => {
+    if (messageText.trim() === "" && uploadList.length === 0) return;
+    sendMessage(messageText.trim(), buildFileItems(uploadList));
+    setMessageText("");
+    setUploadList([]);
+  };
+
+  // 点击附件按钮：先展开面板，再触发文件选择（面板渲染后 ref 才可用）
+  const handleOpenAttachments = () => {
+    setAttachmentsOpen(true);
+    setTimeout(() => {
+      attachmentsRef.current?.select({
+        accept: FILE_ACCEPT,
+        multiple: true,
+      });
+    }, 0);
   };
 
   return (
-    <div
-      className={`chat-input-wrapper ${isDragging ? "dragging" : ""}`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      {isDragging && (
-        <div className="drag-overlay">
-          <div className="drag-content">
-            <Paperclip size={32} />
-            <p>释放文件即可上传</p>
-          </div>
-        </div>
-      )}
-
-      {files.length > 0 && (
-        <div className="file-list">
-          {files.map((file) => (
-            <div key={file.id} className="file-item">
-              {file.type === "image" && file.preview ? (
-                <div className="file-preview">
-                  <div className="file-preview-wrapper">
-                    <Image
-                      height={40}
-                      src={file.preview}
-                      alt={file.name}
-                      preview={false}
-                    />
-                    <div className="file-preview-mask">
-                      <Button
-                        type="text"
-                        size="small"
-                        className="file-remove-btn"
-                        icon={<X size={12} />}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFile(file.id);
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="file-icon">{getFileIcon(file.type)}</div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      {/* 内容输入区域 */}
-      <TextArea
+    <div className="chat-input-wrapper">
+      <Sender
+        className="chat-sender"
         value={messageText}
-        className="chat-input-textarea"
-        onChange={(e) => setMessageText(e.target.value)}
-        onKeyDown={handleKeyDown}
+        onChange={(text) => setMessageText(text)}
+        onSubmit={handleSend}
         placeholder={placeholder}
         autoSize={{ minRows: 2, maxRows: 6 }}
-        disabled={isLoading}
-      />
-
-      <div className="chat-input-operator">
-        <div className="operator-left">
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            onChange={handleFileSelect}
-            multiple
-            accept="image/*,.pdf,.txt,.doc,.docx"
-          />
-          <Button
-            type="text"
-            icon={<Paperclip size={18} />}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isLoading}
-          />
-          {leftOpration}
-        </div>
-        <div className="operator-right">
-          {rightOpration}
-          {isStreaming ? (
+        loading={isStreaming}
+        onCancel={stopChat}
+        prefix={
+          <div className="chat-input-prefix">
+            <Button
+              type="text"
+              className="attach-btn"
+              icon={<Paperclip size={18} />}
+              title="添加附件"
+              onClick={handleOpenAttachments}
+            />
+            {leftOpration}
+          </div>
+        }
+        suffix={
+          isStreaming ? (
             <Button
               shape="circle"
               type="primary"
               icon={<Square size={18} />}
               onClick={stopChat}
-              loading={isLoading}
-              disabled={isLoading}
             />
           ) : (
             <Button
               shape="circle"
               type="primary"
               icon={<ArrowUp size={18} />}
+              disabled={messageText.trim() === "" && uploadList.length === 0}
               onClick={handleSend}
-              loading={isLoading}
-              disabled={
-                isLoading || (messageText.trim() === "" && files.length === 0)
-              }
             />
-          )}
-        </div>
-      </div>
+          )
+        }
+        footer={
+          rightOpration ? (
+            <div className="chat-input-footer">{rightOpration}</div>
+          ) : null
+        }
+        header={
+          <Sender.Header
+            title="附件"
+            open={attachmentsOpen}
+            onOpenChange={setAttachmentsOpen}
+            closable
+          >
+            <Attachments
+              ref={attachmentsRef}
+              items={uploadList as unknown as AttachmentLike[]}
+              accept={FILE_ACCEPT}
+              beforeUpload={beforeUpload}
+              onChange={({ fileList }) => setUploadList(fileList)}
+              placeholder={{
+                icon: <Paperclip size={24} />,
+                title: "拖拽或点击上传附件",
+                description:
+                  "支持图片 / PDF / Word / 文本，单个文件不超过 10MB",
+              }}
+            />
+          </Sender.Header>
+        }
+      />
     </div>
   );
 };

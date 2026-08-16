@@ -31,7 +31,14 @@ pipeline {
         stage('构建Docker镜像') {
             steps {
                 sh """
-                    docker build -t ${FRONT_IMAGE}:${FRONT_TAG} .
+                    # 读取服务器 .env 中的构建参数（rewrites 构建期就需要，见 Dockerfile）
+                    # 用 POSIX 的 . 代替 source，兼容服务器的 /bin/sh(dash)
+                    set -a
+                    . ${ENV_FILE}
+                    set +a
+                    docker build -t ${FRONT_IMAGE}:${FRONT_TAG} \\
+                        --build-arg ADMIN_API_TARGET="\${ADMIN_API_TARGET}" \\
+                        --build-arg AI_API_TARGET="\${AI_API_TARGET}" .
                     docker tag ${FRONT_IMAGE}:${FRONT_TAG} ${FRONT_IMAGE}:latest
                     echo "✅ 镜像构建完成 ${FRONT_IMAGE}:${FRONT_TAG}"
                 """

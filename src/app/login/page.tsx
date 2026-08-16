@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Segmented, App } from "antd";
 import { ArrowLeft } from "lucide-react";
 import { useUserStore } from "@/store";
+import { DEFAULT_IMAGES } from "@/constants/assets";
 import messageManager from "@/utils/messageManager";
 import "@/style/basePage/login.scss";
 import NextImage from "next/image";
@@ -82,7 +83,7 @@ export default function LoginPage() {
             <NextImage
               width={100}
               height={50}
-              src="/logo_opcity.png"
+              src={DEFAULT_IMAGES.logo}
               alt="logo"
             />
           </div>

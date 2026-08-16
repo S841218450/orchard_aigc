@@ -277,7 +277,7 @@ export function createSSE(options: SSEOptions): SSEController {
 
       if (!response.ok) {
         throw new Error(
-          `SSE 请求失败: ${response.status} ${response.statusText}`,
+          `AI服务请求失败: ${response.status} ${response.statusText}`,
         );
       }
 

@@ -12,6 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useUserStore } from "@/store";
+import { DEFAULT_IMAGES } from "@/constants/assets";
 import "./header.scss";
 import NextImage from "next/image";
 
@@ -57,7 +58,10 @@ export default function Header() {
     <div className="user-panel">
       <div className="user-panel-header">
         <div className="user-panel-avatar">
-          <Avatar size={48} src={userInfo?.avatar || "/avatar.png"} />
+          <Avatar
+            size={48}
+            src={userInfo?.avatar || DEFAULT_IMAGES.defaultAvatar}
+          />
         </div>
         <div className="user-panel-info">
           <div className="user-panel-phone">
@@ -129,7 +133,7 @@ export default function Header() {
           width={100}
           loading="eager"
           height={50}
-          src="/logo_all.jpg"
+          src={DEFAULT_IMAGES.logoFull}
           alt="巧思-AI智能创作平台"
         />
         <nav className="header-menu">
@@ -162,7 +166,10 @@ export default function Header() {
             overlayClassName="user-popover"
           >
             <div className="user-avatar-trigger">
-              <Avatar size={32} src={userInfo?.avatar || "/avatar.png"} />
+              <Avatar
+                size={32}
+                src={userInfo?.avatar || DEFAULT_IMAGES.defaultAvatar}
+              />
             </div>
           </Popover>
         ) : (

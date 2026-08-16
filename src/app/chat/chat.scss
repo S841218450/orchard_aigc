@@ -1,8 +1,14 @@
 .chat-page {
   display: flex;
   height: 100vh;
-  background: #fafafa;
+  background: var(--color-bg-sunken);
   overflow: hidden;
+  position: relative;
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
 
   .chat-aside {
     flex-shrink: 0;
@@ -12,10 +18,13 @@
   }
 
   .chat-content-wrapper {
-    flex: 1;
     display: flex;
     flex-direction: column;
     height: 100%;
+    width: 60%;
+    min-width: 900px;
+    max-width: 1200px;
+    margin: 0 auto;
     overflow: hidden;
     padding: 16px 24px;
 

@@ -105,11 +105,12 @@ export default function ChatAside({
             ) : sessionList.length === 0 ? (
               <div className="session-empty">暂无对话</div>
             ) : (
-              sessionList.map((session) => (
+              sessionList.map((session, index) => (
                 <div
                   key={session.id}
                   className={`session-item ${currentSessionId === session.id ? "active" : ""}`}
                   onClick={() => handleSelectSession(session.id)}
+                  style={{ ["--i" as any]: index }}
                 >
                   <div className="session-title">
                     {session.title || "新对话"}

@@ -59,6 +59,18 @@ const KnowledgeCom = () => {
       if (res.success) {
         const data = res.data;
         setFolderTree(data);
+        // 默认展开全部目录（仅首次加载/未手动折叠时生效，刷新时保留用户折叠状态）
+        const allIds: string[] = [];
+        const walk = (nodes: FolderTreeVo[]) => {
+          nodes.forEach((n) => {
+            allIds.push(n.id);
+            if (n.children) walk(n.children);
+          });
+        };
+        walk(data);
+        if (allIds.length) {
+          setExpandedKeys((prev) => (prev.length ? prev : allIds));
+        }
         if (data.length > 0 && !selectedFolderId) {
           setSelectedFolderId(data[0].id);
           setSelectedFolderName(data[0].folderName);

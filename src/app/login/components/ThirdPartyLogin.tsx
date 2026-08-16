@@ -14,22 +14,25 @@ type ThirdPartyType = "wechat" | "alipay" | "github";
 
 const THIRD_PARTY_CONFIG: Record<
   ThirdPartyType,
-  { icon: React.ReactNode; label: string; color: string }
+  { icon: React.ReactNode; label: string; color: string; disabled: boolean }
 > = {
   wechat: {
     icon: <WechatOutlined size={18} />,
     label: "微信",
     color: "#07c160",
+    disabled: true,
   },
   alipay: {
     icon: <AlipayOutlined size={18} />,
     label: "支付宝",
     color: "#1677ff",
+    disabled: true,
   },
   github: {
     icon: <GithubOutlined size={18} />,
     label: "Github",
     color: "#333",
+    disabled: false,
   },
 };
 
@@ -116,8 +119,9 @@ export default function ThirdPartyLogin({
       ).map(([key, config]) => (
         <Button
           key={key}
+          className={config.disabled ? "disabled" : ""}
           onClick={() => handleThirdPartyLogin(key)}
-          disabled={isLoading}
+          disabled={isLoading || config.disabled}
         >
           <span style={{ color: config.color }}>{config.icon}</span>
           {config.label}

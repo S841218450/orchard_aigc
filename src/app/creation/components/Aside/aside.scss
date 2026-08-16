@@ -5,76 +5,50 @@ $spacing-unit: 8px;
   width: 20vw;
   min-width: 400px;
   max-width: 600px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
-  background: var(--color-bg-elevated);
-  padding: $spacing-unit * 2.5;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: $spacing-unit * 2;
-  box-shadow: var(--shadow-sm);
-  height: fit-content;
+  overflow: visible;
   font-family: var(--font-sans);
-  transition: box-shadow var(--duration-normal) var(--ease-out-expo);
 
-  &:hover {
-    box-shadow: var(--shadow-md);
-  }
-
-  .aside-header {
+  /* ==================== 顶部悬浮胶囊（功能切换，与表单区错位隔离） ==================== */
+  .aside-toolbar {
+    /* 收窄 + 左侧错位，悬浮在主卡片顶部边缘上方 */
+    align-self: flex-start;
+    position: relative;
+    z-index: 2;
     display: flex;
     align-items: center;
-    gap: $spacing-unit * 1.25;
-    padding-bottom: $spacing-unit * 2;
-    border-bottom: 1px solid var(--color-border-light);
-
-    svg {
-      color: var(--color-primary);
-    }
-
-    span {
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--color-text);
-      letter-spacing: -0.3px;
-    }
-  }
-
-  .aside-toolbar {
-    display: flex;
-    gap: $spacing-unit * 1;
-    padding: 8px;
+    gap: $spacing-unit * 0.5;
+    margin: $spacing-unit 0 (-$spacing-unit * 2.5) $spacing-unit * 2;
+    padding: $spacing-unit * 0.5;
     background: var(--color-bg-sunken);
-    border-radius: var(--radius-md);
     border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
 
     .toolbar-item {
-      flex: 1;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: $spacing-unit * 0.5;
-      padding: $spacing-unit * 1.5 $spacing-unit * 1;
-      border: none;
-      background: transparent;
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      color: var(--color-text-tertiary);
-      transition: all var(--duration-normal) var(--ease-out-expo);
+      gap: $spacing-unit * 0.75;
+      height: 32px;
+      padding: 0 $spacing-unit * 1.75;
       font-size: 13px;
       font-weight: 500;
+      color: var(--color-text-tertiary);
+      border-radius: var(--radius-sm);
+      transition: all var(--duration-normal) var(--ease-out-expo);
 
       &:hover {
         color: var(--color-text);
         background: var(--color-bg-elevated);
-        box-shadow: var(--shadow-xs);
       }
 
       &.active {
         color: var(--color-primary);
         background: var(--color-bg-elevated);
-        box-shadow: var(--shadow-sm);
         font-weight: 600;
+        box-shadow: var(--shadow-sm);
 
         svg {
           color: var(--color-primary);
@@ -83,19 +57,86 @@ $spacing-unit: 8px;
 
       svg {
         color: var(--color-text-quaternary);
+        flex-shrink: 0;
       }
 
       span {
         white-space: nowrap;
+        line-height: 1;
       }
     }
   }
 
-  .aside-body {
+  /* ==================== 右侧主区：可滚动表单 + 固定底部按钮 ==================== */
+  .aside-main {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: $spacing-unit * 2;
-    animation: fadeIn 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-light);
+    background: var(--color-bg-elevated);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--duration-normal) var(--ease-out-expo);
+
+    &:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .aside-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-unit * 2;
+      /* 顶部留白给悬浮胶囊（胶囊下探进主卡片约 20px） */
+      padding: $spacing-unit * 4 $spacing-unit * 2.5 $spacing-unit * 2.5;
+      animation: fadeIn 200ms cubic-bezier(0.16, 1, 0.3, 1);
+
+      &::-webkit-scrollbar {
+        width: 5px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background-color: #d4d4d8;
+        border-radius: 3px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    }
+
+    .aside-footer {
+      flex-shrink: 0;
+      padding: $spacing-unit * 2 $spacing-unit * 2.5;
+      border-top: 1px solid var(--color-border-light);
+      background: var(--color-bg-elevated);
+
+      .generate-btn {
+        height: 44px;
+        border-radius: var(--radius-md);
+        font-size: 15px;
+        font-weight: 600;
+        background: #18181b;
+        border: none;
+        box-shadow: var(--shadow-sm);
+        transition: all var(--duration-normal) var(--ease-out-expo);
+        letter-spacing: 0.2px;
+
+        &:hover {
+          background: #27272a;
+          box-shadow: var(--shadow-md);
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          background: #3f3f46;
+          transform: translateY(0);
+          box-shadow: var(--shadow-xs);
+        }
+      }
+    }
   }
 
   .aside-content {
@@ -114,343 +155,26 @@ $spacing-unit: 8px;
       svg {
         color: #606060;
       }
+
+      // 参考图数量提示（标题行右侧）
+      .image-count-hint {
+        font-size: 12px;
+        color: var(--color-text-quaternary);
+        font-weight: normal;
+        margin-left: 4px;
+      }
+
+      // 参考图标注操作提示（标题行右侧）
+      .image-annotate-hint {
+        font-size: 12px;
+        color: var(--color-text-quaternary);
+        font-weight: normal;
+        margin-left: 8px;
+      }
     }
 
     .ant-select {
       width: 100%;
-    }
-  }
-
-  .upload-area {
-    /* 整体容器：不限制最大高度（堆叠模式下卡片会向下偏移露出），但限制最小高度 */
-    position: relative;
-    min-height: 160px;
-    overflow: visible;
-    background: var(--color-bg-sunken);
-    border-radius: var(--radius-md);
-    border: 2px dashed #9e9e9e;
-    padding: 12px 14px; // 让内部卡片不要贴边
-    box-sizing: border-box;
-    .upload-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: $spacing-unit;
-      color: var(--color-text-tertiary);
-      font-size: 14px;
-      border-radius: var(--radius-md);
-      /* 空上传区固定高度，与有图时视觉一致 */
-      min-height: 160px;
-      padding: $spacing-unit * 2;
-      box-sizing: border-box;
-      margin: -12px -14px; // 抵消父容器 12px/14px padding，使拖拽区占满整个 upload-area
-      border: none !important; // 去掉 antd 内部边框（父容器已画边框）
-
-      &:hover {
-        border-color: var(--color-primary);
-        background: var(--color-primary-muted);
-      }
-      .ant-upload-drag-icon {
-        margin-bottom: 0;
-      }
-
-      .ant-upload-text {
-        font-size: 14px;
-        color: var(--color-text-tertiary);
-        margin: 0;
-      }
-
-      .ant-upload-hint {
-        font-size: 12px;
-        color: var(--color-text-quaternary);
-        margin: 0;
-      }
-    }
-
-    .uploading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: $spacing-unit;
-      color: var(--color-primary);
-
-      .spin {
-        animation: spin 1s linear infinite;
-      }
-    }
-
-    .upload-hint {
-      font-size: 12px;
-      color: var(--color-text-quaternary);
-    }
-
-    .image-count-hint {
-      font-size: 12px;
-      color: var(--color-text-quaternary);
-      font-weight: normal;
-      margin-left: 4px;
-    }
-
-    /* ====================================================================== */
-    /* ===================== 堆叠 / 平铺 图片容器 核心样式 ===================== */
-    /* ====================================================================== */
-    .stacked-images {
-      position: relative;
-      display: flex;
-      align-items: stretch;
-      overflow: visible;
-      width: 100%;
-      box-sizing: border-box;
-
-      /* =============== 模式一：平铺等宽（2 / 3 项） =============== */
-      &.linear-mode {
-        gap: 12px;
-        padding: 4px 0 8px;
-
-        .stacked-image-item {
-          // 等分布局：每项宽度 = (100% - (N-1) * gap) / N
-          flex: 1 1 0;
-          width: 0;
-          max-height: 130px; // 平铺模式：统一固定高度
-          margin-left: 0 !important; // 取消堆叠用的负 margin
-          transform: none !important; // 取消堆叠用的旋转偏移
-        }
-      }
-
-      /* =============== 模式二：堆叠铺满（4 / 5 项）—— 整体宽度必须 100% =============== */
-      &.stacked-mode {
-        padding: 4px 0 36px 0; // 底部额外空间：最后一张卡片会向下偏移 21~24px
-        align-items: flex-start;
-
-        .stacked-image-item {
-          // 所有卡片统一宽高比（4:5，视觉上类似拍立得长方形）
-          // aspect-ratio: 4 / 5;
-          flex-shrink: 0;
-          overflow: visible;
-          transform-origin: center center;
-
-          &:hover {
-            // 任意堆叠项 hover：转正 + 上浮 + 放大
-            z-index: 99 !important;
-            border-color: #ffffff;
-            transform: translate(0, -6px) rotate(0deg) scale(1.03) !important;
-          }
-        }
-
-        /* ---------- count-4：4 项精准铺满 100% ---------- */
-        /* 公式（父容器相对）：W + (N-1) × (W - overlap) = 100% */
-        /* → overlap = (N · W - 100%) / (N - 1)  — 只需改 --card-w，margin-left 自动联动 */
-        &.count-4 {
-          --card-w: 42%;
-          --item-count: 4;
-          --overlap: calc(
-            (var(--item-count) * var(--card-w) - 100%) / (var(--item-count) - 1)
-          );
-
-          .stacked-image-item {
-            max-width: var(--card-w);
-            width: var(--card-w);
-            flex-basis: var(--card-w);
-          }
-
-          .stacked-image-item:nth-child(1) {
-            transform: translate(0, 0) rotate(-1.5deg);
-          }
-          .stacked-image-item:nth-child(2) {
-            margin-left: calc(-1 * var(--overlap));
-            transform: translate(0, 7px) rotate(1deg);
-          }
-          .stacked-image-item:nth-child(3) {
-            margin-left: calc(-1 * var(--overlap));
-            transform: translate(0, 14px) rotate(-0.8deg);
-          }
-          .stacked-image-item:nth-child(4) {
-            margin-left: calc(-1 * var(--overlap));
-            transform: translate(0, 21px) rotate(1.3deg);
-          }
-        }
-
-        /* ---------- count-5：5 项精准铺满 100%（防御性保留，MAX=4 时暂用不到） ---------- */
-        /* 同上，用变量绑定。示例：--card-w=37% → overlap=(5*37-100)/4 = 21.25% */
-        &.count-5 {
-          --card-w: 37%;
-          --item-count: 5;
-          --overlap: calc(
-            (var(--item-count) * var(--card-w) - 100%) / (var(--item-count) - 1)
-          );
-
-          .stacked-image-item {
-            max-width: var(--card-w);
-            width: var(--card-w);
-            flex-basis: var(--card-w);
-          }
-
-          .stacked-image-item:nth-child(1) {
-            transform: translate(0, 0) rotate(-1.5deg);
-          }
-          .stacked-image-item:nth-child(2) {
-            margin-left: calc(-1 * var(--overlap));
-            transform: translate(0, 6px) rotate(1deg);
-          }
-          .stacked-image-item:nth-child(3) {
-            margin-left: calc(-1 * var(--overlap));
-            transform: translate(0, 12px) rotate(-0.8deg);
-          }
-          .stacked-image-item:nth-child(4) {
-            margin-left: calc(-1 * var(--overlap));
-            transform: translate(0, 18px) rotate(1.3deg);
-          }
-          .stacked-image-item:nth-child(5) {
-            margin-left: calc(-1 * var(--overlap));
-            transform: translate(0, 24px) rotate(-1deg);
-          }
-        }
-      }
-
-      /* ==================== 所有模式通用：单张卡片外壳 ==================== */
-      .stacked-image-item {
-        position: relative;
-        border-radius: var(--radius-md);
-        cursor: pointer;
-        transition: transform var(--duration-normal) var(--ease-out-expo);
-        overflow: visible; // 外层不裁切，给删除按钮留出空间
-      }
-
-      /* ==================== 图片==================== */
-      .stacked-preview-img {
-        border-radius: var(--radius-md);
-        // border: 5px solid #e7e7e7;
-        background: #e7e7e7;
-        filter: blur(grayscale(50%));
-        padding: 5px;
-        box-sizing: border-box;
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden;
-        box-sizing: border-box;
-        &:hover {
-          filter: none;
-        }
-      }
-
-      /* ==================== 删除按钮 ==================== */
-      .stacked-remove-btn {
-        position: absolute;
-        top: -10px; // 由于 5px 白边，按钮再往外多挪一点
-        right: -10px;
-        z-index: 30;
-        width: 24px;
-        height: 24px;
-        min-width: 24px;
-        background: #fff !important;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-        padding: 0;
-
-        &:hover {
-          background: var(--color-error) !important;
-          color: #fff !important;
-          transform: scale(1.1);
-        }
-      }
-
-      /* ==================== 追加卡片（"+"号虚线方块） ==================== */
-      & .stacked-add-item {
-        background: var(--color-bg); // 略深的背景作为虚线卡的底色
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        aspect-ratio: 4 / 5;
-        cursor: pointer;
-        overflow: visible !important;
-        box-shadow: none;
-        border-width: 0 !important;
-
-        // 虚线框（画在内容区内侧，不占额外空间，视觉对齐图片的 5px 白边内缘）
-        &::before {
-          content: "";
-          position: absolute;
-          inset: 5px; // 留 5px 空白，模拟图片卡片的白边位置
-          border: 1.5px dashed var(--color-border);
-          border-radius: calc(var(--radius-md) - 2px);
-          pointer-events: none;
-          box-sizing: border-box;
-          transition: border-color var(--duration-fast) var(--ease-out-expo);
-        }
-
-        // 拖拽文件悬停到卡片：虚线框变主题色
-        &:has(.ant-upload-drag-hover)::before {
-          border-color: var(--color-primary);
-        }
-
-        // Dragger 撑满整卡，去掉默认虚线边框与背景，图标居中
-        .stacked-add-dragger {
-          width: 100%;
-          height: 100%;
-        }
-      }
-    }
-
-    // 兼容旧的单图预览（保留，防止其他场景引用）
-    .preview-container {
-      position: relative;
-      display: inline-block;
-
-      .preview-img {
-        max-width: 100%;
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-sm);
-      }
-
-      .remove-btn {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: var(--color-error);
-        color: white;
-        border: 2px solid white;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        line-height: 1;
-        transition: all var(--duration-fast) var(--ease-out-expo);
-        box-shadow: var(--shadow-sm);
-
-        &:hover {
-          background: #b91c1c;
-          transform: scale(1.1);
-        }
-      }
-    }
-  }
-
-  .generate-btn {
-    margin-top: $spacing-unit;
-    height: 44px;
-    border-radius: var(--radius-md);
-    font-size: 15px;
-    font-weight: 600;
-    background: #18181b;
-    border: none;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--duration-normal) var(--ease-out-expo);
-    letter-spacing: 0.2px;
-
-    &:hover {
-      background: #27272a;
-      box-shadow: var(--shadow-md);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      background: #3f3f46;
-      transform: translateY(0);
-      box-shadow: var(--shadow-xs);
     }
   }
 }
@@ -463,15 +187,6 @@ $spacing-unit: 8px;
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
   }
 }
 
@@ -630,44 +345,16 @@ $spacing-unit: 8px;
   }
 }
 
-/* ====================================================================== */
-/* ========================= 图片框选 Popover 样式 ========================= */
-/* ====================================================================== */
+/* 图片编辑面板（Popover 内容）样式已抽取至 @/components/baseCom/imageEdit/imageEdit.scss */
 
-// 缩略图外层包装（用于角标定位 + Popover 点击热区）
-.thumbnail-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  overflow: hidden;
-}
-
-// 缩略图选框数量角标（堆叠在缩略图右下角）
-.thumbnail-box-badge {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  z-index: 5;
+// 图片比例下拉选项：图标 + 文字水平排列（下拉面板经 portal 渲染到 body，需全局选择器）
+.ratio-option {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(22, 119, 255, 0.92);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.4;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
-  animation: fadeIn 0.2s var(--ease-out-expo);
+  gap: 6px;
 
   svg {
-    color: #fff;
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
   }
 }
-
-/* 图片编辑面板（Popover 内容）样式已抽取至 @/components/baseCom/imageEdit/imageEdit.scss */
-/* 此处仅保留缩略图相关的框选角标样式 */

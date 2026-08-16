@@ -2,6 +2,8 @@
 const apiList = [
   // 上传知识库文档
   { url: "/upload", apiName: "uploadKnowledge" },
+  // 上传知识库文档（分块）
+  { url: "/uploadBatch", apiName: "uploadKnowledgeBatch" },
   // 重试上传知识库文档
   { url: "/retry", apiName: "retryKnowledgeUpload" },
   // 获取知识库文档列表

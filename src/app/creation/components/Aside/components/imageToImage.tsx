@@ -1,53 +1,70 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Button, Upload, Image, Popconfirm, Popover, Segmented } from "antd";
-import type { UploadProps } from "antd";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
+import { Image, Popover, Select } from "antd";
 import RadioGraph from "@/components/baseCom/radio/radioGraph";
-import { ImageIcon, Loader2, Sparkles, Plus, X, Square } from "lucide-react";
+import {
+  ImageIcon,
+  Sparkles,
+  X,
+  Square,
+  Box,
+  Images,
+  Scaling,
+  Gauge,
+} from "lucide-react";
 import API from "@/api";
 import messageManager from "@/utils/messageManager";
 import { useCreationEditStore } from "@/store/creation";
 import type { ImageToImageFormData } from "@/actions/creationSchemas";
+import type {
+  FormSubmitHandle,
+  FormSubmitState,
+} from "@/app/creation/components/Aside/aside";
 import TextArea from "antd/es/input/TextArea";
 import { ImageEdit } from "@/components/baseCom/imageEdit/imageEdit";
 import type { SelectionBox } from "@/components/baseCom/imageEdit/imageEdit";
 import { bakeBoxesToImage } from "@/utils/imageBake";
+import { BaseUpload } from "@/components/baseCom/upload/baseUpload";
+import type { UploadImageItem } from "@/components/baseCom/upload/baseUpload";
+import {
+  CREATION_MODEL_LIST,
+  DEFAULT_CREATION_MODEL,
+  PROPORTION_LIST,
+  getRatioIcon,
+  getRatioDesc,
+} from "@/constants/creationModel";
 
 // 最多允许上传的图片数量
 const MAX_IMAGES = 4;
 
 // 图生图
-export const ImageToImage = ({
-  generateImage,
-  editImageUrl,
-}: {
-  generateImage: (data: ImageToImageFormData) => void;
-  // 历史记录"修改图片"传入的图片 URL（消费后自动清除）
-  editImageUrl?: string | null;
-}) => {
-  const { Dragger } = Upload;
+export const ImageToImage = forwardRef<
+  FormSubmitHandle,
+  {
+    generateImage: (data: ImageToImageFormData) => void;
+    // 历史记录"修改图片"传入的图片 URL（消费后自动清除）
+    editImageUrl?: string | null;
+    // 上报提交能力（驱动布局层底部按钮禁用/加载态）
+    onStateChange?: (state: FormSubmitState) => void;
+  }
+>(({ generateImage, editImageUrl, onStateChange }, ref) => {
   const [imagePrompt, setImagePrompt] = useState("");
   const [referenceImages, setReferenceImages] = useState<
     { id: number; url: string }[]
-  >([
-    {
-      id: 1,
-      url: "https://images.unsplash.com/photo-1510001618818-4b4e3d86bf0f",
-    },
-    {
-      id: 2,
-      url: "https://images.unsplash.com/photo-1507513319174-e556268bb244",
-    },
-    {
-      id: 3,
-      url: "https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2",
-    },
-  ]); // 参考图片URL列表
-  const [uploading, setUploading] = useState(false);
+  >([]); // 参考图片URL列表
   // 提交处理中（烘焙选框并重新上传）
   const [submitting, setSubmitting] = useState(false);
   const [referenceStrength, setReferenceStrength] = useState(2); // 图片参考强度
   const [imageQty, setImageQty] = useState(1); // 生成张数
+  const [model, setModel] = useState(DEFAULT_CREATION_MODEL.value); // 生图模型
+
+  const [imageProportion, setImageProportion] = useState("1:1");
   // 每张图片独立维护自己的选框集合（key 是图片 URL，value 是选框数组）
   const [boxesMap, setBoxesMap] = useState<Record<string, SelectionBox[]>>({});
   // 当前在 Popover 中打开的图片索引
@@ -64,63 +81,71 @@ export const ImageToImage = ({
     useCreationEditStore.getState().clearEditImage();
   }, [editImageUrl]);
 
-  // ================ 上传图片配置 ================
-  const uploadProps: UploadProps = {
-    name: "file",
-    accept: "image/*",
-    multiple: true,
-    showUploadList: false,
-    customRequest: async (options) => {
-      const { file, onSuccess, onError } = options;
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-      try {
-        const res = await API.uploadFile(formData);
-        const fileUrl = res.data.fileUrl;
-        setReferenceImages((prev) => {
-          if (prev.length >= MAX_IMAGES) {
-            messageManager.warning(`最多只能上传 ${MAX_IMAGES} 张图片`);
-            return prev;
-          }
-          return [...prev, { id: Date.now(), url: fileUrl }];
-        });
-        onSuccess?.(res);
-        messageManager.success("图片上传成功");
-      } catch (e) {
-        console.error("上传失败:", e);
-        onError?.(e as Error);
-        messageManager.error("图片上传失败，请重试");
-      } finally {
-        setUploading(false);
-      }
-    },
-  };
-
-  // 删除指定索引的图片（同时清理对应的选框数据）
-  const handleRemoveImage = (index: number) => {
-    const imgUrl = referenceImages[index];
-    setBoxesMap((prev) => {
-      const next = { ...prev };
-      delete next[imgUrl.url];
-      return next;
-    });
-    setReferenceImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
+  // ================ 参考图交互回调 ================
   // 子组件（ImageEdit）选框变化时同步保存，供缩略图角标统计
   const handleBoxesChange = (imgUrl: string, boxes: SelectionBox[]) => {
     setBoxesMap((prev) => ({ ...prev, [imgUrl]: boxes }));
   };
 
-  // ================ 动态布局计算 ================
-  // 当前总项数（图片张数 + 未达上限时追加 1 个"+"卡片）
-  const itemsCount =
-    referenceImages.length + (referenceImages.length < MAX_IMAGES ? 1 : 0);
-  // 4 项及以上启用堆叠效果，否则平铺等宽铺满
-  const isStacked = itemsCount >= 4;
+  // 删除图片前清理对应的选框数据（列表移除由 BaseUpload 内部完成）
+  const handleRemoveImage = (item: UploadImageItem) => {
+    setBoxesMap((prev) => {
+      const next = { ...prev };
+      delete next[item.url];
+      return next;
+    });
+  };
 
-  const handleSubmit = async () => {
+  // 缩略图渲染：点击弹出 ImageEdit 标注面板（含选框数量角标）
+  const renderThumbnail = (item: UploadImageItem, index: number) => (
+    <Popover
+      open={openPopoverIndex === index}
+      onOpenChange={(open) => {
+        setOpenPopoverIndex(open ? index : null);
+      }}
+      trigger="click"
+      placement="rightTop"
+      style={{ padding: 0 }}
+      className="image-edit-popover-wrapper"
+      content={
+        <div className="image-edit-close-wrap">
+          <ImageEdit
+            key={item.url}
+            imageUrl={item.url}
+            initialBoxes={boxesMap[item.url] ?? []}
+            onBoxesChange={(boxes) => handleBoxesChange(item.url, boxes)}
+          />
+          {/* 右上角关闭按钮 */}
+          <button
+            type="button"
+            className="image-edit-close-btn"
+            onClick={() => setOpenPopoverIndex(null)}
+            aria-label="关闭编辑面板"
+          >
+            <X size={12} />
+          </button>
+        </div>
+      }
+    >
+      <div className="thumbnail-wrapper">
+        <Image
+          src={item.url}
+          alt={`参考图 ${index + 1}`}
+          className="stacked-preview-img"
+          preview={{ open: false }}
+        />
+        {/* 已选框数量角标 */}
+        {(boxesMap[item.url]?.length ?? 0) > 0 && (
+          <span className="thumbnail-box-badge">
+            <Square size={10} />
+            {boxesMap[item.url]!.length}
+          </span>
+        )}
+      </div>
+    </Popover>
+  );
+
+  const handleSubmit = useCallback(async () => {
     if (referenceImages.length === 0) {
       messageManager.warning("请先上传参考图片");
       return;
@@ -160,8 +185,10 @@ export const ImageToImage = ({
       generateImage({
         type: "image",
         prompt: imagePrompt,
+        model,
         params: {
           imageQty,
+          imageProportion,
           referenceIntensity: Number(referenceStrength),
         },
         originImageList,
@@ -172,7 +199,27 @@ export const ImageToImage = ({
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [
+    referenceImages,
+    boxesMap,
+    imagePrompt,
+    model,
+    imageQty,
+    imageProportion,
+    referenceStrength,
+    generateImage,
+  ]);
+
+  // 暴露提交方法给布局层底部按钮
+  useImperativeHandle(ref, () => ({ submit: handleSubmit }), [handleSubmit]);
+
+  // 上报提交能力：至少一张参考图才允许提交
+  useEffect(() => {
+    onStateChange?.({
+      canSubmit: referenceImages.length > 0,
+      submitting,
+    });
+  }, [referenceImages.length, submitting, onStateChange]);
 
   return (
     <>
@@ -184,136 +231,41 @@ export const ImageToImage = ({
           <span className="image-count-hint">
             （{referenceImages.length}/{MAX_IMAGES}）
           </span>
+          <span className="image-annotate-hint">点击缩略图可进行标注</span>
         </div>
-        <div className="upload-area">
-          {referenceImages.length > 0 ? (
-            <div
-              className={`stacked-images ${
-                isStacked ? "stacked-mode" : "linear-mode"
-              } count-${itemsCount}`}
-            >
-              {referenceImages.map((img, index) => (
-                <div
-                  key={`${img.url}-${index}`}
-                  className="stacked-image-item"
-                  style={{
-                    zIndex: isStacked ? index + 1 : 1,
-                  }}
-                >
-                  {/* 用 Popover 包裹缩略图，点击弹出图片编辑组件 */}
-                  <Popover
-                    open={openPopoverIndex === index}
-                    onOpenChange={(open) => {
-                      setOpenPopoverIndex(open ? index : null);
-                    }}
-                    trigger="click"
-                    placement="rightTop"
-                    style={{ padding: 0 }}
-                    className="image-edit-popover-wrapper"
-                    content={
-                      <div className="image-edit-close-wrap">
-                        <ImageEdit
-                          key={img.url}
-                          imageUrl={img.url}
-                          initialBoxes={boxesMap[img.url] ?? []}
-                          onBoxesChange={(boxes) =>
-                            handleBoxesChange(img.url, boxes)
-                          }
-                        />
-                        {/* 右上角关闭按钮 */}
-                        <button
-                          type="button"
-                          className="image-edit-close-btn"
-                          onClick={() => setOpenPopoverIndex(null)}
-                          aria-label="关闭编辑面板"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    }
-                  >
-                    <div className="thumbnail-wrapper">
-                      <Image
-                        src={img.url}
-                        alt={`参考图 ${index + 1}`}
-                        className="stacked-preview-img"
-                        preview={{ open: false }}
-                      />
-                      {/* 已选框数量角标 */}
-                      {(boxesMap[img.url]?.length ?? 0) > 0 && (
-                        <span className="thumbnail-box-badge">
-                          <Square size={10} />
-                          {boxesMap[img.url]!.length}
-                        </span>
-                      )}
-                    </div>
-                  </Popover>
-
-                  <Popconfirm
-                    title="确认删除该参考图？"
-                    okText="删除"
-                    cancelText="取消"
-                    okButtonProps={{ danger: true }}
-                    onConfirm={() => handleRemoveImage(index)}
-                  >
-                    <Button
-                      type="text"
-                      danger
-                      shape="circle"
-                      size="small"
-                      icon={<X size={12} />}
-                      className="stacked-remove-btn"
-                    />
-                  </Popconfirm>
-                </div>
-              ))}
-
-              {/* 追加上传卡片：Dragger 支持拖拽上传，未达到上限时显示 */}
-              {referenceImages.length < MAX_IMAGES && (
-                <div
-                  className="stacked-image-item stacked-add-item"
-                  style={{
-                    zIndex: isStacked ? referenceImages.length + 1 : 1,
-                  }}
-                >
-                  <Dragger {...uploadProps} className="stacked-add-dragger">
-                    {uploading ? (
-                      <div className="uploading-state">
-                        <Loader2 size={20} className="spin" />
-                        <span>上传中...</span>
-                      </div>
-                    ) : (
-                      <Plus size={28} />
-                    )}
-                  </Dragger>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Dragger {...uploadProps} className="upload-placeholder">
-              {uploading ? (
-                <div className="uploading-state">
-                  <Loader2 size={24} className="spin" />
-                  <span>上传中...</span>
-                </div>
-              ) : (
-                <>
-                  <ImageIcon size={24} />
-                  <p>点击或拖拽上传图片</p>
-                  <p className="upload-hint">
-                    支持 JPG、PNG 格式，最多 {MAX_IMAGES} 张
-                  </p>
-                </>
-              )}
-            </Dragger>
-          )}
-        </div>
+        <BaseUpload
+          type="image"
+          images={referenceImages}
+          onChange={setReferenceImages}
+          maxImages={MAX_IMAGES}
+          renderThumbnail={renderThumbnail}
+          onRemove={handleRemoveImage}
+        />
       </div>
-
-      {/* 参考强度（独立区块，与参考图平级） */}
+      {/* 创作描述（独立区块） */}
       <div className="aside-content">
         <div className="aside-title">
           <Sparkles size={16} />
+          <span>创作描述</span>
+        </div>
+        <TextArea
+          value={imagePrompt}
+          autoSize={{ minRows: 4, maxRows: 10 }}
+          onChange={(e) => setImagePrompt(e.target.value)}
+          placeholder={
+            !referenceImages.length
+              ? "请先上传参考图"
+              : "你可以说：" +
+                (referenceImages.length == 1
+                  ? "将图中红色标注区域替换为xx"
+                  : "将图1的xx替换成图二的图案")
+          }
+        />
+      </div>
+      {/* 参考强度（独立区块，与参考图平级） */}
+      <div className="aside-content">
+        <div className="aside-title">
+          <Gauge size={16} />
           <span>参考强度</span>
         </div>
         <RadioGraph
@@ -329,8 +281,43 @@ export const ImageToImage = ({
       </div>
       <div className="aside-content">
         <div className="aside-title">
-          <Sparkles size={16} />
-          <span>生成张数</span>
+          <Box size={16} />
+          <span>生图模型</span>
+        </div>
+        <Select
+          value={model}
+          size="large"
+          onChange={setModel}
+          options={CREATION_MODEL_LIST}
+        />
+      </div>
+      <div className="aside-content">
+        <div className="aside-title">
+          <Scaling size={16} />
+          <span>图片比例</span>
+        </div>
+        <Select
+          value={imageProportion}
+          size="large"
+          onChange={setImageProportion}
+          options={PROPORTION_LIST.map((item) => {
+            const Icon = getRatioIcon(item.label);
+            return {
+              value: item.value,
+              label: (
+                <span className="ratio-option">
+                  <Icon size={14} />
+                  {item.label} {getRatioDesc(item.label)}
+                </span>
+              ),
+            };
+          })}
+        />
+      </div>
+      <div className="aside-content">
+        <div className="aside-title">
+          <Images size={16} />
+          <span>生图张数</span>
         </div>
         <RadioGraph
           name="imageQty"
@@ -344,31 +331,7 @@ export const ImageToImage = ({
           onChange={(v) => setImageQty(Number(v))}
         />
       </div>
-      {/* 创作描述（独立区块） */}
-      <div className="aside-content">
-        <div className="aside-title">
-          <Sparkles size={16} />
-          <span>创作描述</span>
-        </div>
-        <TextArea
-          value={imagePrompt}
-          autoSize={{ minRows: 4, maxRows: 15 }}
-          onChange={(e) => setImagePrompt(e.target.value)}
-          placeholder="描述你想要生成的图片..."
-        />
-      </div>
-
-      <Button
-        type="primary"
-        size="large"
-        block
-        onClick={handleSubmit}
-        loading={submitting}
-        icon={<Sparkles size={16} />}
-        className="generate-btn"
-      >
-        开始生成
-      </Button>
     </>
   );
-};
+});
+ImageToImage.displayName = "ImageToImage";

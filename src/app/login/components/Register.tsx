@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Form, Input, Button } from "antd";
-import { Smartphone, Lock, Eye, EyeOff } from "lucide-react";
+import { Smartphone, Lock, Eye, EyeOff, MessageSquare } from "lucide-react";
 import API from "@/api";
 import { encryptPassword } from "@/utils/encrypt";
 import { useRequest } from "ahooks";
@@ -24,17 +24,26 @@ export default function Register({
 }: RegisterProps) {
   const [form] = Form.useForm();
   const [publicKey, setPublicKey] = useState("");
-
+  const [codeCountdown, setCodeCountdown] = useState(0);
+  // 验证码输入框显示值：Form.Item 直接子元素是 div 无法自动绑定，用 state 承载显示并同步到表单 store
+  const [code, setCode] = useState("");
   useRequest(getPublicKey, {
     onSuccess: (data) => {
       setPublicKey(data);
     },
   });
-
+  useEffect(() => {
+    if (codeCountdown <= 0) return;
+    const timer = setTimeout(() => {
+      setCodeCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [codeCountdown]);
   const handleRegister = useCallback(
     async (values: {
       phone: string;
       password: string;
+      code: string;
       confirmPassword: string;
     }) => {
       setIsLoading(true);
@@ -42,6 +51,7 @@ export default function Register({
         const res = await API.register({
           phone: values.phone,
           password: encryptPassword(values.password, publicKey),
+          code: values.code,
         });
         if (res.success) {
           messageManager.success("注册成功，请登录");
@@ -49,15 +59,43 @@ export default function Register({
         } else {
           onError(res.msg || "注册失败");
         }
-      } catch {
+      } catch (error) {
         onError("注册失败，请稍后重试");
+        console.error("注册失败，请稍后重试", error);
       } finally {
         setIsLoading(false);
       }
     },
     [onSuccess, onError, setIsLoading, publicKey],
   );
-
+  const handleGetCode = useCallback(async () => {
+    const phone = form.getFieldValue("phone");
+    if (!phone) {
+      messageManager.warning("请输入手机号");
+      return;
+    }
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      messageManager.warning("请输入正确的手机号");
+      return;
+    }
+    try {
+      const res = await API.sendSms({ phone });
+      if (res.success) {
+        setCodeCountdown(60);
+        messageManager.success("验证码已发送");
+        setTimeout(() => {
+          // 测试环境：直接把验证码写入表单，回填输入框
+          form.setFieldsValue({ code: "123456" });
+          setCode("123456");
+          messageManager.success("项目仅为测试环境，验证码已自动填写");
+        }, 3000);
+      } else {
+        messageManager.error(res.msg || "发送失败");
+      }
+    } catch {
+      messageManager.error("发送失败，请稍后重试");
+    }
+  }, [form]);
   const validateConfirmPassword = ({ getFieldValue }: any) => ({
     validator(_: any, value: string) {
       if (!value || getFieldValue("password") === value) {
@@ -69,10 +107,6 @@ export default function Register({
 
   return (
     <div className="register-form">
-      <div className="register-title">
-        <h2>注册账号</h2>
-        <p>手机号快速注册，开启 AI 创作之旅</p>
-      </div>
       <Form
         form={form}
         onFinish={handleRegister}
@@ -94,9 +128,40 @@ export default function Register({
             placeholder="请输入手机号"
             disabled={isLoading}
             maxLength={11}
+            allowClear={true}
           />
         </Form.Item>
-
+        <Form.Item
+          name="code"
+          rules={[{ required: true, message: "请输入验证码" }]}
+        >
+          <div className="flex-gap-5">
+            <Input
+              prefix={
+                <MessageSquare
+                  size={18}
+                  style={{ color: "rgba(0,0,0,0.35)" }}
+                />
+              }
+              placeholder="请输入验证码"
+              disabled={isLoading}
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value);
+                form.setFieldsValue({ code: e.target.value });
+              }}
+            />
+            <Button
+              onClick={handleGetCode}
+              className="w-100"
+              disabled={codeCountdown > 0 || isLoading}
+            >
+              <span className="fs-14">
+                {codeCountdown > 0 ? `${codeCountdown}s` : "获取验证码"}
+              </span>
+            </Button>
+          </div>
+        </Form.Item>
         <Form.Item
           name="password"
           rules={[

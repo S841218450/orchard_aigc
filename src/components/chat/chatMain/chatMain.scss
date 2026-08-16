@@ -53,17 +53,36 @@
       gap: 12px;
       padding: 16px;
       background: var(--color-bg-elevated);
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-light);
       border-radius: var(--radius-lg);
       cursor: pointer;
       transition: all var(--duration-normal) var(--ease-out-expo);
       position: relative;
       overflow: hidden;
 
+      // 卡片顶部边角装饰（奇偶交替冷暖色小三角）
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 22px;
+        height: 22px;
+        opacity: 0.25;
+        clip-path: polygon(0 0, 100% 0, 0 100%);
+      }
+
+      &:nth-child(odd)::before { background: var(--color-warm-500); }
+      &:nth-child(even)::before { background: var(--color-ai-cyan); }
+
       &:hover {
-        border-color: #d4d4d8;
-        box-shadow: var(--shadow-sm);
+        border-color: rgba(96, 196, 196, 0.3);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03);
         transform: translateY(-2px);
+
+        .operation-icon svg {
+          transform: rotate(-6deg) scale(1.08);
+        }
       }
 
       &.active {
@@ -82,11 +101,23 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--color-bg-sunken);
         border-radius: var(--radius-md);
-        color: var(--color-text-tertiary);
         flex-shrink: 0;
         transition: all var(--duration-normal) var(--ease-out-expo);
+
+        svg {
+          transition: transform var(--duration-normal) var(--ease-out-expo);
+        }
+      }
+
+      // 第 1、3 项（奇）暖棕系图标底；第 2、4 项（偶）水雾青系图标底
+      &:nth-child(odd) .operation-icon {
+        background: rgba(212, 165, 116, 0.14);
+        color: var(--color-warm-500);
+      }
+      &:nth-child(even) .operation-icon {
+        background: rgba(96, 196, 196, 0.14);
+        color: var(--color-ai-cyan);
       }
 
       .operation-info {

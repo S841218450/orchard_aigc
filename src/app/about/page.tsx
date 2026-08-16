@@ -14,6 +14,7 @@ import {
   Code2,
 } from "lucide-react";
 import NextImage from "next/image";
+import { DEFAULT_IMAGES } from "@/constants/assets";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -156,7 +157,7 @@ const AboutPage = () => {
             <span className="brand-logo-ring" aria-hidden="true" />
             <span className="brand-logo-orb" aria-hidden="true" />
             <NextImage
-              src="/logo_opcity.png"
+              src={DEFAULT_IMAGES.logo}
               alt="巧思-AI智能创作平台"
               width={72}
               height={72}

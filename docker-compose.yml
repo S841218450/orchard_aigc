@@ -6,6 +6,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # rewrites 构建期就需要目标地址（.dockerignore 排除了 .env*），必须显式传入
+      args:
+        ADMIN_API_TARGET: http://host.docker.internal:48080
+        AI_API_TARGET: http://host.docker.internal:3000
     image: orchard-aigc:latest
     container_name: orchard-aigc
     restart: unless-stopped

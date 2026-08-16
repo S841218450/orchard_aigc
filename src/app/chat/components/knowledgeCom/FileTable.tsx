@@ -389,7 +389,6 @@ const FileTable: React.FC<FileTableProps> = ({
             showTotal: (t) => `共 ${t} 条`,
             onChange: (p, s) => onPageChange?.(p, s),
           }}
-          // scroll={{ x: 720 }}
         />
       </div>
     </div>

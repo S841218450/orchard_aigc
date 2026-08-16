@@ -41,6 +41,7 @@ export const imageToImageSchema = z.object({
   params: z.object({
     imageQty: z.number(),
     referenceIntensity: z.number(),
+    imageProportion: z.string().optional(),
   }),
   originImageList: z
     .array(z.object({ id: z.number(), url: z.string() }))
@@ -71,8 +72,10 @@ export interface TextToImageFormData {
 export interface ImageToImageFormData {
   type: "image";
   prompt: string;
+  model: string;
   params: {
     imageQty: number; //生成张数
+    imageProportion: string; // 图片比例
     referenceIntensity: number; // 参考图片强度：0-弱 1-中 2-强
   };
   originImageList: { id: number; url: string }[];

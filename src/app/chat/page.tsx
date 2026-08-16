@@ -9,6 +9,7 @@ import KnowledgeCom from "./components/knowledgeCom/knowledgeCom";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Loading from "@/components/core/loadding/loading";
 import { App } from "antd";
+import UserCenterBackground from "@/components/userCenter/pageBackground/pageBackground";
 import {
   getMessageList,
   Message,
@@ -33,6 +34,8 @@ export const ChatPage = () => {
   /** 当前 agent 思考步骤（SSE step_* 事件驱动，完成后清空隐藏） */
   const [steps, setSteps] = useState<WorkStep[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  /** 滚动 rAF 句柄（合并流式高频更新，实际滚动最多每帧一次） */
+  const scrollRafRef = useRef<number | null>(null);
   const userId = useUserStore((state) => state.userInfo)?.userId;
 
   // 更新指定消息的状态
@@ -51,10 +54,30 @@ export const ChatPage = () => {
     onStepsChange: setSteps,
   });
 
-  // 滚动到底部
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // 滚动到底部（smooth 仅用于非流式场景；流式输出期间用瞬时滚动，
+  // 避免 20ms 一次的文本追加把 smooth 动画反复打断重开，持续占满主线程）
+  const scrollToBottom = useCallback((smooth = true) => {
+    const el = messagesEndRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+  }, []);
+
+  // 消息列表变化时滚动到底部（rAF 合并 + 卸载清理，防止定时器/动画残留）
+  useEffect(() => {
+    if (scrollRafRef.current !== null) {
+      cancelAnimationFrame(scrollRafRef.current);
+    }
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      scrollToBottom(!streaming);
+    });
+    return () => {
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
+  }, [messageList, streaming, scrollToBottom]);
 
   // 获取消息列表
   const { loading: messageLoading } = useRequest(
@@ -66,7 +89,7 @@ export const ChatPage = () => {
       setMessageList([]);
       const result = await getMessageList(currentSessionId);
       if (result.success) {
-        const list = (result.data || []).map((msg) => ({
+        const list = (result.data.list || []).map((msg) => ({
           ...msg,
           answerStatus: (msg.answer
             ? "success"
@@ -75,7 +98,7 @@ export const ChatPage = () => {
         setMessageList(list);
         return list;
       }
-      messageManager.error(result.msg ?? "获取消息列表失败");
+      messageManager.error(result.error ?? "获取消息列表失败");
       return [] as Message[];
     },
     {
@@ -84,10 +107,6 @@ export const ChatPage = () => {
       onError: (e) => console.error("获取消息列表失败:", e),
     },
   );
-  // 消息列表变化时滚动到底部
-  useEffect(() => {
-    scrollToBottom();
-  }, [messageList]);
 
   /**
    * 流式生成回答：通过 SSE 长连接流式累积回答分片到指定消息，
@@ -120,6 +139,7 @@ export const ChatPage = () => {
     let sessionId = currentSessionId;
     if (!sessionId) {
       const res = await createSession({
+        question: content,
         title: content.slice(0, 10) || "默认会话",
       });
       if (res.success) {
@@ -139,10 +159,14 @@ export const ChatPage = () => {
       attachments:
         files?.map((file) => ({
           name: file.name,
-          url: file.file.url,
+          url: URL.createObjectURL(file.file),
           type: file.type,
         })) || [],
     });
+    if (!messageData.success) {
+      messageManager.error(messageData.error ?? "发送消息失败");
+      return;
+    }
     // 追加单条消息（问题 + 待生成的回答）
     const newMessage: Message = {
       ...messageData.data,
@@ -188,14 +212,13 @@ export const ChatPage = () => {
     }
   };
 
-  // 选择模板
-  const handleSelectTemplate = (template: {
+  // 选择引导模板：直接把预设问题发送给助手
+  const handleSelectTemplate = async (template: {
     id: string;
     title: string;
     content: string;
   }) => {
-    // 可以在这里处理模板选择逻辑
-    console.log("选择模板:", template);
+    await handleSendMessage(template.content);
   };
   //======================会话相关======================
   const [sessionList, setSessionList] = useState<Session[]>([]);
@@ -242,6 +265,7 @@ export const ChatPage = () => {
   );
   return (
     <div className="chat-page">
+      <UserCenterBackground tone="warm" />
       <div className="chat-aside">
         <ChatAside
           sessionList={sessionList}
@@ -250,7 +274,7 @@ export const ChatPage = () => {
         />
       </div>
       <div className="chat-content-wrapper">
-        <div className="chat-main-content">
+        <div className="chat-main-content flex-center">
           {activeView === "knowledge" ? (
             <KnowledgeCom />
           ) : currentSessionId ? (

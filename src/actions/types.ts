@@ -23,6 +23,8 @@ export interface OriginImageItem {
 export interface WorkStep {
   seqId: number;
   type: string;
+  /** 中文步骤名（后端 NODE_MAP 的 name，供展示与错误提示，不暴露原始节点名） */
+  name?: string;
   status: string;
   detail: string;
   timestamp: number;
@@ -35,6 +37,7 @@ export interface WorkMessage {
   type: string;
   prompt: string;
   model: string;
+  dataList: { id: string; url: string }[];
   params: {
     style: string;
     imageProportion: string;

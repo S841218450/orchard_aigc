@@ -33,7 +33,7 @@ export default function AccountLogin({
       setIsLoading(true);
       try {
         const res = await API.loginPassword({
-          username: values.account,
+          phone: values.account,
           password: encryptPassword(values.password, publicKey),
         });
 

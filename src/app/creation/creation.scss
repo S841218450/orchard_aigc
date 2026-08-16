@@ -2,8 +2,7 @@
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  min-height: 100vh;
-  height: fit-content;
+  height: 100%;
   width: 100%;
   padding: 20px;
   background: var(--color-bg-sunken);
@@ -353,170 +352,6 @@
             }
           }
 
-          /* 步骤流进度 */
-          .step-progress {
-            margin-bottom: 16px;
-            background: var(--color-bg-sunken);
-
-            border-radius: 10px;
-            padding: 10px 14px;
-            border: 1px solid var(--color-border-light);
-            overflow: hidden;
-
-            /* 展开/收起按钮 */
-            .step-progress-toggle {
-              display: flex;
-              align-items: center;
-              width: 100%;
-              padding: 2px 0 6px;
-              background: none;
-              border: none;
-              cursor: pointer;
-              font-size: 12px;
-              font-weight: 500;
-              color: var(--color-text-tertiary);
-              border-bottom: 1px solid transparent;
-              margin-bottom: 8px;
-              transition: all var(--duration-fast) ease;
-
-              &:hover {
-                color: var(--color-text-secondary);
-              }
-
-              .toggle-icon {
-                transition: transform var(--duration-fast) ease;
-
-                &.open {
-                  transform: rotate(180deg);
-                }
-              }
-            }
-
-            /* 步骤列表 */
-            .step-list {
-              display: flex;
-              flex-direction: column;
-              max-height: 120px;
-              overflow-y: auto;
-
-              padding-bottom: 8px;
-              gap: 6px;
-
-              &.step-list-history {
-                padding-bottom: 8px;
-                margin-bottom: 8px;
-                border-bottom: 1px dashed var(--color-border-light);
-              }
-            }
-
-            .step-item {
-              display: flex;
-              align-items: flex-start;
-              gap: 10px;
-              padding: 6px 4px;
-              transition: all var(--duration-fast) ease;
-              animation: step-in 0.3s var(--ease-out-expo) both;
-
-              .step-icon {
-                flex-shrink: 0;
-                width: 18px;
-                height: 18px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                margin-top: 1px;
-                color: #fff;
-                background: var(--color-text-quaternary);
-
-                & .spin {
-                  animation: spin 1s linear infinite;
-                }
-              }
-
-              .step-content {
-                flex: 1;
-                min-width: 0;
-              }
-
-              .step-title {
-                font-size: 13px;
-                font-weight: 500;
-                color: var(--color-text-secondary);
-                line-height: 1.5;
-              }
-
-              .step-detail {
-                font-size: 12px;
-                color: var(--color-text-tertiary);
-                line-height: 1.55;
-                margin-top: 2px;
-              }
-
-              /* 已完成：划线灰显 */
-              &.step-done {
-                .step-icon {
-                  background: #52c41a;
-                }
-
-                .step-title,
-                .step-detail {
-                  color: var(--color-text-quaternary);
-                  text-decoration: line-through;
-                }
-              }
-
-              /* 进行中：主题色高亮 */
-              &.step-running {
-                .step-icon {
-                  background: var(--color-primary);
-                }
-
-                .step-title {
-                  color: var(--color-primary);
-                  font-weight: 600;
-                }
-
-                .step-detail {
-                  color: var(--color-text-secondary);
-                }
-              }
-
-              /* 失败：红色 */
-              &.step-error {
-                .step-icon {
-                  background: #ff4d4f;
-                }
-
-                .step-title {
-                  color: #ff4d4f;
-                }
-
-                .step-detail {
-                  color: #ff7875;
-                }
-              }
-
-              /* 当前活跃步骤微动效 */
-              &.step-active {
-                .step-title {
-                  position: relative;
-
-                  &::after {
-                    content: "";
-                    display: inline-block;
-                    width: 2px;
-                    height: 14px;
-                    margin-left: 4px;
-                    background: var(--color-primary);
-                    vertical-align: -2px;
-                    animation: cursor-blink 1s steps(2) infinite;
-                  }
-                }
-              }
-            }
-          }
-
           .data-wrap {
             display: flex;
             flex-direction: column;
@@ -569,6 +404,16 @@
 
             &:hover {
               transform: scale(1.03);
+            }
+          }
+          // 生图进行中的占位图（antd Image placeholder 水彩墨水加载动画）
+          .message-image-wrap-placeholder {
+            background: var(--color-bg-sunken);
+            border: 1px dashed var(--color-border);
+            pointer-events: none;
+
+            .ant-image-progress-wrapper {
+              background: transparent;
             }
           }
           .message-image-cover {
@@ -751,40 +596,5 @@
   to {
     opacity: 0;
     transform: translateY(-12px) scale(0.98);
-  }
-}
-
-/* 步骤入场动画 */
-@keyframes step-in {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    max-height: 80px;
-  }
-}
-
-/* 光标闪烁 */
-@keyframes cursor-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-/* 旋转 */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
   }
 }

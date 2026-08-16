@@ -25,6 +25,19 @@ export interface FileDetailVo {
   createTime?: string;
 }
 
+/** 知识库文档（批量上传返回，对应后端 KnowledgeDocVo） */
+export interface KnowledgeDocVo {
+  id: string;
+  fileName?: string;
+  originalName?: string;
+  docType?: string;
+  status?: number;
+  fileSize?: number;
+  fileUrl?: string;
+  folderId?: string | null;
+  createTime?: string;
+}
+
 /** 创建文件夹参数 */
 export interface CreateFolderParams {
   folderName: string;
@@ -53,17 +66,47 @@ type ActionResult<T = void> =
 
 // ==================== 上传文件 ====================
 
+/** 计算上传进度百分比（供 axios onUploadProgress 使用） */
+const calcProgress = (e: { loaded: number; total?: number }): number =>
+  e.total ? Math.min(100, Math.round((e.loaded / e.total) * 100)) : 0;
+
+/** 上传单个知识库文档 */
 export async function uploadFile(
   formData: FormData,
   onProgress?: (percent: number) => void,
 ): Promise<ActionResult<FileDetailVo>> {
   try {
-    const res = await API.uploadKnowledge(formData); // 上传至知识库
+    const res = await API.uploadKnowledge(formData, {
+      onUploadProgress: (e: { loaded: number; total?: number }) =>
+        onProgress && onProgress(calcProgress(e)),
+    });
     return { success: true, data: res?.data };
   } catch (e: any) {
     return {
       success: false,
       error: e?.msg || e?.message || "上传文件失败",
+    };
+  }
+}
+
+/**
+ * 批量上传知识库文档（多个文件 + 目录ID，同一目录，单次请求）
+ * formData 需包含多个 files 字段与 folderId 字段
+ */
+export async function uploadKnowledgeBatch(
+  formData: FormData,
+  onProgress?: (percent: number) => void,
+): Promise<ActionResult<KnowledgeDocVo[]>> {
+  try {
+    const res = await API.uploadKnowledgeBatch(formData, {
+      onUploadProgress: (e: { loaded: number; total?: number }) =>
+        onProgress && onProgress(calcProgress(e)),
+    });
+    return { success: true, data: res?.data || [] };
+  } catch (e: any) {
+    return {
+      success: false,
+      error: e?.msg || e?.message || "批量上传失败",
     };
   }
 }

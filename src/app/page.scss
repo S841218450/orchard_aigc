@@ -1,6 +1,5 @@
 .home-page {
   display: flex;
-  flex: 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -8,7 +7,7 @@
   background: linear-gradient(180deg, #fdfcfa 0%, #f8faf8 50%, #f4f8f6 100%);
   min-height: 100vh;
   height: 100vh;
-  overflow: auto;
+  overflow-y: auto;
   position: relative;
 
   /* ---- 主内容区 ---- */

@@ -4,11 +4,21 @@ export type ImageProportion = "1:1" | "9:16" | "16:9" | "24:3";
 // 素材项接口定义
 export interface MaterialItem {
   id: string;
+  authorName: string;
+  authorAvatar: string;
+  url: string;
+  userId: string;
   image: string;
   title: string;
-  time: string;
-  // 生成参数中的固定比例，骨架屏可据此占位防止重排
-  imageProportion: ImageProportion;
+  prompt: string; // 素材描述提示
+  createTime: string; // 创建时间
+  likeCount: number; // 点赞数
+  liked: boolean; // 是否点赞
+  params: {
+    style: string;
+    imageQuality: string;
+    imageProportion: ImageProportion;
+  };
 }
 
 // 素材列表响应接口

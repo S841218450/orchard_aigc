@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Form, Input, Button } from "antd";
 import { Smartphone, Lock, Eye, EyeOff, MessageSquare } from "lucide-react";
 import API from "@/api";
@@ -21,6 +21,16 @@ export default function PhoneLogin({
 }: PhoneLoginProps) {
   const [form] = Form.useForm();
   const [codeCountdown, setCodeCountdown] = useState(0);
+  // 验证码输入框显示值：Form.Item 直接子元素是 div 无法自动绑定，用 state 承载显示并同步到表单 store
+  const [code, setCode] = useState("");
+  // 验证码倒计时：每秒递减，归零后按钮恢复可用
+  useEffect(() => {
+    if (codeCountdown <= 0) return;
+    const timer = setTimeout(() => {
+      setCodeCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [codeCountdown]);
 
   const handleGetCode = useCallback(async () => {
     const phone = form.getFieldValue("phone");
@@ -37,6 +47,12 @@ export default function PhoneLogin({
       if (res.success) {
         setCodeCountdown(60);
         messageManager.success("验证码已发送");
+        setTimeout(() => {
+          // 测试环境：直接把验证码写入表单，回填输入框
+          form.setFieldsValue({ code: "123456" });
+          setCode("123456");
+          messageManager.success("项目仅为测试环境，验证码已自动填写");
+        }, 3000);
       } else {
         messageManager.error(res.msg || "发送失败");
       }
@@ -107,9 +123,15 @@ export default function PhoneLogin({
               }
               placeholder="请输入验证码"
               disabled={isLoading}
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value);
+                form.setFieldsValue({ code: e.target.value });
+              }}
             />
             <Button
               onClick={handleGetCode}
+              className="w-100"
               disabled={codeCountdown > 0 || isLoading}
             >
               <span className="fs-14">

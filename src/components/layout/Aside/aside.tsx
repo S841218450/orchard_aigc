@@ -15,6 +15,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { Avatar, Popover, Tag, Button } from "antd";
 import { useUserStore } from "@/store";
+import { DEFAULT_IMAGES } from "@/constants/assets";
 import NextImage from "next/image";
 import "./aside.scss";
 
@@ -58,7 +59,6 @@ const MenuBtn = () => {
 const PersonPanel = () => {
   const router = useRouter();
   const { isLoggedIn, userInfo, logout } = useUserStore();
-  const defaultAvatar = "/defaultUser.svg";
   const handleLogin = () => router.push("/login");
   const handleLogout = async () => {
     await logout();
@@ -98,7 +98,10 @@ const PersonPanel = () => {
     <div className="user-panel">
       <div className="user-panel-header">
         <div className="user-panel-avatar">
-          <Avatar size={48} src={userInfo?.avatar || defaultAvatar} />
+          <Avatar
+            size={48}
+            src={userInfo?.avatar || DEFAULT_IMAGES.defaultAvatar}
+          />
         </div>
         <div className="user-panel-info">
           <div className="user-panel-phone">
@@ -161,7 +164,10 @@ const PersonPanel = () => {
         className="user-popover"
       >
         <div className="user-avatar-trigger">
-          <Avatar size={36} src={userInfo?.avatar || defaultAvatar} />
+          <Avatar
+            size={36}
+            src={userInfo?.avatar || DEFAULT_IMAGES.defaultAvatar}
+          />
         </div>
       </Popover>
     </div>
@@ -174,7 +180,7 @@ const Aside = () => {
     <div className="aside">
       <div className="aside-logo" onClick={() => router.push("/")}>
         <NextImage
-          src="/logo_opcity.png"
+          src={DEFAULT_IMAGES.logo}
           alt="巧思-AI智能创作平台"
           width={36}
           height={36}

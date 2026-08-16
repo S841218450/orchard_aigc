@@ -6,6 +6,7 @@ import { UserRound, Phone, Mail, Camera, Save, Sparkles } from "lucide-react";
 import { useRequest } from "ahooks";
 import { getUserProfile, updateUserProfile } from "@/actions/userCenter";
 import { useUserStore } from "@/store";
+import { DEFAULT_IMAGES } from "@/constants/assets";
 import UserCenterBackground from "@/components/userCenter/pageBackground/pageBackground";
 
 interface ProfileFormValues {
@@ -79,7 +80,10 @@ const ProfilePage = () => {
                   if (info.file.status === "done") {
                     const url = info.file.response?.data?.url;
                     if (url) {
-                      modal.success({ title: "上传成功", content: "头像已更新" });
+                      modal.success({
+                        title: "上传成功",
+                        content: "头像已更新",
+                      });
                     }
                   }
                 }}
@@ -87,7 +91,7 @@ const ProfilePage = () => {
                 <div className="avatar-uploader">
                   <Avatar
                     size={96}
-                    src={userInfo?.avatar || "/defaultUser.svg"}
+                    src={userInfo?.avatar || DEFAULT_IMAGES.defaultAvatar}
                   />
                   <div className="avatar-mask">
                     <Camera size={20} />
@@ -95,7 +99,9 @@ const ProfilePage = () => {
                 </div>
               </Upload>
             </div>
-            <div className="avatar-name">{userInfo?.nickname || "未设置昵称"}</div>
+            <div className="avatar-name">
+              {userInfo?.nickname || "未设置昵称"}
+            </div>
             <div className="avatar-tip">点击头像可更换图片</div>
           </div>
 

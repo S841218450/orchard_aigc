@@ -1,9 +1,30 @@
-import { Input, Button, Popover, Image, Select } from "antd";
-import { useState } from "react";
-import { Palette, Box, Diamond, Images, Sparkles } from "lucide-react";
+import { Popover, Image, Select } from "antd";
+import {
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+  useCallback,
+} from "react";
+import { Palette, Box, Images, Sparkles, Scaling } from "lucide-react";
 import { RightOutlined } from "@ant-design/icons";
 import RadioGraph from "@/components/baseCom/radio/radioGraph";
 import type { TextToImageFormData } from "@/actions/creationSchemas";
+import type {
+  FormSubmitHandle,
+  FormSubmitState,
+} from "@/app/creation/components/Aside/aside";
+import PromptInput from "@/components/creation/promptInput/promptInput";
+import {
+  CREATION_MODEL_LIST,
+  DEFAULT_CREATION_MODEL,
+  PROPORTION_LIST,
+  getRatioIcon,
+  getRatioDesc,
+} from "@/constants/creationModel";
+
+//风格选项
+type StyleItem = { value: string; label: string; url: string };
 
 //风格内容
 const StyleSelect = ({
@@ -12,18 +33,19 @@ const StyleSelect = ({
   changeStyle,
 }: {
   style: string;
-  styleList: { value: string; label: string; url: string }[];
-  changeStyle: (style: string) => void;
+  styleList: StyleItem[];
+  changeStyle: (item: StyleItem) => void;
 }) => {
-  const currentStyle = styleList.find((item) => item.value === style);
+  // style 状态存的是风格名称（label），按 label 匹配当前选中项
+  const currentStyle = styleList.find((item) => item.label === style);
   const styleContent = (
     <div className="style-popover">
       <div className="style-grid">
         {styleList.map((item) => (
           <div
             key={item.value}
-            className={`style-item ${item.value === style ? "active" : ""}`}
-            onClick={() => changeStyle(item.value)}
+            className={`style-item ${item.label === style ? "active" : ""}`}
+            onClick={() => changeStyle(item)}
           >
             {item.url ? (
               <div className="style-item-img">
@@ -46,7 +68,8 @@ const StyleSelect = ({
       title="画面风格"
       trigger="click"
       content={styleContent}
-      getPopupContainer={(trigger) => trigger.parentElement || document.body}
+      // 渲染到 body，避免被 aside 内部 overflow hidden/auto 容器裁剪并导致方向翻转
+      getPopupContainer={() => document.body}
     >
       <div className="style-select-card">
         {currentStyle?.url ? (
@@ -76,49 +99,37 @@ const StyleSelect = ({
   );
 };
 // 文生图
-export const TextToImage = ({
-  generateImage,
-}: {
-  generateImage: (data: TextToImageFormData) => void;
-}) => {
-  const { TextArea } = Input;
+export const TextToImage = forwardRef<
+  FormSubmitHandle,
+  {
+    generateImage: (data: TextToImageFormData) => void;
+    // 上报提交能力（驱动布局层底部按钮禁用/加载态）
+    onStateChange?: (state: FormSubmitState) => void;
+  }
+>(({ generateImage, onStateChange }, ref) => {
   const [imagePrompt, setImagePrompt] = useState("");
-  const [model, setModel] = useState("default");
+  const [model, setModel] = useState(DEFAULT_CREATION_MODEL.value);
+  // 固定比例（如 "1:1"），具体分辨率由后端换算
   const [imageProportion, setImageProportion] = useState("1:1");
-  const [imageQuality, setImageQuality] = useState("1080p");
+  // 进入页面时按当前（默认）模型选中第一个画面质量
+  const [imageQuality, setImageQuality] = useState(
+    DEFAULT_CREATION_MODEL.defaultQuality ||
+      DEFAULT_CREATION_MODEL.QualityList[0] ||
+      "2k",
+  );
   const [imageCount, setImageCount] = useState("1");
-  const [imageQualityList, setImageQualityList] = useState([
-    "1080p",
-    "2k",
-    "4k",
-  ]);
+  const [imageQualityList, setImageQualityList] = useState(
+    DEFAULT_CREATION_MODEL.QualityList,
+  );
 
-  //模型选择(不同模型显示的画面质量不同,根据模型选择画面质量)
-  const modelList = [
-    {
-      value: "default",
-      label: "DouBao-Seedream-5.0-Lite 最新模型",
-      QualityList: ["2k", "4k"],
-    },
-    {
-      value: "DouBao-Seedream-5.0-Pro",
-      label: "DouBao-Seedream-5.0-Pro",
-      QualityList: ["1080p", "2k", "4k"],
-    },
-  ];
   const handleSetModel = (value: string) => {
+    const target = CREATION_MODEL_LIST.find((item) => item.value === value);
     setModel(value);
-    setImageQualityList(
-      modelList.find((item) => item.value === value)?.QualityList || [],
-    );
-    setImageQuality(
-      modelList.find((item) => item.value === value)?.QualityList?.[0] ||
-        "1080p",
-    );
+    setImageQualityList(target?.QualityList || []);
+    setImageQuality(target?.defaultQuality || target?.QualityList?.[0] || "2k");
   };
-  //画面质量
   //画面风格
-  const [style, setStyle] = useState("default");
+  const [style, setStyle] = useState("智能匹配");
   const styleList = [
     { value: "default", label: "智能匹配", url: "" },
     { value: "1", label: "商业写实", url: "" },
@@ -130,21 +141,36 @@ export const TextToImage = ({
     { value: "7", label: "电影广告", url: "" },
     { value: "8", label: "复古美式", url: "" },
   ];
-  const handleSubmit = () => {
-    const currentStyle = styleList.find((item) => item.value === style);
+  const handleSubmit = useCallback(() => {
     const data: TextToImageFormData = {
       type: "image",
       prompt: imagePrompt,
       model,
       params: {
-        style: currentStyle?.label || "智能匹配",
+        style: style || "智能匹配",
         imageProportion,
         imageQuality,
         imageCount: Number(imageCount),
       },
     };
     generateImage(data);
-  };
+  }, [
+    imagePrompt,
+    model,
+    style,
+    imageProportion,
+    imageQuality,
+    imageCount,
+    generateImage,
+  ]);
+
+  // 暴露提交方法给布局层底部按钮
+  useImperativeHandle(ref, () => ({ submit: handleSubmit }), [handleSubmit]);
+
+  // 上报提交能力（文生图无必填前置条件，始终可提交）
+  useEffect(() => {
+    onStateChange?.({ canSubmit: true, submitting: false });
+  }, [onStateChange]);
 
   return (
     <>
@@ -153,11 +179,12 @@ export const TextToImage = ({
           <Sparkles size={16} />
           <span>创作描述</span>
         </div>
-        <TextArea
-          value={imagePrompt}
-          autoSize={{ minRows: 4, maxRows: 8 }}
-          onChange={(e) => setImagePrompt(e.target.value)}
-          placeholder="描述你想要生成的图片..."
+
+        <PromptInput
+          prompt={imagePrompt}
+          setPrompt={setImagePrompt}
+          size="medium"
+          style={style}
         />
       </div>
       <div className="aside-content">
@@ -168,7 +195,7 @@ export const TextToImage = ({
         <StyleSelect
           style={style}
           styleList={styleList}
-          changeStyle={setStyle}
+          changeStyle={(value) => setStyle(value.label)}
         />
       </div>
       <div className="aside-content">
@@ -180,7 +207,7 @@ export const TextToImage = ({
           value={model}
           size="large"
           onChange={(value) => handleSetModel(value)}
-          options={modelList}
+          options={CREATION_MODEL_LIST}
         />
       </div>
       <div className="aside-content">
@@ -201,20 +228,25 @@ export const TextToImage = ({
 
       <div className="aside-content">
         <div className="aside-title">
-          <Diamond size={16} />
+          <Scaling size={16} />
           <span>图片比例</span>
         </div>
         <Select
           value={imageProportion}
           size="large"
           onChange={setImageProportion}
-          options={[
-            { value: "1:1", label: "1:1 正方形" },
-            { value: "4:3", label: "4:3 横版" },
-            { value: "3:4", label: "3:4 竖版" },
-            { value: "16:9", label: "16:9 宽屏" },
-            { value: "9:16", label: "9:16 竖屏" },
-          ]}
+          options={PROPORTION_LIST.map((item) => {
+            const Icon = getRatioIcon(item.label);
+            return {
+              value: item.value,
+              label: (
+                <span className="ratio-option">
+                  <Icon size={14} />
+                  {item.label} {getRatioDesc(item.label)}
+                </span>
+              ),
+            };
+          })}
         />
       </div>
 
@@ -232,20 +264,10 @@ export const TextToImage = ({
             { value: "4", label: "4 张" },
           ]}
           value={imageCount}
-          onChange={(v) => setImageCount(v)}
+          onChange={(v) => setImageCount(String(v))}
         />
       </div>
-
-      <Button
-        type="primary"
-        size="large"
-        block
-        onClick={handleSubmit}
-        icon={<Sparkles size={16} />}
-        className="generate-btn"
-      >
-        开始生成
-      </Button>
     </>
   );
-};
+});
+TextToImage.displayName = "TextToImage";

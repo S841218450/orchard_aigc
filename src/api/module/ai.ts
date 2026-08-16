@@ -13,6 +13,13 @@ const apiList = [
     type: "post",
     baseURL: "/ai-api/v1/",
   },
+  //提示词生成/优化
+  {
+    url: "/prompt-generate/generate",
+    apiName: "promptGenerate",
+    type: "post",
+    baseURL: "/ai-api/v1/",
+  },
   // 暂停问答
   {
     baseURL: "/ai-api/v1/",
@@ -22,7 +29,7 @@ const apiList = [
   // 发送消息
   { url: "/api/ai/chat/send", apiName: "sendMessage", type: "post" },
   // 获取消息列表
-  { url: "/api/ai/message/list", apiName: "getMsgList", type: "get" },
+  { url: "/api/ai/message/page", apiName: "getMsgList", type: "post" },
   // 删除消息
   { url: "/api/ai/chat/delete", apiName: "deleteMsg", type: "post" },
 

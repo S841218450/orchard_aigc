@@ -1,95 +1,142 @@
-// 聊天内容区域
+// 聊天内容区域（antd X Bubble.List 容器，内部自带滚动）
 .chat-content {
   flex: 1;
   width: 100%;
-  overflow-y: auto;
-  padding: 24px 0;
+  min-height: 0;
   display: flex;
   justify-content: center;
+  padding: 24px 0;
+
+  // Bubble.List 占满可视区，scroll-box 内部滚动
+  .ant-bubble-list {
+    width: 100%;
+    max-height: 100%;
+  }
+
   // 滚动条样式
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
+  .ant-bubble-list-scroll-box {
+    scrollbar-width: thin;
 
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
 
-  &::-webkit-scrollbar-thumb {
-    background: #d4d4d8;
-    border-radius: 3px;
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
-    &:hover {
-      background: #a1a1aa;
+    &::-webkit-scrollbar-thumb {
+      background: #d4d4d8;
+      border-radius: 3px;
+
+      &:hover {
+        background: #a1a1aa;
+      }
     }
   }
 
-  .message-list {
+  // 消息头像
+  .message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
-    flex-direction: column;
-    gap: 24px;
-    width: 80%;
-    padding: 0 24px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
 
-  // 单条消息组：一个问题 + 一个回答（左右角色结构）
-  .message-group {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
+  .user-avatar {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+    border: 1px solid rgba(212, 165, 116, 0.3);
   }
 
-  // 单条消息
-  .message-item {
+  .ai-avatar {
+    background: linear-gradient(135deg, #e0f4f4 0%, #ffffff 100%);
+    color: var(--color-ai-cyan);
+    border: 1px solid rgba(96, 196, 196, 0.3);
+    box-shadow: 0 0 0 3px rgba(96, 196, 196, 0.1);
+  }
+
+  // 气泡文本通用样式（variant 使用 borderless，背景由下方消息角色类控制）
+  .message-content {
+    padding: 6px 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  // 用户气泡：右侧深色卡片
+  .ant-bubble-end .message-content {
+    background: linear-gradient(135deg, #141414 0%, #1f1f1f 100%);
+    color: #fff;
+    border-radius: 16px 16px 4px 16px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    // 右上暖棕装饰角标
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 14px;
+      height: 14px;
+      background: var(--color-warm-500);
+      clip-path: polygon(100% 0, 0 0, 100% 100%);
+      border-radius: 0 16px 0 0;
+    }
+  }
+
+  // AI 气泡：左侧浅色卡片（正常 markdown 渲染）
+  .ant-bubble-start .markdown-body {
+    background: linear-gradient(180deg, #fafdff 0%, #f4f8f8 100%);
+    color: #18181b;
+    border-radius: 4px 16px 16px 16px;
+    border: 1px solid rgba(232, 221, 208, 0.8);
+    border-left: 3px solid var(--color-ai-cyan);
+    padding: 10px 16px;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(96, 196, 196, 0.06);
+  }
+
+  // AI 气泡：错误回答
+  .ant-bubble-start .message-content.error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-left: 3px solid var(--color-error);
+    border-radius: 4px 16px 16px 16px;
+    padding: 10px 16px;
+  }
+
+  // AI 气泡：空回答
+  .ant-bubble-start .message-content.empty {
+    color: #a1a1aa;
+    padding: 6px 0;
+  }
+
+  // 操作栏：复制 / 重新生成 / 删除（hover 气泡时显示）
+  .message-actions {
     display: flex;
-    gap: 12px;
-    width: 100%;
-    animation: messageFadeIn 0.3s ease-out;
-
-    .message-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .message-body {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-width: 70%;
-      min-width: 0;
-    }
-
-    .message-content {
-      padding: 6px 16px;
-      font-size: 14px;
-      line-height: 1.7;
-      word-break: break-word;
-      white-space: pre-wrap;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+    opacity: 0;
+    transition: opacity 0.2s;
 
     .copy-btn {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       width: 28px;
       height: 28px;
-      border: none;
-      background: transparent;
-      color: #a1a1aa;
-      cursor: pointer;
-      border-radius: 4px;
-      opacity: 0;
-      transition: all 0.2s;
       padding: 0;
-      align-self: flex-start;
+      color: #a1a1aa;
 
       &:hover {
         background: #f4f4f5;
@@ -97,44 +144,39 @@
       }
     }
 
-    // AI 回答操作栏：复制 / 重新生成 / 删除
-    .message-actions {
-      display: flex;
+    .action-btn {
+      display: inline-flex;
       align-items: center;
       gap: 4px;
-      align-self: flex-start;
-      opacity: 0;
-      transition: opacity 0.2s;
+      padding: 3px 8px;
+      color: #a1a1aa;
+      font-size: 12px;
 
-      .action-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 8px;
-        border: none;
-        background: transparent;
-        color: #a1a1aa;
-        font-size: 12px;
-        cursor: pointer;
-        border-radius: 4px;
-        transition: all 0.2s;
+      &:hover:not(:disabled) {
+        background: #f4f4f5;
+        color: #52525b;
+      }
 
-        &:hover:not(:disabled) {
-          background: #f4f4f5;
-          color: #52525b;
-        }
+      &.danger:hover:not(:disabled) {
+        background: #fef2f2;
+        color: #dc2626;
+      }
 
-        &.danger:hover:not(:disabled) {
-          background: #fef2f2;
-          color: #dc2626;
-        }
-
-        &:disabled {
-          cursor: not-allowed;
-          opacity: 0.5;
-        }
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
       }
     }
+  }
+
+  .ant-bubble:hover .message-actions {
+    opacity: 1;
+  }
+
+  // 用户气泡侧操作栏 hover 反色
+  .ant-bubble-end .message-actions .copy-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #d4d4d8;
   }
 
   // AI 回答 Markdown 内容样式
@@ -329,66 +371,10 @@
     }
   }
 
-  // hover 消息项显示复制按钮与操作栏
-  .message-item:hover .copy-btn,
-  .message-item:hover .message-actions {
-    opacity: 1;
-  }
-
-  // 用户消息：右侧
-  .message-item.user {
-    justify-content: flex-end;
-
-    .message-avatar {
-      background: #18181b;
-      color: #fff;
-      order: 1;
-    }
-
-    .message-body {
-      align-items: flex-end;
-    }
-
-    .message-actions {
-      align-self: flex-end;
-    }
-
-    .message-content {
-      background: #18181b;
-      color: #fff;
-      border-radius: 16px 16px 4px 16px;
-    }
-
-    .copy-btn {
-      align-self: flex-end;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #d4d4d8;
-      }
-    }
-  }
-
-  // AI 消息：左侧
-  .message-item.assistant {
-    justify-content: flex-start;
-
-    .message-avatar {
-      background: #f4f4f5;
-      color: #52525b;
-    }
-
-    .message-content {
-      background: #f4f4f5;
-      color: #18181b;
-      border-radius: 16px 16px 16px 4px;
-
-      &.error {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-      }
-    }
+  // 流式输出中的 AI 回答纯文本（覆盖 .markdown-body 的 white-space: normal，
+  // 保留换行展示；避免每 ~20ms 对整段增长文本重复做 markdown 解析）
+  .markdown-body.streaming-text {
+    white-space: pre-wrap;
   }
 
   // 加载中打字动画
@@ -415,109 +401,13 @@
     }
   }
 
-  // 思考过程区域：agent 执行步骤展示（SSE step_* 事件驱动）
-  .thinking-process {
-    width: 100%;
-    padding: 12px 16px;
-    background: #fafafa;
-    border: 1px solid #f0f0f0;
-    border-radius: 12px;
-    animation: messageFadeIn 0.3s ease-out;
-
-    .thinking-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #52525b;
-
-      svg {
-        color: var(--color-primary);
-      }
-    }
-
-    .thinking-steps {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .thinking-step {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      min-width: 0;
-      font-size: 12px;
-      color: #a1a1aa;
-      transition: color 0.2s;
-
-      .step-icon {
-        display: inline-flex;
-        align-items: center;
-        flex-shrink: 0;
-      }
-
-      .step-spin {
-        animation: stepSpin 1s linear infinite;
-      }
-
-      .step-label {
-        flex-shrink: 0;
-        font-weight: 500;
-      }
-
-      .step-status {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      // 已完成：绿色对勾
-      &.done {
-        color: #71717a;
-
-        .step-icon {
-          color: var(--color-success);
-        }
-      }
-
-      // 执行中：主色图标 + 旋转动画
-      &.running {
-        color: #52525b;
-
-        .step-icon {
-          color: var(--color-primary);
-        }
-
-        .step-status {
-          color: #52525b;
-        }
-      }
-    }
-  }
-}
-
-// 思考步骤执行中图标旋转动画
-@keyframes stepSpin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-// 消息淡入动画
-@keyframes messageFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  // 思考过程折叠块（antd X Think 组件）
+  .ai-bubble-body {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    min-width: 0;
   }
 }
 

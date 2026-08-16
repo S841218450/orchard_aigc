@@ -18,67 +18,62 @@ interface SSEStepData {
   timestamp: number;
 }
 
-/** 创作工作流类型：text=文生图，image=图生图 */
-type WorkType = "text" | "image";
-
 /**
- * 从 SSE 事件中提取步骤详情文案
+ * 文生图 / 图生图统一节点映射（后端 NODE_MAP 的前端版本）
+ * 事件 type 已是映射后的类型（如 step_generate），name 为中文步骤名，
+ * 供前端展示与错误提示，绝不透出原始节点名
  */
+const STEP_NAME_MAP: Record<string, string> = {
+  step_input_check: "输入检查",
+  step_decision: "方案决策",
+  step_supplementary: "补充描述",
+  step_interrupt: "补充描述",
+  step_prompt_optimize: "提示词优化",
+  step_generate: "图片生成",
+  step_retry: "重试",
+};
+
+/** 从 SSE 事件中提取步骤详情文案：优先取 data.messages，退化回 status */
 function extractStepDetail(stepData: SSEStepData): string {
   const data = stepData.data;
-  if (!data) return stepData.status;
-
-  // 优先取 messages 字段
-  if (typeof data.messages === "string" && data.messages) {
+  if (data && typeof data.messages === "string" && data.messages) {
     return data.messages;
-  }
-  // step_generate 有 url 数组时
-  if (stepData.type === "step_generate" && data.url) {
-    const arr = data.url as unknown[];
-    return Array.isArray(arr) && arr.length > 0
-      ? `生成 ${arr.length} 张图片完成`
-      : stepData.status;
-  }
-  // done 事件
-  if (stepData.type === "done") {
-    return "所有步骤执行完毕";
   }
   return stepData.status;
 }
 
 /**
- * 从 step_generate 节点提取结果图列表：
- * 优先取 data.imageList（{ id, url }[]），兼容 data.url（字符串数组 / 老版 fileUrl 数组）
+ * 从 step_generate 节点提取结果图列表：优先 data.imageList（{id,url}[]），
+ * 兼容 NODE_MAP 中的 image_list 写法
  */
 function extractResultImageList(
   stepData: SSEStepData,
 ): { id: string; url: string }[] {
   const data = stepData.data || {};
-  const imageList = data.imageList as
+  const imageList = (data.imageList ?? data.image_list) as
     | Array<{ id?: string; url?: string }>
     | undefined;
-  if (Array.isArray(imageList) && imageList.length > 0) {
-    return imageList
-      .filter((item) => typeof item?.url === "string" && item.url)
-      .map((item) => ({ id: item.id ?? "", url: item.url as string }));
-  }
-  const url = data.url as unknown;
-  if (Array.isArray(url) && url.length > 0) {
-    return url
-      .map((item) => {
-        if (typeof item === "string") return { id: "", url: item };
-        const fileUrl = (item as { fileUrl?: string })?.fileUrl;
-        return fileUrl ? { id: "", url: fileUrl } : null;
-      })
-      .filter((item): item is { id: string; url: string } => item !== null);
-  }
-  return [];
+  if (!Array.isArray(imageList)) return [];
+  return imageList
+    .filter((item) => typeof item?.url === "string" && item.url)
+    .map((item) => ({ id: item.id ?? "", url: item.url as string }));
 }
 
 /**
- * 文生图结果图节点解析：从 step_generate 的 imageList/url 数组中提取全部结果图
+ * 判定 step_generate 是否执行失败：
+ * 失败节点会显式返回空 imageList（[]），或详情文案包含失败关键字
  */
-function extractTextResultImage(
+function isGenerateFailed(stepData: SSEStepData): boolean {
+  if (stepData.type !== "step_generate") return false;
+  const data = stepData.data || {};
+  const imageList = (data.imageList ?? data.image_list) as unknown;
+  if (Array.isArray(imageList) && imageList.length === 0) return true;
+  const msg = typeof data.messages === "string" ? data.messages : "";
+  return /执行失败|未成功/.test(msg);
+}
+
+/** 结果图节点解析：从 step_generate 提取结果图，写入 resultUrl / resultImageList */
+function applyGenerateResult(
   stepData: SSEStepData,
   base: WorkMessage,
 ): WorkMessage {
@@ -91,15 +86,18 @@ function extractTextResultImage(
   };
 }
 
-/**
- * 图生图结果图节点解析：节点结构与文生图不同，
- * 当前暂复用通用解析，待后端图生图节点协议确认后在此按需调整
- */
-function extractImageResultImage(
-  stepData: SSEStepData,
-  base: WorkMessage,
-): WorkMessage {
-  return extractTextResultImage(stepData, base);
+/** 计算步骤状态：失败节点 / 错误事件为 error，完成事件为 done，其余为 running */
+function getStepState(stepData: SSEStepData): WorkStep["state"] {
+  if (stepData.type === "done") return "done";
+  if (
+    stepData.type === "error" ||
+    stepData.type === "step_error" ||
+    stepData.type === "step_retry" ||
+    isGenerateFailed(stepData)
+  ) {
+    return "error";
+  }
+  return "running";
 }
 
 interface UseCreationSSEOptions {
@@ -111,7 +109,7 @@ interface UseCreationSSEOptions {
 }
 
 /**
- * 创作业务 SSE 长连接 Hook（文生图 / 图生图）
+ * 创作业务 SSE 长连接 Hook（文生图 / 图生图统一节点解析）
  *
  * 复用通用 useSSE 的连接生命周期，创作专属的接口 URL（文生图/图生图分流）、
  * 请求参数组装、SSE 事件解析（步骤流 / 结果图 / 失败 / 补充问题）均收敛在此。
@@ -138,44 +136,57 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
     [],
   );
 
-  /** 通用步骤基础组装：把上一步标记完成、追加新步骤、组装基础消息 */
+  /**
+   * 通用步骤组装：
+   * - 追加新步骤时把上一步置为 done；
+   * - done / error 类事件不追加新步骤，终态直接落在最后一步上；
+   * - 步骤 name 取 NODE_MAP 中文名，detail 取 data.messages
+   */
   const buildStepBase = useCallback(
     (msg: WorkMessage, stepData: SSEStepData): WorkMessage => {
       const prevSteps = msg.steps || [];
-      // 把上一步标记为完成
+      // 上一步置为完成（仅当仍是 running）
       const updatedSteps: WorkStep[] = prevSteps.map((s, idx) =>
         idx === prevSteps.length - 1 && s.state === "running"
           ? { ...s, state: "done" as const }
           : s,
       );
 
-      // 从 stepData 里提取步骤详情文案
-      const stepDetail = extractStepDetail(stepData);
-
-      // 判断当前步骤状态
-      let stepState: WorkStep["state"] = "running";
-      if (stepData.type === "step_error" || stepData.type === "error") {
-        stepState = "error";
-      } else if (stepData.type === "done") {
-        stepState = "done";
+      // done / error 类事件：不追加新步骤，终态直接落在最后一步上
+      if (
+        stepData.type === "done" ||
+        stepData.type === "error" ||
+        stepData.type === "step_error"
+      ) {
+        const steps =
+          stepData.type === "done"
+            ? updatedSteps
+            : updatedSteps.map((s, idx) =>
+                idx === updatedSteps.length - 1
+                  ? { ...s, state: "error" as const }
+                  : s,
+              );
+        return {
+          ...msg,
+          status: 1 as const,
+          sseStatus: stepData.status,
+          steps,
+        };
       }
 
       const newStep: WorkStep = {
         seqId: stepData.seq_id,
         type: stepData.type,
+        name: STEP_NAME_MAP[stepData.type],
         status: stepData.status,
-        detail: stepDetail,
+        detail: extractStepDetail(stepData),
         timestamp: stepData.timestamp,
-        state: stepState,
+        state: getStepState(stepData),
       };
 
-      // 只有带有效信息的 step 才追加（跳过 heartbeat、纯 done 等没有实质内容的）
       const shouldAppend =
         stepData.type.startsWith("step_") ||
-        stepData.type === "done" ||
-        stepData.type === "error" ||
         stepData.type === "human_in_the_loop";
-
       const steps = shouldAppend ? [...updatedSteps, newStep] : updatedSteps;
 
       return {
@@ -189,38 +200,65 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
   );
 
   /**
-   * 工作流事件状态机：结果图节点（step_generate）按各工作流提取函数解析，
-   * 其余状态转换（补充问题 / 失败 / 完成）两种工作流共用
+   * 工作流事件状态机（文生图 / 图生图共用同一 NODE_MAP）：
+   * 结果图 / 失败 / 补充问题 / 完成 均在此收敛
    */
   const applyStep = useCallback(
-    (
-      workId: string,
-      stepData: SSEStepData,
-      msg: WorkMessage,
-      extractResultImage: (
-        stepData: SSEStepData,
-        base: WorkMessage,
-      ) => WorkMessage,
-    ): WorkMessage => {
+    (workId: string, stepData: SSEStepData, msg: WorkMessage): WorkMessage => {
       const base = buildStepBase(msg, stepData);
 
       switch (stepData.type) {
         case "step_generate":
-          return extractResultImage(stepData, base);
+          // 生成失败：整条消息置为失败（等待重试）
+          if (isGenerateFailed(stepData)) {
+            sseErrorSetRef.current.add(workId);
+            return {
+              ...base,
+              status: 3 as const,
+              sseStepType: "error",
+            };
+          }
+          return applyGenerateResult(stepData, base);
+
+        case "step_supplementary": {
+          // 补充描述选项列表：暂存，供 step_interrupt 待操作态使用
+          const data = stepData.data as Record<string, unknown> | undefined;
+          const selectList =
+            (data?.selectList as SelectListItem[] | undefined) ?? [];
+          return {
+            ...base,
+            operationData:
+              selectList.length > 0 ? { selectList } : base.operationData,
+          };
+        }
+
+        case "step_interrupt":
         case "human_in_the_loop": {
-          const questionList =
-            (
-              stepData.data as unknown as {
-                interrupt?: { question_list?: SelectListItem[] };
-              }
-            )?.interrupt?.question_list || [];
+          // 兼容旧协议 interrupt.question_list
+          const data = stepData.data as Record<string, unknown> | undefined;
+          const interrupt = data?.interrupt as
+            | { question_list?: SelectListItem[] }
+            | undefined;
+          const selectList =
+            base.operationData?.selectList ?? interrupt?.question_list ?? [];
           return {
             ...base,
             status: 4 as const,
             sseStepType: "human_in_the_loop",
-            operationData: { selectList: questionList },
+            operationData: { selectList },
           };
         }
+
+        case "step_retry": {
+          // 步骤执行失败，等待手动重试
+          sseErrorSetRef.current.add(workId);
+          return {
+            ...base,
+            status: 3 as const,
+            sseStepType: "retry",
+          };
+        }
+
         case "step_error":
         case "error": {
           sseErrorSetRef.current.add(workId);
@@ -230,6 +268,7 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
             sseStepType: "error",
           };
         }
+
         case "done": {
           if (
             sseErrorSetRef.current.has(workId) ||
@@ -248,6 +287,7 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
             selectList: undefined,
           };
         }
+
         default:
           return base;
       }
@@ -255,30 +295,16 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
     [buildStepBase],
   );
 
-  /** 文生图事件处理：节点按文生图工作流解析 */
-  const handleTextToImageStep = useCallback(
+  /** 统一事件处理：文生图 / 图生图共用同一套节点解析 */
+  const handleStep = useCallback(
     (workId: string, stepData: SSEStepData, msg: WorkMessage): WorkMessage =>
-      applyStep(workId, stepData, msg, extractTextResultImage),
+      applyStep(workId, stepData, msg),
     [applyStep],
   );
 
-  /** 图生图事件处理：节点按图生图工作流解析（节点差异收敛在 extractImageResultImage） */
-  const handleImageToImageStep = useCallback(
-    (workId: string, stepData: SSEStepData, msg: WorkMessage): WorkMessage =>
-      applyStep(workId, stepData, msg, extractImageResultImage),
-    [applyStep],
-  );
-
-  /** 建立 SSE 连接：workType 决定事件按文生图/图生图工作流解析 */
+  /** 建立 SSE 连接：文生图 / 图生图事件解析统一走 handleStep */
   const createConnection = useCallback(
-    (
-      workId: string,
-      url: string,
-      body: Record<string, unknown>,
-      workType: WorkType,
-    ) => {
-      const handleStep =
-        workType === "image" ? handleImageToImageStep : handleTextToImageStep;
+    (workId: string, url: string, body: Record<string, unknown>) => {
       connect({
         url,
         body,
@@ -308,7 +334,7 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
         },
       });
     },
-    [connect, onUpdateMessage, handleTextToImageStep, handleImageToImageStep],
+    [connect, onUpdateMessage, handleStep],
   );
 
   /** 提交创作：根据是否携带参考图选择文生图/图生图 SSE 接口 */
@@ -333,7 +359,6 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
               userId,
               ...data,
             },
-        isImageToImage ? "image" : "text",
       );
     },
     [createConnection, getGenerateUrl, getOriginImageList],
@@ -373,7 +398,6 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
               userId,
               ...data,
             },
-        isImageToImage ? "image" : "text",
       );
     },
     [createConnection, getGenerateUrl, getOriginImageList, onUpdateMessage],
@@ -395,16 +419,11 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
         steps: [],
       }));
 
-      createConnection(
-        workId,
-        "/ai-api/v1/text-to-image/select",
-        {
-          threadId: workId,
-          userId,
-          user_select: answers,
-        },
-        "text",
-      );
+      createConnection(workId, "/ai-api/v1/text-to-image/select", {
+        threadId: workId,
+        userId,
+        user_select: answers,
+      });
     },
     [createConnection, onUpdateMessage],
   );
@@ -427,7 +446,6 @@ export function useCreationSSE({ onUpdateMessage }: UseCreationSSEOptions) {
           threadId: workId,
           userId,
         },
-        isImageToImage ? "image" : "text",
       );
     },
     [createConnection, onUpdateMessage],

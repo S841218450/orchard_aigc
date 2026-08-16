@@ -31,25 +31,23 @@ import {
   Check,
   Loader2,
   X,
-  ChevronDown,
   Images,
   MoveRight,
 } from "lucide-react";
+import ThinkBlock from "@/components/chat/chatContent/thinkBlock/thinkBlock";
 import type {
   SelectListItem,
   SelectAnswer,
   WorkMessage,
-  WorkStep,
 } from "@/actions/types";
 import { WORK_STATUS_MAP } from "@/actions/types";
+import { DEFAULT_IMAGES } from "@/constants/assets";
 import messageManager from "@/utils/messageManager";
 import { useCreationEditStore } from "@/store/creation";
+import { createAsset } from "@/actions/asset";
 
 /** 补充问题选项 */
 export type { SelectListItem, SelectAnswer, WorkMessage };
-
-const errImg =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNjY2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7lm77niYc8L3RleHQ+PC9zdmc+";
 
 // ==================== 消息列表项组件 ====================
 interface MessageItemProps {
@@ -248,89 +246,6 @@ const SelectList = ({
   );
 };
 
-// ===========步骤流进度组件============
-interface StepProgressProps {
-  steps: WorkStep[];
-  status: WorkMessage["status"];
-}
-
-// 步骤流进度组件
-const StepProgress = ({ steps, status }: StepProgressProps) => {
-  const [expanded, setExpanded] = useState(true);
-
-  // 没有步骤数据时不渲染
-  if (!steps || steps.length === 0) return null;
-
-  const isRunning = status === 1;
-  const latestStep = steps[steps.length - 1];
-  const prevSteps = steps.slice(0, -1);
-
-  // SSE 结束（成功/失败/待操作）时收起，只显示最新一条
-  const shouldCollapse = !isRunning;
-
-  return (
-    <div className="step-progress">
-      {/* 展开/收起切换按钮 */}
-      <button
-        className="step-progress-toggle"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <span className="toggle-label">
-          {isRunning ? "执行中" : shouldCollapse ? "执行详情" : "执行详情"}
-        </span>
-        <ChevronDown
-          size={14}
-          className={`toggle-icon ${expanded ? "open" : ""}`}
-        />
-      </button>
-
-      {/* 历史步骤（已完成/已失败 — 划线灰显） */}
-      {expanded && prevSteps.length > 0 && (
-        <div className="step-list step-list-history">
-          {prevSteps.map((step) => (
-            <div key={step.seqId} className={`step-item step-${step.state}`}>
-              <div className="step-icon">
-                {step.state === "done" && <Check size={12} />}
-                {step.state === "error" && <X size={12} />}
-                {step.state === "running" && <Loader2 size={12} />}
-              </div>
-              <div className="step-content">
-                <div className="step-title">{step.status}</div>
-                {step.detail && step.detail !== step.status && (
-                  <div className="step-detail">{step.detail}</div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 当前/最新步骤 */}
-      <div className={`step-list step-list-current`}>
-        <div
-          className={`step-item step-${latestStep.state} ${
-            isRunning ? "step-active" : ""
-          }`}
-        >
-          <div className="step-icon">
-            {latestStep.state === "running" && (
-              <Loader2 size={12} className="spin" />
-            )}
-            {latestStep.state === "done" && <Check size={12} />}
-            {latestStep.state === "error" && <X size={12} />}
-          </div>
-          <div className="step-content">
-            <div className="step-title">{latestStep.status}</div>
-            {latestStep.detail && latestStep.detail !== latestStep.status && (
-              <div className="step-detail">{latestStep.detail}</div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ===========消息列表项组件============
 const MessageItem = ({
   message,
@@ -347,7 +262,7 @@ const MessageItem = ({
     status,
     sseStatus,
     resultUrl,
-    resultImageList,
+    dataList,
     operationData,
     originImageList,
     steps,
@@ -357,21 +272,29 @@ const MessageItem = ({
   // 删除动画状态
   const [removing, setRemoving] = useState(false);
 
-  // 结果图列表：优先多图列表，无则退化为单张 resultUrl
+  // 结果图列表：优先 SSE 多图结果（resultImageList）→ 历史多图（dataList）→ 单张 resultUrl
   const resultImages =
-    resultImageList && resultImageList.length > 0
-      ? resultImageList
-      : resultUrl
-        ? [{ id: "", url: resultUrl }]
-        : [];
+    message.resultImageList && message.resultImageList.length > 0
+      ? message.resultImageList
+      : dataList && dataList.length > 0
+        ? dataList
+        : resultUrl
+          ? [{ id: "", url: resultUrl }]
+          : [];
 
   // 处理删除（先播放淡出动画，再调用回调）
   const handleDelete = useCallback(() => {
     setRemoving(true);
-    setTimeout(() => {
+  }, []);
+
+  // 淡出动画结束后再调用父级删除回调；
+  useEffect(() => {
+    if (!removing) return;
+    const timer = setTimeout(() => {
       onDelete?.(message);
     }, 400);
-  }, [message, onDelete]);
+    return () => clearTimeout(timer);
+  }, [removing, message, onDelete]);
 
   // 计算图片比例
   const getImgSize = (proportion: string) => {
@@ -387,7 +310,6 @@ const MessageItem = ({
     };
     return sizeMap[proportion] || { width: 300, height: 300 };
   };
-
   const statusInfo = WORK_STATUS_MAP[status] || WORK_STATUS_MAP[0];
   const imgSize = getImgSize(params?.imageProportion || "1:1");
   const downloadImage = async (url: string) => {
@@ -404,12 +326,15 @@ const MessageItem = ({
       a.click();
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch {
-      // fetch 受限（如服务器未开放 CORS）时退回 a 标签直接下载
       const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
       a.click();
     }
+  };
+  //上传素材
+  const handleCreateAsset = async (imageId: string) => {
+    await createAsset({ workId: message.id, imageId, tags: [] });
   };
   const copyPrompt = (prompt: string) => {
     messageManager.success("已复制到剪贴板");
@@ -419,6 +344,37 @@ const MessageItem = ({
   const handleSelectSubmit = (answers: SelectAnswer[]) => {
     onSelectSubmit?.(message, answers);
   };
+
+  // 执行步骤流：最新步骤单独高亮展示
+  const latestStep =
+    steps && steps.length > 0 ? steps[steps.length - 1] : undefined;
+
+  // 生图进行中：最新步骤为运行中的 step_generate 且尚无结果图 → 展示占位图
+  const isGenerating =
+    status === 1 &&
+    latestStep?.type === "step_generate" &&
+    latestStep.state === "running" &&
+    resultImages.length === 0;
+  // 占位图数量与用户选择的出图数量一致
+  const placeholderCount = Math.max(1, Number(params?.imageCount) || 1);
+
+  // 最新步骤元素 ref：流式执行追加新步骤时自动滚动跟随到最新步骤
+  const latestStepRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (status !== 1 || !steps?.length) return;
+    const raf = requestAnimationFrame(() => {
+      const el = latestStepRef.current;
+      if (!el) return;
+      // 仅滚动列表容器（.message-list），避免 scrollIntoView 连带滚动外层页面
+      const container = el.closest<HTMLElement>(".message-list");
+      if (!container) return;
+      // 将最新步骤底部对齐到容器底部：新增步骤或详情变长时持续跟随
+      const elBottom = el.getBoundingClientRect().bottom;
+      const boxBottom = container.getBoundingClientRect().bottom;
+      container.scrollTop += elBottom - boxBottom;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [steps, status]);
 
   // 状态对应的类名
   const statusClass = `status-${status}`;
@@ -532,9 +488,62 @@ const MessageItem = ({
           )}
         </div>
 
-        {/* 执行步骤流 */}
-        {steps && steps.length > 0 && (
-          <StepProgress steps={steps} status={status} />
+        {/* 执行步骤流（统一使用 ThinkBlock 折叠块） */}
+        {steps && steps.length > 0 && latestStep && (
+          <ThinkBlock
+            title={status === 1 ? "执行中" : "执行详情"}
+            done={status !== 1}
+          >
+            <div className="think-steps">
+              {/* 历史步骤（已完成/已失败 — 划线灰显） */}
+              {steps.slice(0, -1).map((step) => (
+                <div
+                  key={step.seqId}
+                  className={`think-step think-step-${step.state}`}
+                >
+                  <div className="think-step-icon">
+                    {step.state === "done" && <Check size={12} />}
+                    {step.state === "error" && <X size={12} />}
+                    {step.state === "running" && <Loader2 size={12} />}
+                  </div>
+                  <div className="think-step-content">
+                    <div className="think-step-title">
+                      {step.name || step.status}
+                    </div>
+                    {step.detail && step.detail !== step.status && (
+                      <div className="think-step-detail">{step.detail}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {/* 当前/最新步骤 */}
+              <div
+                ref={latestStepRef}
+                className={`think-step think-step-${latestStep.state} ${
+                  status === 1 ? "think-step-active" : ""
+                }`}
+              >
+                <div className="think-step-icon">
+                  {latestStep.state === "running" && (
+                    <Loader2 size={12} className="spin" />
+                  )}
+                  {latestStep.state === "done" && <Check size={12} />}
+                  {latestStep.state === "error" && <X size={12} />}
+                </div>
+                <div className="think-step-content">
+                  <div className="think-step-title">
+                    {latestStep.name || latestStep.status}
+                  </div>
+                  {latestStep.detail &&
+                    latestStep.detail !== latestStep.status && (
+                      <div className="think-step-detail">
+                        {latestStep.detail}
+                      </div>
+                    )}
+                </div>
+              </div>
+            </div>
+          </ThinkBlock>
         )}
 
         {/* 补充问题选择 UI（human_in_the_loop） */}
@@ -546,7 +555,9 @@ const MessageItem = ({
         )}
 
         {/* 生成产出区：参考图 → 结果图（仅图生图展示参考图，无参考图时退化为普通结果图） */}
-        {(originImageList?.length || 0) > 0 || resultImages.length > 0 ? (
+        {(originImageList?.length || 0) > 0 ||
+        resultImages.length > 0 ||
+        isGenerating ? (
           <div className="generation-result">
             {/* 参考图缩略图 */}
             {originImageList && originImageList.length > 0 && (
@@ -569,7 +580,7 @@ const MessageItem = ({
                         className="ref-image"
                         src={item.url}
                         alt={`参考图${index + 1}`}
-                        fallback={errImg}
+                        fallback={DEFAULT_IMAGES.fallback}
                       />
                     </div>
                   ))}
@@ -577,63 +588,84 @@ const MessageItem = ({
               </div>
             )}
 
-            {/* 箭头：参考图 → 结果图 */}
-            {resultImages.length > 0 &&
+            {/* 箭头：参考图 → 结果图/占位图 */}
+            {(resultImages.length > 0 || isGenerating) &&
               originImageList &&
               originImageList.length > 0 && (
                 <MoveRight className="result-arrow" size={20} />
               )}
 
-            {/* 生成结果图片（支持多张，预览可切换） */}
-            {resultImages.length > 0 && (
+            {/* 生成结果图片（支持多张，预览可切换）；生图节点开始时先展示占位图 */}
+            {(isGenerating || resultImages.length > 0) && (
               <Image.PreviewGroup>
                 <div className="image-list">
-                  {resultImages.map((img, index) => (
-                    <div
-                      className="message-image-wrap"
-                      key={`${img.id}-${index}`}
-                    >
-                      <Image
-                        className="message-image"
-                        src={img.url}
-                        alt={`生成素材${index + 1}`}
-                        fallback={errImg}
-                        preview={{
-                          mask: { blur: true },
-                          // 注意：cover 内的按钮必须阻止冒泡，否则会触发图片自身的 preview 打开
-                          cover: (
-                            <div className="message-image-cover">
-                              <Button
-                                className="W80"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditImage(img.url);
-                                }}
-                              >
-                                修改图片
-                              </Button>
-                              <Button
-                                icon={<DownloadOutlined size={14} />}
-                                type="primary"
-                                className="W80"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  downloadImage(img.url);
-                                }}
-                              >
-                                下载图片
-                              </Button>
-                            </div>
-                          ),
-                        }}
-                        style={{
-                          width: imgSize.width,
-                          height: imgSize.height,
-                          objectFit: "cover",
-                        }}
-                      />
-                    </div>
-                  ))}
+                  {isGenerating
+                    ? Array.from({ length: placeholderCount }).map(
+                        (_, index) => (
+                          <div
+                            className="message-image-wrap message-image-wrap-placeholder"
+                            key={`placeholder-${index}`}
+                          >
+                            <Image
+                              className="message-image"
+                              src=""
+                              alt={`生成中 ${index + 1}`}
+                              placeholder={{ progress: true }}
+                              style={{
+                                width: imgSize.width,
+                                height: imgSize.height,
+                              }}
+                            />
+                          </div>
+                        ),
+                      )
+                    : resultImages.map((img, index) => (
+                        <div
+                          className="message-image-wrap"
+                          key={`${img.id}-${index}`}
+                        >
+                          <Image
+                            className="message-image"
+                            src={img.url}
+                            alt={`生成素材${index + 1}`}
+                            fallback={DEFAULT_IMAGES.fallback}
+                            preview={{
+                              mask: { blur: true },
+                              // 注意：cover 内的按钮必须阻止冒泡，否则会触发图片自身的 preview 打开
+                              cover: (
+                                <div className="message-image-cover">
+                                  <Button
+                                    className="W80"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditImage(img.url);
+                                    }}
+                                  >
+                                    修改图片
+                                  </Button>
+                                  <Button
+                                    icon={<DownloadOutlined size={14} />}
+                                    type="primary"
+                                    className="W80"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      downloadImage(img.url);
+                                      handleCreateAsset(img.id);
+                                    }}
+                                  >
+                                    下载图片
+                                  </Button>
+                                </div>
+                              ),
+                            }}
+                            style={{
+                              width: imgSize.width,
+                              height: imgSize.height,
+                              objectFit: "cover",
+                            }}
+                          />
+                        </div>
+                      ))}
                 </div>
               </Image.PreviewGroup>
             )}
@@ -647,7 +679,6 @@ const MessageItem = ({
 // ==================== 历史记录组件 ====================
 
 export const HistoryContent = ({
-  activeKey,
   onSwitchTab,
   messageList,
   loading,
@@ -663,7 +694,6 @@ export const HistoryContent = ({
   onLoadMore,
   onRetryLoadMore,
 }: {
-  activeKey: string;
   onSwitchTab: () => void;
   messageList: WorkMessage[];
   loading?: boolean;

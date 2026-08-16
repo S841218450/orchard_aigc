@@ -3,6 +3,8 @@
 import {
   Code,
   FileText,
+  Lightbulb,
+  MessageSquareText,
   Search,
   Palette,
   Zap,
@@ -95,6 +97,41 @@ export const ChatMain = ({
     onSelectTemplate?.(template);
   };
 
+  // 无会话时的知识库问答引导卡片：点击后直接向助手提问
+  const knowledgeTemplates: OperationItem[] = [
+    {
+      type: "knowledge-summary",
+      title: "总结知识库",
+      desc: "快速了解知识库整体内容",
+      icon: <FileText size={20} />,
+    },
+    {
+      type: "knowledge-search",
+      title: "查找资料",
+      desc: "检索知识库中的相关信息",
+      icon: <Search size={20} />,
+    },
+    {
+      type: "knowledge-advice",
+      title: "方案建议",
+      desc: "结合知识库给出建议",
+      icon: <Lightbulb size={20} />,
+    },
+    {
+      type: "knowledge-qa",
+      title: "快速问答",
+      desc: "基于知识库回答你的问题",
+      icon: <MessageSquareText size={20} />,
+    },
+  ];
+  // 引导卡片对应的预设提问
+  const presetQuestions: Record<string, string> = {
+    "knowledge-summary": "请帮我总结一下知识库中的主要内容和核心要点",
+    "knowledge-search": "请帮我检索知识库中关于项目背景与目标的信息",
+    "knowledge-advice": "请结合知识库中的内容，给我提出几条可行的建议",
+    "knowledge-qa": "请基于知识库内容回答我的问题",
+  };
+
   const renderTemplates = () => {
     if (!selectedType || !templates[selectedType]) return null;
 
@@ -150,9 +187,31 @@ export const ChatMain = ({
 
   return (
     <div className="chat-main animate__animated animate__fadeIn flex-center">
-      <p className="chat-main-desc">
-        我是你的 AI 智能助手，可以根据知识库中的信息，回答你的问题哦
-      </p>
+      <div className="chat-main-header">
+        <h2>你好，我是你的 AI 智能助手</h2>
+        <p>我可以基于知识库中的信息，回答你的问题</p>
+      </div>
+      <div className="chat-main-operation">
+        {knowledgeTemplates.map((item) => (
+          <div
+            key={item.type}
+            className="chat-main-operation-item"
+            onClick={() =>
+              onSelectTemplate?.({
+                id: item.type,
+                title: item.title,
+                content: presetQuestions[item.type],
+              })
+            }
+          >
+            <div className="operation-icon">{item.icon}</div>
+            <div className="operation-info">
+              <h3>{item.title}</h3>
+              <p>{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

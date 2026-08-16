@@ -241,7 +241,7 @@ const FolderTree: React.FC<FolderTreeProps> = ({
             treeData={treeData}
             expandedKeys={expandedKeys}
             selectedKeys={selectedFolderId ? [selectedFolderId] : []}
-
+            autoExpandParent={true}
             switcherIcon={({ isLeaf, expanded }) =>
               isLeaf ? null : expanded ? (
                 <ChevronDown size={14} />

@@ -5,6 +5,12 @@ WORKDIR /app
 # 安装 pnpm 9（与 pnpm-lock.yaml lockfileVersion 9 匹配）
 RUN npm install -g pnpm@9
 
+# next.config.ts 的 rewrites 在构建期就要读取目标地址（.dockerignore 排除了 .env*）
+# 因此必须由构建方通过 --build-arg 传入，如 Jenkinsfile / docker-compose
+ARG ADMIN_API_TARGET
+ARG AI_API_TARGET
+ENV ADMIN_API_TARGET=$ADMIN_API_TARGET AI_API_TARGET=$AI_API_TARGET
+
 # 先拷贝依赖清单，利用 Docker 层缓存
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile

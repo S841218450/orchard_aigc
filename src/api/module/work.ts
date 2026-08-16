@@ -6,7 +6,7 @@ const apiList = [
   { url: "/api/ai/work/page", apiName: "getWorkList", type: "post" },
   // 更新作品
   { url: "/api/ai/work/update", apiName: "updateWork", type: "post" },
-  // 删除作品（路径参数）
+  // 删除作品
   {
     url: "/api/ai/work/delete",
     apiName: "deleteWork",

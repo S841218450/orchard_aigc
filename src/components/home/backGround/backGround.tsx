@@ -28,8 +28,11 @@ const dotList = Array.from({ length: 40 }, (_, i) => ({
 }));
 export const BackGround = ({
   containerRef,
+  className = "",
 }: {
-  containerRef: RefObject<HTMLDivElement>;
+
+  containerRef: RefObject<HTMLDivElement | null>;
+  className?: string;
 }) => {
   const bgRef = useRef<HTMLDivElement>(null);
   const glowLayerRef = useRef<HTMLDivElement>(null);
@@ -197,7 +200,7 @@ export const BackGround = ({
   }, [containerRef]);
 
   return (
-    <div ref={bgRef} id="background-container">
+    <div ref={bgRef} id="background-container" className={className}>
       {/* 第一层：基底噪点 + 轻透色洗 */}
       <div className="bg-base-layer">
         <div className="bg-noise" />

@@ -17,13 +17,22 @@ type ActionResult<T = void> =
 
 /**
  * 获取历史作品列表
+ * @param type 素材类型（image/video），不传表示全部
+ * @param tag 标签精确匹配，不传表示不限
  */
 export async function getWorkList(
   pageNum: number = 1,
   pageSize: number = 10,
+  type?: string,
+  tag?: string,
 ): Promise<ActionResult<WorkMessage[]>> {
   try {
-    const res = await API.getWorkList({ pageNum, pageSize });
+    const res = await API.getWorkList({
+      pageNum,
+      pageSize,
+      ...(type ? { type } : {}),
+      ...(tag ? { tag } : {}),
+    });
     return { success: true, data: res.data?.list || [] };
   } catch (e) {
     return {
@@ -60,7 +69,7 @@ export async function createWork(
  */
 export async function deleteWork(workId: string): Promise<ActionResult<void>> {
   try {
-    await API.deleteWork(workId);
+    await API.deleteWork({ id: workId });
     return { success: true, data: undefined };
   } catch (e) {
     return {
@@ -91,6 +100,25 @@ export async function submitTextToImage(
     return {
       success: false,
       error: e instanceof Error ? e.message : "提交失败",
+    };
+  }
+}
+//提示词生成/优化
+export async function promptGenerate({
+  prompt,
+  style = "智能匹配",
+}: {
+  prompt: string;
+  style?: string;
+}): Promise<ActionResult<WorkMessage>> {
+  try {
+    prompt = prompt.trim();
+    const res = await API.promptGenerate({ prompt, style });
+    return { success: true, data: res.data };
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : "提示词生成/优化失败",
     };
   }
 }

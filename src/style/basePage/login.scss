@@ -262,6 +262,11 @@
           color: var(--color-primary);
           background: var(--color-primary-muted);
         }
+
+        // 未开放的第三方登录：整块置灰，并覆盖 antd 默认禁用样式
+        &.disabled {
+          background: #e9e9e9;
+        }
       }
     }
 

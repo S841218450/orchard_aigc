@@ -2,7 +2,7 @@
   padding: 16px 0 24px;
   width: 100%;
   height: auto;
-  min-height: 55vh;
+  // min-height: 55vh;
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-xl);
@@ -43,6 +43,8 @@
       position: relative;
       width: 100%;
       overflow: hidden;
+      // 图片加载前按自然比例撑起前的最小占位高度，避免骨架阶段塌陷
+      min-height: 180px;
 
       .card-skeleton-placeholder {
         position: absolute;
@@ -67,7 +69,8 @@
         width: 100%;
         justify-content: flex-start;
         align-items: flex-end;
-        margin: 0 16px 0 16px;
+        // 遮罩层背景：hover 显示时轻微压暗图片，保证信息区可读
+        background: rgba(0, 0, 0, 0.1) !important;
       }
       .card-image {
         width: 100%;
@@ -84,6 +87,87 @@
         .card-overlay {
           opacity: 1;
           transform: translateY(0);
+        }
+      }
+    }
+
+    // 骨架卡片信息区：对应 MaterialItem 的标题 / 参数 / 作者 / 点赞
+    .card-info-skeleton {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .skeleton-chips {
+        display: flex;
+        gap: 8px;
+      }
+
+      .skeleton-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .ant-skeleton-input {
+          height: 14px;
+        }
+      }
+    }
+
+    // 卡片信息区：作者头像/名字（左）+ 复制/点赞操作（右）
+    .card-info-panel {
+      padding: 10px 12px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      // 相对遮罩层更深的背景，通栏铺满形成区分条
+      background: rgba(0, 0, 0, 0.55);
+
+      .card-author {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+
+        .card-avatar {
+          flex-shrink: 0;
+          background: rgba(255, 255, 255, 0.2);
+          color: var(--color-pure-0);
+          font-size: 12px;
+        }
+
+        .card-author-name {
+          font-size: 13px;
+          color: var(--color-pure-0);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .card-actions {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+
+        .card-action-btn {
+          color: var(--color-pure-0);
+          font-size: 13px;
+
+          &:hover {
+            color: rgba(255, 255, 255, 0.85);
+          }
+        }
+
+        // 已点赞：爱心填充为错误色（品牌红色系），数量文字保持白色
+        .card-like-btn.liked {
+          color: var(--color-error);
+
+          &:hover {
+            color: var(--color-error);
+          }
         }
       }
     }
