@@ -106,28 +106,37 @@ export const Aside = ({
   // 历史记录点击"修改图片"时自动切换到图生图
   useEffect(() => {
     if (!editImageUrl) return;
-    setMenu("imageToImage");
-    onMenuChange?.("imageToImage");
-    setSubmitState({ canSubmit: false, submitting: false });
+    // 同步 setState 用 queueMicrotask 包裹，避免 React19 级联渲染告警
+    queueMicrotask(() => {
+      setMenu("imageToImage");
+      onMenuChange?.("imageToImage");
+      setSubmitState({ canSubmit: false, submitting: false });
+    });
   }, [editImageUrl, onMenuChange]);
 
   // 首页输入框携带的数据：一次性收敛进本地 state 并清空 store
   useEffect(() => {
     if (!initialMenu || carryData) return;
-    setCarryData({
-      menu: initialMenu,
-      prompt: initialPrompt ?? "",
-      images: initialImages ?? [],
+    // 同步 setState 用 queueMicrotask 包裹，避免 React19 级联渲染告警
+    queueMicrotask(() => {
+      setCarryData({
+        menu: initialMenu,
+        prompt: initialPrompt ?? "",
+        images: initialImages ?? [],
+      });
+      clearInitialData();
     });
-    clearInitialData();
   }, [initialMenu, initialPrompt, initialImages, carryData, clearInitialData]);
 
   // 携带的菜单生效（覆盖默认文生图，切换时重置提交能力状态）
   useEffect(() => {
     if (!carryData) return;
-    setMenu(carryData.menu);
-    onMenuChange?.(carryData.menu);
-    setSubmitState({ canSubmit: false, submitting: false });
+    // 同步 setState 用 queueMicrotask 包裹，避免 React19 级联渲染告警
+    queueMicrotask(() => {
+      setMenu(carryData.menu);
+      onMenuChange?.(carryData.menu);
+      setSubmitState({ canSubmit: false, submitting: false });
+    });
   }, [carryData, onMenuChange]);
 
   // 提交创作描述

@@ -316,7 +316,7 @@ const theme = {
   },
   algorithm: undefined, // 使用默认算法，不使用暗色算法
   // 零运行时 CSS 变量模式：主题 token 以 CSS 变量注入，减少运行时 JS 样式计算
-  cssVar: true,
+  cssVar: { prefix: "ant" },
 };
 
 export default function Providers({ children }: { children: React.ReactNode }) {

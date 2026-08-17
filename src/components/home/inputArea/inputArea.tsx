@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, Input, Popconfirm, Upload, Image } from "antd";
 import type { UploadProps } from "antd";
-import { ArrowUp, ImagePlus, X } from "lucide-react";
+import { ArrowUp, X } from "lucide-react";
 import messageManager from "@/utils/messageManager";
 import { type SendMessageData } from "@/actions/home";
 import "./inputArea.scss";
