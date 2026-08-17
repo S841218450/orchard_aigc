@@ -67,7 +67,7 @@ export const Aside = ({
 
   // ---- 滑动高亮指示器：测量选中项位置，平滑过渡 ----
   const toolbarRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const itemRefs = useRef<(HTMLElement | null)[]>([]);
   const [indicator, setIndicator] = useState({
     left: 0,
     width: 0,
