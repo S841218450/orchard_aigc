@@ -7,10 +7,12 @@
   justify-content: center;
   padding: 24px 0;
 
-  // Bubble.List 占满可视区，scroll-box 内部滚动
+  // Bubble.List 占满可视区，scroll-box 内部滚动；
+  // 消息列约束到舒适阅读宽度（约 65 字符），居中展示
   .ant-bubble-list {
-    width: 100%;
+    width: 50vw;
     max-height: 100%;
+    margin: 0 auto;
   }
 
   // 滚动条样式
@@ -18,7 +20,7 @@
     scrollbar-width: thin;
 
     &::-webkit-scrollbar {
-      width: 6px;
+      width: 4px;
     }
 
     &::-webkit-scrollbar-track {
@@ -35,29 +37,28 @@
     }
   }
 
-  // 消息头像
+  // 消息头像：圆角方（squircle），去重圈光环，统一青色点缀
   .message-avatar {
     width: 36px;
     height: 36px;
-    border-radius: 50%;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    transition: transform var(--duration-fast) var(--ease-out-expo);
   }
 
   .user-avatar {
     background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
     color: #fff;
-    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
-    border: 1px solid rgba(212, 165, 116, 0.3);
+    border: 1px solid rgba(17, 17, 17, 0.12);
   }
 
   .ai-avatar {
-    background: linear-gradient(135deg, #e0f4f4 0%, #ffffff 100%);
+    background: var(--color-ai-cyan-light);
     color: var(--color-ai-cyan);
-    border: 1px solid rgba(96, 196, 196, 0.3);
-    box-shadow: 0 0 0 3px rgba(96, 196, 196, 0.1);
+    border: 1px solid rgba(96, 196, 196, 0.35);
   }
 
   // 气泡文本通用样式（variant 使用 borderless，背景由下方消息角色类控制）
@@ -69,39 +70,37 @@
     white-space: pre-wrap;
   }
 
-  // 用户气泡：右侧深色卡片
+  // 用户气泡：右侧深色卡片（无额外装饰，靠圆角尾巴与阴影分层）
   .ant-bubble-end .message-content {
     background: linear-gradient(135deg, #141414 0%, #1f1f1f 100%);
     color: #fff;
     border-radius: 16px 16px 4px 16px;
-    position: relative;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-
-    // 右上暖棕装饰角标
-    &::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 14px;
-      height: 14px;
-      background: var(--color-warm-500);
-      clip-path: polygon(100% 0, 0 0, 100% 100%);
-      border-radius: 0 16px 0 0;
-    }
   }
 
-  // AI 气泡：左侧浅色卡片（正常 markdown 渲染）
+  // AI 气泡：左侧白色卡片 + 细边框 + 柔和阴影 + 左上小尾巴，去掉青左边条
   .ant-bubble-start .markdown-body {
-    background: linear-gradient(180deg, #fafdff 0%, #f4f8f8 100%);
+    position: relative;
+    background: var(--color-pure-0);
     color: #18181b;
     border-radius: 4px 16px 16px 16px;
-    border: 1px solid rgba(232, 221, 208, 0.8);
-    border-left: 3px solid var(--color-ai-cyan);
+    border: 1px solid var(--color-border);
     padding: 10px 16px;
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 rgba(96, 196, 196, 0.06);
+    box-shadow: var(--shadow-xs);
+
+    // 左上角尾巴：与卡片同色的旋转方块，左侧/下侧描边自然形成箭头
+    // &::before {
+    //   content: "";
+    //   position: absolute;
+    //   top: 5px;
+    //   left: -6px;
+    //   width: 9px;
+    //   height: 9px;
+    //   background: var(--color-pure-0);
+    //   border-left: 1px solid var(--color-border);
+    //   border-bottom: 1px solid var(--color-border);
+    //   transform: rotate(45deg);
+    // }
   }
 
   // AI 气泡：错误回答
@@ -109,7 +108,6 @@
     background: #fef2f2;
     color: #dc2626;
     border: 1px solid #fecaca;
-    border-left: 3px solid var(--color-error);
     border-radius: 4px 16px 16px 16px;
     padding: 10px 16px;
   }
@@ -169,7 +167,8 @@
     }
   }
 
-  .ant-bubble:hover .message-actions {
+  .ant-bubble:hover .message-actions,
+  .ant-bubble:focus-within .message-actions {
     opacity: 1;
   }
 

@@ -149,6 +149,7 @@ const ChatInput = ({
               className="attach-btn"
               icon={<Paperclip size={18} />}
               title="添加附件"
+              aria-label="添加附件"
               onClick={handleOpenAttachments}
             />
             {leftOpration}
@@ -160,6 +161,7 @@ const ChatInput = ({
               shape="circle"
               type="primary"
               icon={<Square size={18} />}
+              aria-label="停止生成"
               onClick={stopChat}
             />
           ) : (
@@ -167,6 +169,7 @@ const ChatInput = ({
               shape="circle"
               type="primary"
               icon={<ArrowUp size={18} />}
+              aria-label="发送消息"
               disabled={messageText.trim() === "" && uploadList.length === 0}
               onClick={handleSend}
             />

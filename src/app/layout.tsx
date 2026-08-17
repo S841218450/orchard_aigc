@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
 import "@/app/globals.css";
 import "@/style/basePage/layout.scss";
 import "nprogress/nprogress.css";
@@ -20,16 +21,18 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body>
-        <Providers>
-          <div className="root-layout">
-            <Aside />
-            <div className="main-content">
-              <RouteGuard>
-                <PageTransition>{children}</PageTransition>
-              </RouteGuard>
+        <AntdRegistry>
+          <Providers>
+            <div className="root-layout">
+              <Aside />
+              <div className="main-content">
+                <RouteGuard>
+                  <PageTransition>{children}</PageTransition>
+                </RouteGuard>
+              </div>
             </div>
-          </div>
-        </Providers>
+          </Providers>
+        </AntdRegistry>
       </body>
     </html>
   );

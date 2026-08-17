@@ -15,6 +15,7 @@ import {
   Flex,
   Tooltip,
   Input,
+  Tag,
 } from "antd";
 import Loading from "@/components/core/loadding/loading";
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -393,14 +394,17 @@ const MessageItem = ({
         <div className="message-header">
           <div className="message-time-wrap">
             <span className="message-time">{formatDate(createTime)}</span>
-            <span className="message-status-badge">
-              {status === 1 && (
-                <Spin indicator={<LoadingOutlined />} size="small" />
-              )}
-              <span className="status-text">
-                {sseStatus || statusInfo.label}
-              </span>
-            </span>
+            <Tag
+              className="message-status-tag"
+              color={statusInfo.color}
+              icon={
+                status === 1 ? (
+                  <Spin indicator={<LoadingOutlined />} size="small" />
+                ) : undefined
+              }
+            >
+              {statusInfo.label}
+            </Tag>
           </div>
 
           <div className="message-actions">
@@ -456,14 +460,16 @@ const MessageItem = ({
         <div className="message-info-wrap">
           <div className="message-content-wrap">
             <span className="prompt-quote">&quot;</span>
-            <p className="message-content">{prompt}</p>
+            <p className="message-content">
+              {prompt.length > 400 ? prompt.slice(0, 400) + "..." : prompt}
+            </p>
           </div>
         </div>
 
-        {/* 参数 chip 标签 */}
+        {/* 参数 chip 标签（模型/比例为主关键参数，挂 chip-key 强调） */}
         <div className="message-chips">
           {model && (
-            <div className="chip">
+            <div className="chip chip-key">
               <Sparkles size={12} />
               <span>{model === "default" ? "默认模型" : model}</span>
             </div>
@@ -481,7 +487,7 @@ const MessageItem = ({
             </div>
           )}
           {params?.imageProportion && (
-            <div className="chip">
+            <div className="chip chip-key">
               <Maximize2 size={12} />
               <span>{params.imageProportion}</span>
             </div>

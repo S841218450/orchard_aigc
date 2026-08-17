@@ -41,12 +41,12 @@ export const CREATION_MODEL_LIST = [
     QualityList: ["2k"],
     defaultQuality: "2k",
   },
-  {
-    value: "Wan2.7",
-    label: "万相2.7 image专业版",
-    QualityList: ["2k"],
-    defaultQuality: "2k",
-  },
+  // {
+  //   value: "Wan2.7",
+  //   label: "万相2.7 image专业版",
+  //   QualityList: ["2k"],
+  //   defaultQuality: "2k",
+  // },
   {
     value: "qwen-image-3.0-pro",
     label: "千问-3.0-Pro",

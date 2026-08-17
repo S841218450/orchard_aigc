@@ -4,7 +4,6 @@ import { Button, Spin } from "antd";
 import {
   SquarePen,
   MessageSquare,
-  FolderOpen,
   PanelLeftClose,
   PanelLeftOpen,
   Trash2,
@@ -63,6 +62,8 @@ export default function ChatAside({
         <Button
           type="text"
           className="collapse-btn"
+          aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
+          title={collapsed ? "展开侧边栏" : "收起侧边栏"}
           onClick={() => setCollapsed(!collapsed)}
           icon={
             collapsed ? (
@@ -110,7 +111,7 @@ export default function ChatAside({
                   key={session.id}
                   className={`session-item ${currentSessionId === session.id ? "active" : ""}`}
                   onClick={() => handleSelectSession(session.id)}
-                  style={{ ["--i" as any]: index }}
+                  style={{ "--i": index } as unknown as React.CSSProperties}
                 >
                   <div className="session-title">
                     {session.title || "新对话"}

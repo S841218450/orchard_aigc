@@ -1,17 +1,19 @@
 "use client";
 
 import {
+  ArrowUpRight,
+  Bot,
   Code,
   FileText,
   Lightbulb,
   MessageSquareText,
   Search,
-  Palette,
   Zap,
   Image as ImageIcon,
 } from "lucide-react";
-import { useState } from "react";
-import NextImage from "next/image";
+import { useRef, useState } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import "./chatMain.scss";
 
 interface OperationItem {
@@ -60,6 +62,39 @@ export const ChatMain = ({
   onSelectTemplate,
 }: ChatMainProps) => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  // 欢迎区入场动画：品牌标 → 标题 → 副标题 → 引导卡片 stagger
+  useGSAP(
+    () => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.fromTo(
+        ".chat-main-logo",
+        { opacity: 0, y: -14, scale: 0.92 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.55 },
+      )
+        .fromTo(
+          ".chat-main-header h2",
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.6 },
+          "-=0.3",
+        )
+        .fromTo(
+          ".chat-main-header p",
+          { opacity: 0, y: 10 },
+          { opacity: 1, y: 0, duration: 0.45 },
+          "-=0.4",
+        )
+        .fromTo(
+          ".chat-main-operation-item",
+          { opacity: 0, y: 22 },
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.07 },
+          "-=0.3",
+        );
+    },
+    { scope: mainRef },
+  );
 
   const operations: OperationItem[] = [
     {
@@ -102,25 +137,25 @@ export const ChatMain = ({
     {
       type: "knowledge-summary",
       title: "总结知识库",
-      desc: "快速了解知识库整体内容",
+      desc: "梳理全库脉络，掌握核心要点",
       icon: <FileText size={20} />,
     },
     {
       type: "knowledge-search",
       title: "查找资料",
-      desc: "检索知识库中的相关信息",
+      desc: "按需检索，精准定位资料",
       icon: <Search size={20} />,
     },
     {
       type: "knowledge-advice",
       title: "方案建议",
-      desc: "结合知识库给出建议",
+      desc: "结合资料，给出可行建议",
       icon: <Lightbulb size={20} />,
     },
     {
       type: "knowledge-qa",
       title: "快速问答",
-      desc: "基于知识库回答你的问题",
+      desc: "基于知识库，即刻为你解答",
       icon: <MessageSquareText size={20} />,
     },
   ];
@@ -160,7 +195,10 @@ export const ChatMain = ({
 
   if (chatType === "creation") {
     return (
-      <div className="chat-main animate__animated animate__fadeIn">
+      <div className="chat-main" ref={mainRef}>
+        <div className="chat-main-logo" aria-hidden="true">
+          <Bot size={30} strokeWidth={1.8} />
+        </div>
         <div className="chat-main-header">
           <h2>你想从哪里开始设计</h2>
           <p>选择一种创作方式开始</p>
@@ -186,7 +224,10 @@ export const ChatMain = ({
   }
 
   return (
-    <div className="chat-main animate__animated animate__fadeIn flex-center">
+    <div className="chat-main flex-center" ref={mainRef}>
+      <div className="chat-main-logo" aria-hidden="true">
+        <Bot size={32} strokeWidth={1.8} />
+      </div>
       <div className="chat-main-header">
         <h2>你好，我是你的 AI 智能助手</h2>
         <p>我可以基于知识库中的信息，回答你的问题</p>
@@ -209,6 +250,7 @@ export const ChatMain = ({
               <h3>{item.title}</h3>
               <p>{item.desc}</p>
             </div>
+            <ArrowUpRight size={14} className="card-arrow" aria-hidden="true" />
           </div>
         ))}
       </div>

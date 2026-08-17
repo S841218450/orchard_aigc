@@ -3,7 +3,7 @@
 import { Bubble, type BubbleItemType } from "@ant-design/x";
 import { Button, Popconfirm } from "antd";
 import { Bot, User, Copy, Check, RefreshCw, Trash2 } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Message } from "@/actions/chat";
@@ -160,8 +160,7 @@ const ChatContent = ({
 
   // AI 气泡内容渲染：按消息 id 定位，交给 memo 化的 AiBubbleContent，
   // 流式更新时只有 answer 在增长的那条消息会重渲染
-  const renderAiContent = useCallback(
-    (content: unknown, info: { key?: string | number; status?: string }) => {
+  const renderAiContent = useCallback((content: unknown) => {
       const msgId = String(content ?? "");
       const msg = messageList.find((m) => m.id === msgId);
       if (!msg) return null;
@@ -206,6 +205,7 @@ const ChatContent = ({
             size="small"
             className="copy-btn"
             title="复制"
+            aria-label="复制内容"
             onClick={() => handleCopy(rawKey, copyContent)}
           >
             {copiedId === rawKey ? <Check size={14} /> : <Copy size={14} />}
@@ -216,6 +216,7 @@ const ChatContent = ({
               size="small"
               className="action-btn"
               title="重新生成"
+              aria-label="重新生成回答"
               disabled={!!streaming}
               onClick={() => onRegenerate(msg)}
             >
@@ -236,6 +237,7 @@ const ChatContent = ({
                 size="small"
                 className="action-btn danger"
                 title="删除"
+                aria-label="删除消息"
               >
                 <Trash2 size={14} />
                 删除

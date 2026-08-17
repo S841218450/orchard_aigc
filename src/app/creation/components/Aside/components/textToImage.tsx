@@ -127,8 +127,10 @@ export const TextToImage = forwardRef<
   {
     generateImage: (data: TextToImageFormData) => void;
     onStateChange?: (state: FormSubmitState) => void;
+    /** 首页输入框携带的描述文字（挂载时预填） */
+    initialPrompt?: string;
   }
->(({ generateImage, onStateChange }, ref) => {
+>(({ generateImage, onStateChange, initialPrompt }, ref) => {
   const [imagePrompt, setImagePrompt] = useState("");
   const [model, setModel] = useState(DEFAULT_CREATION_MODEL.value);
   const [imageProportion, setImageProportion] = useState("1:1");
@@ -141,6 +143,12 @@ export const TextToImage = forwardRef<
   const [imageQualityList, setImageQualityList] = useState(
     DEFAULT_CREATION_MODEL.QualityList,
   );
+
+  // 首页输入框带入的描述：挂载后预填一次
+  useEffect(() => {
+    if (!initialPrompt) return;
+    setImagePrompt(initialPrompt);
+  }, [initialPrompt]);
 
   const handleSetModel = (value: string) => {
     const target = CREATION_MODEL_LIST.find((item) => item.value === value);

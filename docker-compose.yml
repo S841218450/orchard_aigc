@@ -23,9 +23,6 @@ services:
     extra_hosts:
       # Linux 上启用 host.docker.internal 指向宿主机
       - "host.docker.internal:host-gateway"
-    # 若后端与前端加入同一个 docker 网络，可将上面两个 TARGET 改为服务名直连：
-    # ADMIN_API_TARGET: http://admin-api:48080
-    # AI_API_TARGET: http://ai-api:3000
     networks:
       - orchard-net
 

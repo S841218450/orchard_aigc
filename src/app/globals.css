@@ -11,7 +11,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&display=swap");
 /* 拉丁衬线标题：用于英文水印 / 点缀词（--font-display-lat） */
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300;1,500&display=swap");
-
 :root {
   /* ========================================
      巧思 AIGC 配色系统
@@ -38,6 +37,7 @@
   /* ---- 5. AI 平衡色 ---- */
   --color-ai-cyan: #60c4c4; /* 水雾浅青：AI 图标 */
   --color-ai-cyan-light: #e0f4f4; /* 极浅青：AI 功能底色 */
+  --color-ai-cyan-deep: #3f9d9d; /* 深水青：AI 图标 hover 加深 */
 
   /* ---- 6. 语义色 ---- */
   --color-success: #52b788;

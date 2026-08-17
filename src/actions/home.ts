@@ -26,3 +26,11 @@ export interface MaterialListResponse {
   list: MaterialItem[];
   hasMore: boolean;
 }
+type UploadFile = {
+  url: string;
+  id: string;
+};
+export interface SendMessageData {
+  message: string; //消息
+  files?: UploadFile[]; //上传文件列表
+}

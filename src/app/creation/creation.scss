@@ -115,7 +115,7 @@
         display: flex;
         height: 100%;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
         overflow-y: auto;
         padding: 4px;
 
@@ -143,14 +143,36 @@
         .message-item {
           position: relative;
           display: flex;
+          /* 禁止 flex 压缩：否则某项内容偏高时整列被等比压扁，恢复按内容自然高度 + 容器滚动 */
+          flex-shrink: 0;
           padding: 0;
           margin: 0 4px;
-          border-radius: 16px;
+          border-radius: var(--radius-lg);
           background: var(--color-bg-elevated);
-          border: 1px solid transparent;
+          border: 1px solid var(--color-border-light);
           box-shadow:
             0 1px 2px rgba(0, 0, 0, 0.04),
             0 2px 8px rgba(0, 0, 0, 0.03);
+          overflow: hidden;
+
+          /* 编辑「书脊线」：顶部一道暖琥珀细线，像期刊条目；hover 时加深下压 */
+          &::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(
+              90deg,
+              var(--color-warm-500) 0%,
+              rgba(212, 165, 116, 0.25) 30%,
+              transparent 70%
+            );
+            opacity: 0.85;
+            transition: opacity var(--duration-normal) var(--ease-out-expo);
+            pointer-events: none;
+          }
 
           animation: message-fade-in 0.4s var(--ease-out-expo) both;
           transition: all var(--duration-normal) var(--ease-out-expo);
@@ -159,12 +181,43 @@
             animation: message-fade-out 0.4s var(--ease-out-expo) both;
           }
 
+          /* 生成中：左侧一道主题墨色条，提示「实时仍在跑」 */
+          &.status-1::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 2px;
+            bottom: 0;
+            width: 3px;
+            background: var(--color-gray-950);
+            border-radius: 0 3px 3px 0;
+            animation: message-leftbar-pulse 1.6s ease-in-out infinite;
+            pointer-events: none;
+          }
+          /* 状态徽章三态着色（状态类挂在本卡 .message-item 上）：
+               生成中 = 暖琥珀 / 已完成 = 墨 / 失败 = 红 / 待操作 = 琥珀橙 / 等待中 = 灰 */
+
+          &.status-3 {
+            background: rgba(229, 77, 77, 0.08);
+            border-color: rgba(229, 77, 77, 0.35);
+            color: var(--color-error);
+          }
+
+          &.status-4 {
+            background: rgba(240, 160, 48, 0.1);
+            border-color: rgba(240, 160, 48, 0.4);
+            color: #b26a00;
+          }
           &:hover {
-            border-color: rgba(0, 0, 0, 0.06);
+            border-color: rgba(17, 17, 17, 0.08);
             box-shadow:
               0 4px 12px rgba(0, 0, 0, 0.06),
-              0 8px 24px rgba(0, 0, 0, 0.04);
+              0 8px 24px rgba(0, 0, 0, 0.05);
             transform: translateY(-1px);
+
+            &::before {
+              opacity: 1;
+            }
 
             .message-actions {
               opacity: 1;
@@ -198,32 +251,12 @@
               letter-spacing: 0.3px;
             }
 
-            .message-status-badge {
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-              padding: 2px 10px;
-              border-radius: 999px;
-              font-size: 12px;
-              font-weight: 500;
-              background: var(--color-bg-sunken);
-              color: var(--color-text-tertiary);
-
-              .status-text {
-                line-height: 1.6;
-              }
-
-              .ant-spin {
-                margin-inline-end: 0 !important;
-              }
-            }
-
-            /* 操作按钮组 */
+            /* 操作按钮组：低对比常驻，悬停加深 */
             .message-actions {
               display: flex;
               align-items: center;
               gap: 2px;
-              opacity: 0.5;
+              opacity: 0.85;
               transition: opacity var(--duration-fast) ease;
 
               .action-btn {
@@ -252,16 +285,19 @@
             .message-content-wrap {
               position: relative;
               margin-bottom: 14px;
+              // max-width: 72ch;
 
               .prompt-quote {
                 position: absolute;
-                top: -4px;
-                left: -2px;
-                font-size: 32px;
-                font-family: Georgia, serif;
-                color: var(--color-text);
+                top: -6px;
+                left: -3px;
+                font-size: 36px;
+                font-family: var(--font-display-lat);
+                font-style: italic;
+                color: var(--color-warm-500);
                 line-height: 1;
                 pointer-events: none;
+                opacity: 0.7;
               }
             }
           }
@@ -350,20 +386,21 @@
 
           .message-content {
             margin: 0;
-            padding-left: 18px;
-            line-height: 1.7;
+            padding-left: 22px;
+            line-height: 1.75;
             color: var(--color-text);
-            font-size: 14.5px;
+            font-size: 14px;
             font-weight: 400;
             letter-spacing: 0.1px;
           }
 
-          /* 参数 chip 标签 */
+          /* 参数 chip 标签：图标锚点 + 阶梯配色 */
           .message-chips {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-bottom: 16px;
+            padding-left: 22px;
 
             .chip {
               display: inline-flex;
@@ -373,6 +410,7 @@
               font-size: 12px;
               color: var(--color-text-secondary);
               background: var(--color-bg-sunken);
+              border: 1px solid var(--color-border-light);
               border-radius: 8px;
               transition: all var(--duration-fast) ease;
 
@@ -383,6 +421,22 @@
               &:hover {
                 background: var(--color-bg-hover);
                 color: var(--color-text);
+                border-color: var(--color-border);
+              }
+
+              /* 主关键参数（比例/模型）用墨色细边 + 琥珀图标，次级走浅灰 */
+              &.chip-key {
+                border-color: var(--color-primary-muted);
+                background: var(--color-primary-soft);
+
+                svg {
+                  color: var(--color-warm-500);
+                }
+
+                &:hover {
+                  border-color: var(--color-primary-muted);
+                  background: var(--color-bg-hover);
+                }
               }
             }
           }
@@ -404,6 +458,7 @@
             position: relative;
             border-radius: 12px;
             overflow: hidden;
+            border: 1px solid var(--color-border-light);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             transition: all var(--duration-normal) var(--ease-out-expo);
 
@@ -426,6 +481,7 @@
 
             &:hover {
               // transform: translateY(-2px);
+              border-color: var(--color-border);
               box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 
               &::after {
@@ -467,9 +523,8 @@
             padding: 18px 20px;
             background: var(--color-bg-sunken);
             border-radius: 12px;
-            width: 50%;
-            min-width: 300px;
-            max-width: 800px;
+            width: 100%;
+            max-width: 640px;
             border: 1px solid var(--color-border-light);
             animation: message-fade-in 0.4s var(--ease-out-expo) both;
 
@@ -506,9 +561,12 @@
                 color: var(--color-text-quaternary);
 
                 .step-number {
-                  font-size: 18px;
-                  font-weight: 600;
-                  color: var(--color-primary);
+                  font-family: var(--font-display-lat);
+                  font-style: italic;
+                  font-size: 20px;
+                  font-weight: 500;
+                  color: var(--color-warm-500);
+                  margin-right: 4px;
                 }
 
                 .step-total {
@@ -631,5 +689,16 @@
   to {
     opacity: 0;
     transform: translateY(-12px) scale(0.98);
+  }
+}
+
+/* 生成中卡片的左侧主题条呼吸 */
+@keyframes message-leftbar-pulse {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.35;
   }
 }

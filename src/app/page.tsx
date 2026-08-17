@@ -1,22 +1,37 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useChatStore } from "@/store";
+import { useChatStore, useCreationEditStore } from "@/store";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Input, Segmented } from "antd";
 import { Search, Lightbulb, Images, Video, MessageCircle } from "lucide-react";
-import { BackGround } from "@/components/home/backGround/backGround";
 import { getAssetDataList } from "@/actions/asset";
 import { useInfiniteList } from "@/hooks/useInfiniteList";
 import { messageManager } from "@/utils/messageManager";
 
-import MaterialList from "@/components/home/materialList/materialList";
-import ChatInput from "@/components/chat/chatInput/chatInput";
-import { type MaterialItem, type MaterialListResponse } from "@/actions/home";
+import {
+  SendMessageData,
+  type MaterialItem,
+  type MaterialListResponse,
+} from "@/actions/home";
 
 import "./page.scss";
+import InputArea from "@/components/home/inputArea/inputArea";
+
+// 首屏性能：背景动效与素材瀑布流（含 GSAP ScrollTrigger、antd Masonry 等重依赖）
+// 拆为独立 chunk 懒加载，减小首屏 JS 体积；ssr:false 避免服务端执行浏览器动画代码
+const BackGround = dynamic(
+  () =>
+    import("@/components/home/backGround/backGround").then((m) => m.BackGround),
+  { ssr: false },
+);
+const MaterialList = dynamic(
+  () => import("@/components/home/materialList/materialList"),
+  { ssr: false },
+);
 
 const segmentedOptions = [
   { label: "发现", value: 1 },
@@ -308,18 +323,22 @@ export default function Home() {
   };
 
   // 发送消息
-  const handleSend = () => {
-    const currentInput = inputRef.current.trim();
-    if (!currentInput || isLoading) return;
+  const handleSend = (data: SendMessageData) => {
+    const currentInput = data.message.trim();
+    const files = data.files ?? [];
+    if ((!currentInput && files.length === 0) || isLoading) return;
     setInitialMessage(currentInput);
     setInput("");
-    if (activeTab === 4) {
-      // 智能客服
-      router.push("/chat");
-    } else {
-      // 其他输入类型（巧思实现、创意联想、上传短片）
-      router.push("/creation");
-    }
+    // 携带数据进入创作页：有图 → 图生图（预填参考图与描述），仅文字 → 文生图（预填描述）
+    useCreationEditStore.getState().setInitialData({
+      menu: files.length > 0 ? "imageToImage" : "textToImage",
+      prompt: currentInput,
+      images: files.map((file, index) => ({
+        id: Date.now() + index,
+        url: file.url,
+      })),
+    });
+    router.push("/creation");
   };
 
   return (
@@ -328,11 +347,7 @@ export default function Home() {
       <div className="home-title">
         <TitleText />
         {/* 输入框 */}
-        <ChatInput
-          sendMessage={handleSend}
-          leftOpration={null}
-          rightOpration={null}
-        />
+        <InputArea onSendMessage={handleSend} />
         {/* 输入类型 */}
         <InputType active={activeTab} onTabChange={handleTabChange} />
       </div>

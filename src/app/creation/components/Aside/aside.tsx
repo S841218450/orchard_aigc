@@ -11,6 +11,7 @@ import type {
 import type { WorkMessage } from "@/actions/types";
 import messageManager from "@/utils/messageManager";
 import { useCreationEditStore } from "@/store/creation";
+import type { CreationMenuKey, CarryImage } from "@/store/creation";
 import { TextToImage } from "@/app/creation/components/Aside/components/textToImage";
 import { ImageToImage } from "@/app/creation/components/Aside/components/imageToImage";
 import { MarketingImage } from "@/app/creation/components/Aside/components/marketingImage";
@@ -24,6 +25,13 @@ export interface FormSubmitState {
 // 表单组件通过 forwardRef 暴露的提交句柄（底部按钮点击时调用）
 export interface FormSubmitHandle {
   submit: () => void;
+}
+
+/** 首页输入框跳转携带的创作数据（消费后收敛进本地 state，供子表单挂载时预填） */
+interface CarryData {
+  menu: CreationMenuKey;
+  prompt: string;
+  images: CarryImage[];
 }
 
 const menuItems = [
@@ -42,6 +50,13 @@ export const Aside = ({
   const [menu, setMenu] = useState("textToImage");
   // 历史记录点击"修改图片"时携带的待处理图片 URL
   const editImageUrl = useCreationEditStore((s) => s.editImageUrl);
+  // 首页输入框跳转携带的目标菜单 / 描述 / 参考图
+  const initialMenu = useCreationEditStore((s) => s.initialMenu);
+  const initialPrompt = useCreationEditStore((s) => s.initialPrompt);
+  const initialImages = useCreationEditStore((s) => s.initialImages);
+  const clearInitialData = useCreationEditStore((s) => s.clearInitialData);
+  // 携带数据的一次性收敛结果（消费后清空 store，避免刷新/返回后残留）
+  const [carryData, setCarryData] = useState<CarryData | null>(null);
   // 当前表单的提交句柄（点击底部按钮时调用）
   const formRef = useRef<FormSubmitHandle>(null);
   // 当前表单上报的提交能力，切换菜单时重置，由新挂载的表单重新上报
@@ -65,6 +80,25 @@ export const Aside = ({
     setSubmitState({ canSubmit: false, submitting: false });
   }, [editImageUrl, onMenuChange]);
 
+  // 首页输入框携带的数据：一次性收敛进本地 state 并清空 store
+  useEffect(() => {
+    if (!initialMenu || carryData) return;
+    setCarryData({
+      menu: initialMenu,
+      prompt: initialPrompt ?? "",
+      images: initialImages ?? [],
+    });
+    clearInitialData();
+  }, [initialMenu, initialPrompt, initialImages, carryData, clearInitialData]);
+
+  // 携带的菜单生效（覆盖默认文生图，切换时重置提交能力状态）
+  useEffect(() => {
+    if (!carryData) return;
+    setMenu(carryData.menu);
+    onMenuChange?.(carryData.menu);
+    setSubmitState({ canSubmit: false, submitting: false });
+  }, [carryData, onMenuChange]);
+
   // 提交创作描述
   const generateImage = async (data: GenerateWorkData) => {
     try {
@@ -83,6 +117,9 @@ export const Aside = ({
   };
 
   const getPage = () => {
+    // 仅携带目标为文生图时，才对文生图表单预填描述
+    const carryTextPrompt =
+      carryData?.menu === "textToImage" ? carryData.prompt : undefined;
     switch (menu) {
       case "textToImage":
         return (
@@ -90,6 +127,7 @@ export const Aside = ({
             ref={formRef}
             generateImage={generateImage}
             onStateChange={setSubmitState}
+            initialPrompt={carryTextPrompt}
           />
         );
       case "imageToImage":
@@ -99,6 +137,12 @@ export const Aside = ({
             generateImage={generateImage}
             editImageUrl={editImageUrl}
             onStateChange={setSubmitState}
+            initialImages={
+              carryData?.menu === "imageToImage" ? carryData.images : undefined
+            }
+            initialPrompt={
+              carryData?.menu === "imageToImage" ? carryData.prompt : undefined
+            }
           />
         );
       case "marketingImage":
@@ -115,6 +159,7 @@ export const Aside = ({
             ref={formRef}
             generateImage={generateImage}
             onStateChange={setSubmitState}
+            initialPrompt={carryTextPrompt}
           />
         );
     }

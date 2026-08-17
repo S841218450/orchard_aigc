@@ -1,0 +1,190 @@
+/* ====================================================================== */
+/* ============ 主页一体化输入框（图片堆叠墙 + 描述 + 发送） ============ */
+/* ====================================================================== */
+
+.input-area-wrapper {
+  min-width: min(680px, 20vw);
+  width: 100%;
+  max-width: min(1200px, 50vw);
+  margin-top: 10px;
+}
+
+/* ---------- 整体卡片：图片墙 / 输入区 / 底部操作 合成一个整体 ---------- */
+.input-area-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 40px rgba(20, 40, 30, 0.08);
+  padding: 14px 16px 12px;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow:
+      0 12px 40px rgba(20, 40, 30, 0.1),
+      0 0 0 3px var(--color-primary-muted);
+  }
+}
+
+/* ====================================================================== */
+/* ======================= 图片堆叠墙（核心样式） ======================= */
+/* 规则：第奇数张左倾、偶数张右倾（左右交替）；每张 z-index 递增 1； */
+/* 每张相对前一张向右平移固定间距（STACK_OFFSET）；hover 置顶 + 转正放大 */
+/* ====================================================================== */
+
+.photo-stack {
+  display: flex;
+  position: relative;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: visible; // 不外裁切，保留倾斜/上浮露出的部分
+  padding: 2px 40px 10px 4px; // 右侧留出错位平移所需空间
+  min-height: 74px;
+
+  /* -------------------- 单张照片卡片（高度固定，宽度按图片真实比例撑开） -------------------- */
+  .photo-stack-item {
+    left: -20;
+    position: relative;
+    flex-shrink: 0;
+    // height: 64px;
+    // width: auto; // 宽屏/竖屏图片按自身比例自适应，不强制 1:1
+    border-radius: 12px;
+    border: 2px solid #fff;
+    background: var(--color-bg-sunken);
+    box-shadow: 0 6px 16px rgba(30, 45, 40, 0.14);
+    transition:
+      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.28s ease;
+
+    /* hover：置顶显示 + 转正上浮放大（覆盖行内倾斜变换） */
+    &:hover {
+      z-index: 99 !important;
+      transform: rotate(0deg) translateY(-6px) scale(1.1) !important;
+      box-shadow: 0 14px 28px rgba(30, 45, 40, 0.22);
+    }
+
+    // antd Image 外层 .ant-image 包裹层：高度撑满卡片，宽度跟随图片
+    .photo-stack-img {
+      display: inline-block;
+      max-height: 80px;
+      max-width: 80px;
+      object-fit: cover;
+      border-radius: 9px;
+      pointer-events: none; // 不拦截 hover/点击事件，交由外层卡片处理
+      line-height: 0;
+      overflow: hidden;
+      // 内层真实 img：高度撑满，宽度按比例自适应
+      img {
+        display: block;
+        height: 100%;
+        width: auto;
+        overflow: hidden;
+        border-radius: 9px;
+        pointer-events: none; // 不拦截 hover/点击事件，交由外层卡片处理
+      }
+    }
+  }
+
+  /* -------------------- 删除按钮（强制正圆，覆盖 antd 默认 min-width 导致的椭圆） -------------------- */
+  .photo-stack-remove {
+    position: absolute;
+    top: -9px;
+    right: -9px;
+    z-index: 10;
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #fff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+
+    &:hover {
+      background: var(--color-error) !important;
+      color: #fff !important;
+    }
+  }
+
+  /* -------------------- 追加上传入口（隐藏原生上传列表） -------------------- */
+  .photo-stack-upload {
+    flex-shrink: 0;
+    transform: rotate(-10deg);
+    .ant-upload {
+      display: block;
+    }
+  }
+
+  .photo-stack-add {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 64px;
+    height: 64px;
+    border: 1.5px dashed var(--color-border);
+    border-radius: 12px;
+    background: var(--color-bg-sunken);
+    color: var(--color-text-tertiary);
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover {
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+  }
+}
+
+/* ====================================================================== */
+/* ============================ 描述输入区 ============================ */
+/* ====================================================================== */
+
+.input-area-text {
+  margin-top: 10px;
+  width: 100%;
+
+  .ant-input {
+    padding: 0 4px;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    resize: none;
+    font-size: 15px;
+    line-height: 1.6;
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+}
+
+/* ====================================================================== */
+/* ============================ 底部操作行 ============================ */
+/* ====================================================================== */
+
+.input-area-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+
+  .input-area-hint {
+    font-size: 12px;
+    color: var(--color-text-quaternary);
+  }
+}
