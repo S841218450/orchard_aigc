@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Sparkles, ImageIcon, Megaphone } from "lucide-react";
 import { Button } from "antd";
 import "./aside.scss";
@@ -64,6 +64,37 @@ export const Aside = ({
     canSubmit: false,
     submitting: false,
   });
+
+  // ---- 滑动高亮指示器：测量选中项位置，平滑过渡 ----
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [indicator, setIndicator] = useState({
+    left: 0,
+    width: 0,
+    ready: false,
+  });
+
+  // 测量当前选中项在 toolbar 内的偏移与宽度，驱动指示器滑动
+  const updateIndicator = useCallback(() => {
+    const idx = menuItems.findIndex((item) => item.key === menu);
+    const el = itemRefs.current[idx];
+    const toolbar = toolbarRef.current;
+    if (!el || !toolbar) return;
+    setIndicator({
+      left: el.offsetLeft,
+      width: el.offsetWidth,
+      ready: true,
+    });
+  }, [menu]);
+
+  // 选中项变化时重测；挂载/容器尺寸变化时也重测，避免窗口缩放后指示器错位
+  useEffect(() => {
+    updateIndicator();
+  }, [updateIndicator]);
+  useEffect(() => {
+    window.addEventListener("resize", updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [updateIndicator]);
 
   // 切换菜单
   const handleMenuChange = (key: string) => {
@@ -168,13 +199,26 @@ export const Aside = ({
   return (
     <div className="creation-aside">
       {/* 顶部悬浮胶囊：功能切换（与生图输入区错位隔离） */}
-      <div className="aside-toolbar">
-        {menuItems.map((item) => {
+      <div className="aside-toolbar" ref={toolbarRef}>
+        {/* 滑动高亮指示器：跟随选中项平滑滑动（背景圆角 + 底部暖琥珀短线） */}
+        <div
+          className="toolbar-indicator"
+          aria-hidden="true"
+          style={{
+            transform: `translateX(${indicator.left}px)`,
+            width: indicator.width,
+            opacity: indicator.ready ? 1 : 0,
+          }}
+        />
+        {menuItems.map((item, index) => {
           const Icon = item.icon;
           return (
             <Button
               key={item.key}
               type="text"
+              ref={(el) => {
+                itemRefs.current[index] = el;
+              }}
               className={`toolbar-item ${menu === item.key ? "active" : ""}`}
               onClick={() => handleMenuChange(item.key)}
             >

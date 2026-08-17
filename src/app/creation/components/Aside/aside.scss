@@ -27,6 +27,34 @@ $spacing-unit: 8px;
     box-shadow: var(--shadow-md);
     position: relative;
 
+    /* 滑动高亮指示器：跟随选中项平滑滑动（背景圆角 + 底部暖琥珀短线） */
+    .toolbar-indicator {
+      position: absolute;
+      top: $spacing-unit * 0.5;
+      bottom: $spacing-unit * 0.5;
+      left: 0;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.1);
+      pointer-events: none;
+      z-index: 0;
+      transition:
+        transform var(--duration-normal) var(--ease-out-expo),
+        width var(--duration-normal) var(--ease-out-expo),
+        opacity var(--duration-normal) ease;
+
+      /* 底部暖琥珀短线，随指示器一起滑动 */
+      &::after {
+        content: "";
+        position: absolute;
+        left: 20%;
+        right: 20%;
+        bottom: -3px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--color-warm-500);
+      }
+    }
+
     .toolbar-item {
       flex: 1;
       display: flex;
@@ -39,8 +67,10 @@ $spacing-unit: 8px;
       font-weight: 500;
       color: rgba(255, 255, 255, 0.62);
       border-radius: var(--radius-md);
-      transition: all var(--duration-normal) var(--ease-out-expo);
+      transition: color var(--duration-normal) var(--ease-out-expo),
+        background var(--duration-normal) var(--ease-out-expo);
       position: relative;
+      z-index: 1; // 高于指示器，确保文字/图标清晰可点
 
       &:hover {
         color: rgba(255, 255, 255, 0.92);
@@ -62,22 +92,10 @@ $spacing-unit: 8px;
       &.active {
         color: #fff;
         font-weight: 600;
-        background: rgba(255, 255, 255, 0.1);
+        background: transparent; // 背景由指示器承担，避免双层叠加
 
         svg {
           color: var(--color-warm-500);
-        }
-
-        /* 选中项底部一道暖琥珀短线，作为热区锚点 */
-        &::after {
-          content: "";
-          position: absolute;
-          left: 20%;
-          right: 20%;
-          bottom: -3px;
-          height: 2px;
-          border-radius: 2px;
-          background: var(--color-warm-500);
         }
       }
     }
