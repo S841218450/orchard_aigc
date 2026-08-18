@@ -37,7 +37,7 @@ interface CarryData {
 const menuItems = [
   { key: "textToImage", label: "文生图", icon: Sparkles },
   { key: "imageToImage", label: "图生图", icon: ImageIcon },
-  { key: "marketingImage", label: "营销图", icon: Megaphone },
+  { key: "marketingImage", label: "视频生成", icon: Megaphone },
 ];
 
 export const Aside = ({
@@ -245,7 +245,7 @@ export const Aside = ({
             type="primary"
             size="large"
             block
-            disabled={!submitState.canSubmit}
+            disabled={!submitState.canSubmit || menu === "marketingImage"}
             loading={submitState.submitting}
             onClick={() => formRef.current?.submit()}
             icon={<Sparkles size={16} />}

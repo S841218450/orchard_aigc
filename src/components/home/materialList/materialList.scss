@@ -43,8 +43,11 @@
       opacity: 0;
       transition: opacity var(--duration-normal) ease;
       pointer-events: none;
-      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask: linear-gradient(#000 0 0) content-box,
+      mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
         linear-gradient(#000 0 0);
       mask-composite: exclude;
       -webkit-mask-composite: xor;
@@ -107,8 +110,9 @@
         position: absolute;
         inset: 0;
         display: flex;
-        align-items: flex-end;
-        justify-content: flex-start;
+        flex-direction: column; // 标题在信息栏上方纵向排布
+        align-items: stretch;
+        justify-content: flex-end;
         background: linear-gradient(
           to top,
           rgba(0, 0, 0, 0.55) 0%,
@@ -117,6 +121,24 @@
         );
         opacity: 0;
         transition: opacity var(--duration-normal) ease;
+      }
+
+      // 标题：显示在信息栏（作者+点赞）上方，最多三行省略
+      .card-title {
+        padding: 0 12px 8px;
+        font-size: 13px;
+        line-height: 1.45;
+        font-weight: 600;
+        color: var(--color-pure-0);
+        // flex 子项默认 min-height:auto 会把内容全部撑开，覆盖 -webkit-line-clamp 限制
+        min-height: 0;
+        max-height: calc(1.45em * 3); // 兜底：即便 clamp 失效也不超过三行高度
+        display: -webkit-box;
+        -webkit-line-clamp: 3; // 最多三行省略
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        overflow-wrap: anywhere;
       }
 
       .card-image {

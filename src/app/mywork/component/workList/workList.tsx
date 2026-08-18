@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { Image, Spin, Button, Popconfirm, Tooltip } from "antd";
 import {
   Copy,
@@ -61,6 +62,7 @@ const WorkListItem = ({
   onDelete?: (item: WorkMessage) => void;
 }) => {
   const imgSize = getImgSize(item.params?.imageProportion);
+  const [sharingId, setSharingId] = useState<string | null>(null);
 
   // 结果图列表：优先多图列表，无则退化为单张 resultUrl
   const resultImages =
@@ -205,13 +207,24 @@ const WorkListItem = ({
                         icon={<Share size={14} />}
                         type="primary"
                         className="W80"
-                        onClick={(e) => {
+                        loading={sharingId !== null && sharingId === img.id}
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          createAsset({
-                            workId: item.id,
-                            imageId: img.id,
-                            tags: [],
-                          });
+                          setSharingId(img.id);
+                          try {
+                            const res = await createAsset({
+                              workId: item.id,
+                              imageId: img.id,
+                              tags: [],
+                            });
+                            if (res.success) {
+                              messageManager.success("已分享至素材库");
+                            } else {
+                              messageManager.error(res.error ?? "分享失败");
+                            }
+                          } finally {
+                            setSharingId(null);
+                          }
                         }}
                       >
                         分享至素材

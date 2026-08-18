@@ -9,7 +9,7 @@ import { useState, useCallback } from "react";
 import { useUserStore } from "@/store/user";
 import { useRequest } from "ahooks";
 
-import { HistoryContent } from "@/components/creation/message/message";
+import { HistoryContent } from "./components/message/message";
 import type { WorkMessage, SelectAnswer } from "@/actions/types";
 
 import { ExampleContent } from "@/components/creation/example/example";
@@ -23,6 +23,8 @@ const CreationPage = () => {
   const [activeMenu, setActiveMenu] = useState("textToImage");
   const [activeTab, setActiveTab] = useState("2"); //默认展示案例
   const [messageList, setMessageList] = useState<WorkMessage[]>([]);
+  // 是否已访问过"生成历史"标签页：首次访问才挂载内容并拉取历史（懒加载）
+  const [historyVisited, setHistoryVisited] = useState(false);
   // 分页状态（与首页素材列表滚动加载保持一致）
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -48,6 +50,7 @@ const CreationPage = () => {
   });
 
   // 获取历史对话记录（第一页，加载结果直接替换列表）
+  // manual: true —— 懒加载：仅在用户首次切换到"生成历史"时才请求，进入页面默认展示案例时不拉取
   const {
     loading: historyLoading,
     error: historyError,
@@ -61,6 +64,7 @@ const CreationPage = () => {
       throw new Error(result.error ?? "获取历史记录失败");
     },
     {
+      manual: true,
       onSuccess: (list) => {
         setMessageList(list);
         setPage(1);
@@ -124,6 +128,11 @@ const CreationPage = () => {
     async (workData: WorkMessage) => {
       // 提交创作后，切换到生成历史标签页
       if (activeTab === "2") setActiveTab("1");
+      // 首次提交也会切到历史页：一并触发懒加载拉取完整历史（服务端已持久化新作品，拉取结果包含它）
+      if (!historyVisited) {
+        setHistoryVisited(true);
+        fetchHistory();
+      }
       // 先将消息加入列表
       setMessageList((prev) => [workData, ...prev]);
 
@@ -136,7 +145,7 @@ const CreationPage = () => {
         originImageList: workData.originImageList,
       });
     },
-    [userId, submitCreation],
+    [userId, submitCreation, historyVisited, fetchHistory],
   );
 
   // 重新生成
@@ -172,11 +181,11 @@ const CreationPage = () => {
     {
       key: "1",
       label: (
-        <span className="creation-tab-label">
+        <div className="creation-tab-label">
           <em className="creation-tab-index">01</em>生成历史
-        </span>
+        </div>
       ),
-      children: (
+      children: historyVisited ? (
         <HistoryContent
           onSwitchTab={() => setActiveTab("2")}
           messageList={messageList}
@@ -193,14 +202,14 @@ const CreationPage = () => {
           onLoadMore={loadMoreHistory}
           onRetryLoadMore={handleRetryLoadMore}
         />
-      ),
+      ) : null,
     },
     {
       key: "2",
       label: (
-        <span className="creation-tab-label">
+        <div className="creation-tab-label">
           <em className="creation-tab-index">02</em>优秀案例
-        </span>
+        </div>
       ),
       children: <ExampleContent />,
     },
@@ -208,6 +217,11 @@ const CreationPage = () => {
 
   const changeTab = (key: string) => {
     setActiveTab(key);
+    // 首次进入"生成历史"时才挂载内容并拉取历史数据（懒加载）
+    if (key === "1" && !historyVisited) {
+      setHistoryVisited(true);
+      fetchHistory();
+    }
   };
 
   return (
@@ -216,6 +230,7 @@ const CreationPage = () => {
       <div className="creation-content-container">
         <Tabs
           className="creation-tabs"
+          defaultActiveKey="2"
           activeKey={activeTab}
           items={items}
           onChange={changeTab}

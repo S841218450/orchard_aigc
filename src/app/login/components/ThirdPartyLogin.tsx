@@ -12,6 +12,14 @@ import messageManager from "@/utils/messageManager";
 
 type ThirdPartyType = "wechat" | "alipay" | "github";
 
+// GitHub 为国外服务，授权流程可能因访问超时被 axios 取消
+const isTimeoutOrCanceled = (error: unknown): boolean => {
+  const err = error as { code?: string; message?: string };
+  return (
+    err?.code === "ECONNABORTED" || /timeout|cancel/i.test(err?.message || "")
+  );
+};
+
 const THIRD_PARTY_CONFIG: Record<
   ThirdPartyType,
   { icon: React.ReactNode; label: string; color: string; disabled: boolean }
@@ -72,8 +80,12 @@ export default function ThirdPartyLogin({
         messageManager.warning("弹窗被浏览器拦截，请允许弹出窗口");
       }
     } catch (error) {
-      console.error("第三方登录失败:", error);
-      messageManager.error("暂不支持该登录方式");
+      // GitHub 为国外服务，获取授权链接可能因访问超时被取消
+      messageManager.error(
+        isTimeoutOrCanceled(error)
+          ? "GitHub 授权服务访问超时，请更换其他登录方式"
+          : "获取授权链接失败，请稍后重试",
+      );
     }
   }, []);
 
@@ -98,8 +110,13 @@ export default function ThirdPartyLogin({
         } else {
           onError(res.msg || "第三方登录失败");
         }
-      } catch {
-        onError("第三方登录失败，请稍后重试");
+      } catch (error) {
+        // GitHub 为国外服务，换取凭证可能因访问超时被取消
+        onError(
+          isTimeoutOrCanceled(error)
+            ? "GitHub 授权服务访问超时，请更换其他登录方式"
+            : "第三方登录失败，请稍后重试",
+        );
       } finally {
         setIsLoading(false);
       }

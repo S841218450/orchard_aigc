@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useRef,
-  useCallback,
-  type RefObject,
-} from "react";
+import { useState, useRef, useCallback, type RefObject } from "react";
 import { useRequest } from "ahooks";
 import { Avatar, Button, Image, Skeleton, Masonry, Spin } from "antd";
 import { Heart, Copy } from "lucide-react";
@@ -122,16 +117,12 @@ const MaterialCard = ({
   );
 
   return (
-    <div
-      className="material-card"
-      ref={cardRef}
-      onPointerMove={handleSpot}
-    >
+    <div className="material-card" ref={cardRef} onPointerMove={handleSpot}>
       <div className="card-image-wrapper">
         <div className="card-skeleton-placeholder" />
         <Image
           src={item.image || DEFAULT_IMAGES.fallback}
-          alt={item.title}
+          alt={item.title?.slice(0, 10) || "素材"}
           // 懒加载 + 异步解码：避免全部图片并发下载、解码阻塞主线程导致滚动卡顿
           loading="lazy"
           decoding="async"
@@ -146,6 +137,8 @@ const MaterialCard = ({
         />
         {/* 遮罩层信息：hover 图片时浮现作者 + 复制/点赞 */}
         <div className="card-overlay">
+          {/* 标题：截取前 10 个字符，避免过长导致显示不全 */}
+          <div className="card-title">{item.title}</div>
           <div className="card-info-panel">
             <div className="card-author">
               <Avatar

@@ -1,0 +1,29 @@
+// ============================================================
+// OAuth 回调页（全屏独立页）
+// 隐藏全局侧边栏并还原 main-content，避免主页 layout 影响
+// ============================================================
+
+.root-layout:has(.oauth-callback-page) {
+  > .aside {
+    display: none;
+  }
+
+  > .main-content {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow-y: auto;
+    background: var(--color-pure-0);
+  }
+}
+
+.oauth-callback-page {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  height: 100vh;
+  gap: 20px;
+  color: var(--color-text);
+  font-size: 14px;
+}

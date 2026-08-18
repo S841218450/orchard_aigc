@@ -1,6 +1,5 @@
 // ========== 知识库主容器 ==========
 .knowledge-com {
-  display: flex;
   width: 100%;
   height: 100%;
   border-radius: 8px;
@@ -9,17 +8,36 @@
 
   background: #fff;
   overflow: hidden;
+
+  // ========== 左右可拖拽分割 ==========
+  .knowledge-splitter {
+    width: 100%;
+    height: 100%;
+  }
+
+  // 拖拽分隔线：适度加粗热区，hover/拖拽时高亮
+  .ant-splitter-bar {
+    cursor: col-resize;
+  }
+
+  // 左右面板：内层组件撑满各自区域
+  .knowledge-left-panel,
+  .knowledge-right-panel {
+    overflow: hidden;
+  }
 }
 
 // ========== 左侧：树形目录 ==========
+// 注意：宽度不再固定，由 Splitter.Panel 的 defaultSize/min/max 控制
 .knowledge-left {
-  width: 260px;
-  min-width: 260px;
-  border-right: 1px solid #e4e4e7;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: #fafafa;
   overflow: hidden;
+  // 右侧留白给 Splitter 分隔线，避免双线叠加
+  border-right: none;
 }
 
 .left-header {
@@ -283,7 +301,8 @@
 
 // ========== 右侧：文件管理 ==========
 .knowledge-right {
-  flex: 1;
+  width: 100%;
+  height: 100%;
   min-width: 0;
   padding: 0 12px;
   display: flex;
@@ -553,24 +572,9 @@
 }
 
 // ========== 响应式：窄屏调整 ==========
-@media (max-width: 1024px) {
-  .knowledge-left {
-    width: 220px;
-    min-width: 220px;
-  }
-}
-
 @media (max-width: 768px) {
   .knowledge-com {
-    flex-direction: column;
-  }
-
-  .knowledge-left {
-    width: 100%;
-    min-width: 0;
-    border-right: none;
-    border-bottom: 1px solid #e4e4e7;
-    max-height: 220px;
+    padding: 8px;
   }
 
   .upload-area {

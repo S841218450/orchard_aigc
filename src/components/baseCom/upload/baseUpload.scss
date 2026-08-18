@@ -108,7 +108,7 @@
 
       .stacked-image-item {
         // 所有卡片统一宽高比（4:5，视觉上类似拍立得长方形）
-        // aspect-ratio: 4 / 5;
+        aspect-ratio: 4 / 5;
         flex-shrink: 0;
         overflow: visible;
         transform-origin: center center;
@@ -201,16 +201,27 @@
     }
 
     /* ==================== 图片 ==================== */
+    /* antd Image 根节点（.stacked-preview-img 挂在 .ant-image 上）：
+       铺满父容器（thumbnail-wrapper 宽高 100%），内边距模拟拍立得白边 */
     .stacked-preview-img {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
       border-radius: var(--radius-md);
-      // border: 5px solid #e7e7e7;
-      background: #e7e7e7;
-      filter: blur(grayscale(50%));
+      background: #e7e7e7; // 图片加载完成前的底色
       padding: 5px;
       box-sizing: border-box;
       overflow: hidden;
-      &:hover {
-        filter: none;
+
+      /* 内部真实图片：按容器铺满，等比裁切 */
+      .ant-image-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover; // 宽屏/竖屏都填满父容器并裁掉多余部分
+        border-radius: calc(var(--radius-md) - 5px);
+        transition: transform var(--duration-normal) var(--ease-out-expo);
       }
     }
 

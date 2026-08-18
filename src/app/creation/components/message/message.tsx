@@ -34,6 +34,7 @@ import {
   X,
   Images,
   MoveRight,
+  Timer,
 } from "lucide-react";
 import ThinkBlock from "@/components/chat/chatContent/thinkBlock/thinkBlock";
 import type {
@@ -359,6 +360,25 @@ const MessageItem = ({
   // 占位图数量与用户选择的出图数量一致
   const placeholderCount = Math.max(1, Number(params?.imageCount) || 1);
 
+  // ---- 生图耗时计时器：生图进行中每秒 +1，结束后清除定时器并保留最终耗时用于展示 ----
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  useEffect(() => {
+    if (!isGenerating) return;
+    // 新一轮生图开始：重置耗时
+    setElapsedSeconds(0);
+    const timer = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+    // isGenerating 变为 false（生图完成）时清除定时器，耗时停留在最终值
+    return () => clearInterval(timer);
+  }, [isGenerating]);
+  // 耗时格式化：mm:ss
+  const formatElapsed = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
   // 最新步骤元素 ref：流式执行追加新步骤时自动滚动跟随到最新步骤
   const latestStepRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -603,77 +623,90 @@ const MessageItem = ({
 
             {/* 生成结果图片（支持多张，预览可切换）；生图节点开始时先展示占位图 */}
             {(isGenerating || resultImages.length > 0) && (
-              <Image.PreviewGroup>
-                <div className="image-list">
-                  {isGenerating
-                    ? Array.from({ length: placeholderCount }).map(
-                        (_, index) => (
+              <>
+                <Image.PreviewGroup>
+                  <div className="image-list mt10">
+                    {isGenerating
+                      ? Array.from({ length: placeholderCount }).map(
+                          (_, index) => (
+                            <div
+                              className="message-image-wrap message-image-wrap-placeholder"
+                              key={`placeholder-${index}`}
+                            >
+                              <Image
+                                className="message-image"
+                                src=""
+                                alt={`生成中 ${index + 1}`}
+                                placeholder={{ progress: true }}
+                                style={{
+                                  width: imgSize.width,
+                                  height: imgSize.height,
+                                }}
+                              />
+                            </div>
+                          ),
+                        )
+                      : resultImages.map((img, index) => (
                           <div
-                            className="message-image-wrap message-image-wrap-placeholder"
-                            key={`placeholder-${index}`}
+                            className="message-image-wrap"
+                            key={`${img.id}-${index}`}
                           >
                             <Image
                               className="message-image"
-                              src=""
-                              alt={`生成中 ${index + 1}`}
-                              placeholder={{ progress: true }}
+                              src={img.url}
+                              alt={`生成素材${index + 1}`}
+                              fallback={DEFAULT_IMAGES.fallback}
+                              preview={{
+                                mask: { blur: true },
+                                // 注意：cover 内的按钮必须阻止冒泡，否则会触发图片自身的 preview 打开
+                                cover: (
+                                  <div className="message-image-cover">
+                                    <Button
+                                      className="W80"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditImage(img.url);
+                                      }}
+                                    >
+                                      修改图片
+                                    </Button>
+                                    <Button
+                                      icon={<DownloadOutlined size={14} />}
+                                      type="primary"
+                                      className="W80"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        downloadImage(img.url);
+                                        handleCreateAsset(img.id);
+                                      }}
+                                    >
+                                      下载图片
+                                    </Button>
+                                  </div>
+                                ),
+                              }}
                               style={{
                                 width: imgSize.width,
                                 height: imgSize.height,
+                                objectFit: "cover",
                               }}
                             />
                           </div>
-                        ),
-                      )
-                    : resultImages.map((img, index) => (
-                        <div
-                          className="message-image-wrap"
-                          key={`${img.id}-${index}`}
-                        >
-                          <Image
-                            className="message-image"
-                            src={img.url}
-                            alt={`生成素材${index + 1}`}
-                            fallback={DEFAULT_IMAGES.fallback}
-                            preview={{
-                              mask: { blur: true },
-                              // 注意：cover 内的按钮必须阻止冒泡，否则会触发图片自身的 preview 打开
-                              cover: (
-                                <div className="message-image-cover">
-                                  <Button
-                                    className="W80"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleEditImage(img.url);
-                                    }}
-                                  >
-                                    修改图片
-                                  </Button>
-                                  <Button
-                                    icon={<DownloadOutlined size={14} />}
-                                    type="primary"
-                                    className="W80"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      downloadImage(img.url);
-                                      handleCreateAsset(img.id);
-                                    }}
-                                  >
-                                    下载图片
-                                  </Button>
-                                </div>
-                              ),
-                            }}
-                            style={{
-                              width: imgSize.width,
-                              height: imgSize.height,
-                              objectFit: "cover",
-                            }}
-                          />
-                        </div>
-                      ))}
-                </div>
-              </Image.PreviewGroup>
+                        ))}
+                  </div>
+                </Image.PreviewGroup>
+                {/* 生图耗时：进行中显示实时计时，完成后展示最终耗时 */}
+                {elapsedSeconds > 0 && (
+                  <div className="generation-timer">
+                    <Timer size={14} />
+                    <span>
+                      {isGenerating
+                        ? `已耗时 ${formatElapsed(elapsedSeconds)}`
+                        : `本次生成耗时 ${formatElapsed(elapsedSeconds)}`}
+                    </span>
+                  </div>
+                )}
+              </>
             )}
           </div>
         ) : null}

@@ -58,7 +58,7 @@ export const MarketingImage = forwardRef<
   return (
     <>
       {/* 第一节：文案 */}
-      <div className="aside-section">
+      {/* <div className="aside-section">
         <SectionHead index="01" label="文案" hint="Copy" />
 
         <div className="aside-content">
@@ -85,10 +85,10 @@ export const MarketingImage = forwardRef<
             placeholder="输入副标题..."
           />
         </div>
-      </div>
+      </div> */}
 
       {/* 第二节：风格（保留原样：antd Select） */}
-      <div className="aside-section">
+      {/* <div className="aside-section">
         <SectionHead index="02" label="视觉风格" hint="Style" />
 
         <div className="aside-content">
@@ -108,7 +108,8 @@ export const MarketingImage = forwardRef<
             ]}
           />
         </div>
-      </div>
+      </div> */}
+      <div className="flex-center H100">视频生成功能正在开发中，敬请期待！</div>
     </>
   );
 });

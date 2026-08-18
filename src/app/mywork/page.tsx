@@ -3,6 +3,7 @@ import WorkList from "./component/workList/workList";
 import WorkMasonry from "./component/workMasonry/workMasonry";
 import "./mywork.scss";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button, Input, Select } from "antd";
 import {
   Search,
@@ -22,6 +23,7 @@ import UserCenterBackground from "@/components/userCenter/pageBackground/pageBac
 const PAGE_SIZE = 12;
 
 const MyWorkPage = () => {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filterType, setFilterType] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -80,7 +82,11 @@ const MyWorkPage = () => {
           </h1>
           <span className="work-count">{materialList.length} 个项目</span>
         </div>
-        <Button type="primary" icon={<Plus size={16} />}>
+        <Button
+          type="primary"
+          onClick={() => router.push("/creation")}
+          icon={<Plus size={16} />}
+        >
           新建项目
         </Button>
       </div>

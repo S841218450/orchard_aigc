@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Loading from "@/components/core/loadding/loading";
+import "@/style/basePage/callback.scss";
 
 function CallbackContent() {
   const router = useRouter();
@@ -28,18 +29,7 @@ function CallbackContent() {
   }, [router, searchParams]);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        flexDirection: "column",
-        justifyContent: "center",
-        height: "100vh",
-        gap: 20,
-        color: "#000000",
-        fontSize: 14,
-      }}
-    >
+    <div className="oauth-callback-page">
       <Loading />
       登录处理中，请稍候...
     </div>
@@ -50,18 +40,7 @@ export default function CallbackPage() {
   return (
     <Suspense
       fallback={
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 20,
-            justifyContent: "center",
-            height: "100vh",
-            color: "#000000",
-            fontSize: 14,
-          }}
-        >
+        <div className="oauth-callback-page">
           <Loading />
           加载中...
         </div>

@@ -52,23 +52,23 @@ export const CREATION_MODEL_LIST = [
     label: "千问-3.0-Pro",
     QualityList: ["1k", "2k"],
   },
-  {
-    value: "qwen-image-3.0",
-    label: "千问-3.0",
-    QualityList: ["1k", "2k"],
-  },
+  // {
+  //   value: "qwen-image-3.0",
+  //   label: "千问-3.0",
+  //   QualityList: ["1k", "2k"],
+  // },
 
   {
     value: "DouBao-Seedream-5.0-Lite",
     label: "DouBao-Seedream-5.0-Lite",
     QualityList: ["2k", "4k"],
   },
-  {
-    value: "DouBao-Seedream-5.0-Pro",
-    label: "DouBao-Seedream-5.0-Pro",
-    QualityList: ["1k", "2k", "4k"],
-    disabled: false,
-  },
+  // {
+  //   value: "DouBao-Seedream-5.0-Pro",
+  //   label: "DouBao-Seedream-5.0-Pro",
+  //   QualityList: ["1k", "2k", "4k"],
+  //   disabled: false,
+  // },
 ];
 
 // 默认模型（进入页面时按该模型的第一个画面质量初始化）

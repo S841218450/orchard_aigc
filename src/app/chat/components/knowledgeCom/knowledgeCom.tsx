@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRequest } from "ahooks";
+import { Splitter } from "antd";
 import type { FolderTreeVo, FileDetailVo, PageResult } from "@/actions/file";
 import { getFileListTree, getFileFolderFiles } from "@/actions/file";
 import FolderTree from "./FolderTree";
@@ -202,39 +203,53 @@ const KnowledgeCom = () => {
 
   return (
     <div className="knowledge-com">
-      {/* 左侧：树形目录 */}
-      <FolderTree
-        folderTree={folderTree}
-        selectedFolderId={selectedFolderId}
-        expandedKeys={expandedKeys}
-        loading={treeReq.loading}
-        folderNameMap={folderNameMap}
-        onSelectFolder={handleSelectFolder}
-        onExpandedKeysChange={setExpandedKeys}
-        onRefreshTree={refreshFolderTree}
-      />
+      <Splitter
+        className="knowledge-splitter"
+        style={{ width: "100%", height: "100%" }}
+      >
+        {/* 左侧：树形目录（可拖拽调整宽度 180~480px） */}
+        <Splitter.Panel
+          defaultSize={260}
+          min={180}
+          max={480}
+          className="knowledge-left-panel"
+        >
+          <FolderTree
+            folderTree={folderTree}
+            selectedFolderId={selectedFolderId}
+            expandedKeys={expandedKeys}
+            loading={treeReq.loading}
+            folderNameMap={folderNameMap}
+            onSelectFolder={handleSelectFolder}
+            onExpandedKeysChange={setExpandedKeys}
+            onRefreshTree={refreshFolderTree}
+          />
+        </Splitter.Panel>
 
-      {/* 右侧：面包屑 + 上传 + 文件列表 */}
-      <div className="knowledge-right">
-        <div className="right-header">
-          <Breadcrumb items={breadcrumb} onSelect={handleSelectFolder} />
-        </div>
+        {/* 右侧：面包屑 + 上传 + 文件列表 */}
+        <Splitter.Panel className="knowledge-right-panel">
+          <div className="knowledge-right">
+            <div className="right-header">
+              <Breadcrumb items={breadcrumb} onSelect={handleSelectFolder} />
+            </div>
 
-        <UploadFile
-          selectedFolderId={selectedFolderId}
-          selectedFolderName={selectedFolderName}
-          onUploadComplete={handleUploadComplete}
-        />
+            <UploadFile
+              selectedFolderId={selectedFolderId}
+              selectedFolderName={selectedFolderName}
+              onUploadComplete={handleUploadComplete}
+            />
 
-        <FileTable
-          fileList={fileList}
-          loading={filesReq.loading}
-          onRefresh={refreshFileList}
-          onUpdateFile={updateFileById}
-          pagination={{ current: page, pageSize, total }}
-          onPageChange={handlePageChange}
-        />
-      </div>
+            <FileTable
+              fileList={fileList}
+              loading={filesReq.loading}
+              onRefresh={refreshFileList}
+              onUpdateFile={updateFileById}
+              pagination={{ current: page, pageSize, total }}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </Splitter.Panel>
+      </Splitter>
     </div>
   );
 };
