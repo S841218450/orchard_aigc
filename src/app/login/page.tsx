@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Segmented } from "antd";
+import { Segmented, Image } from "antd";
 import { ArrowLeft, Sparkles, Images, Megaphone } from "lucide-react";
 import { useUserStore } from "@/store";
 import { DEFAULT_IMAGES } from "@/constants/assets";
 import messageManager from "@/utils/messageManager";
 import "@/style/basePage/login.scss";
-import NextImage from "next/image";
 import PhoneLogin from "./components/PhoneLogin";
 import AccountLogin from "./components/AccountLogin";
 import ThirdPartyLogin from "./components/ThirdPartyLogin";
@@ -140,10 +139,10 @@ export default function LoginPage() {
         <div className="auth-card">
           <div className="login-header">
             <div className="logo-wrapper">
-              <NextImage
-                width={100}
-                height={50}
-                src={DEFAULT_IMAGES.logo}
+              <Image
+                width={200}
+                preview={false}
+                src={DEFAULT_IMAGES.logoFull}
                 alt="巧思 logo"
               />
             </div>

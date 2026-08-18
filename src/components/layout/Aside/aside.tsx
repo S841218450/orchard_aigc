@@ -182,8 +182,8 @@ const Aside = () => {
         <NextImage
           src={DEFAULT_IMAGES.logo}
           alt="巧思-AI智能创作平台"
-          width={36}
-          height={36}
+          width={58}
+          height={58}
           loading="eager"
         />
       </div>
