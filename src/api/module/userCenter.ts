@@ -14,6 +14,14 @@ const apiList = [
   { url: "/invite/info", apiName: "getInviteInfo", type: "get" },
   // 获取邀请记录列表
   { url: "/invite/records", apiName: "getInviteRecords", type: "get" },
+  // 获取站内信列表（query: onlyUnread）
+  { url: "/message/list", apiName: "getMessages", type: "get" },
+  // 获取未读消息数
+  { url: "/message/unreadCount", apiName: "getUnreadCount", type: "get" },
+  // 标记单条消息已读（body: messageId）
+  { url: "/message/read", apiName: "markMessageRead", type: "put" },
+  // 全部标记已读
+  { url: "/message/readAll", apiName: "markAllMessagesRead", type: "put" },
 ];
 
 export default apiList.map((item) => ({

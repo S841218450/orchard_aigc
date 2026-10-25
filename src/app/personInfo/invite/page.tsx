@@ -14,14 +14,13 @@ import { useRequest } from "ahooks";
 import { getInviteInfo, getInviteRecords } from "@/actions/userCenter";
 import type { InviteInfo, InviteRecord } from "@/actions/userCenter";
 import { formatDate } from "@/utils/timeUtils";
-import UserCenterBackground from "@/components/userCenter/pageBackground/pageBackground";
 
 const InvitePage = () => {
   const { message } = App.useApp();
-  const { data: inviteInfoRes, loading: infoLoading } = useRequest(getInviteInfo);
-  const { data: recordsRes, loading: recordsLoading } = useRequest(
-    getInviteRecords,
-  );
+  const { data: inviteInfoRes, loading: infoLoading } =
+    useRequest(getInviteInfo);
+  const { data: recordsRes, loading: recordsLoading } =
+    useRequest(getInviteRecords);
 
   const inviteInfo: InviteInfo | null =
     inviteInfoRes && inviteInfoRes.success ? inviteInfoRes.data : null;
@@ -43,17 +42,6 @@ const InvitePage = () => {
 
   return (
     <div className="invite-page">
-      <UserCenterBackground tone="cyan" />
-      <div className="invite-header">
-        <div className="header-left">
-          <h1>
-            <Gift size={24} />
-            邀请记录
-          </h1>
-          <span className="header-desc">邀请好友加入，双方均可获得奖励</span>
-        </div>
-      </div>
-
       <div className="invite-content">
         {loading ? (
           <div className="loading-state">
@@ -68,7 +56,9 @@ const InvitePage = () => {
                   <Users size={20} />
                 </div>
                 <div className="stat-info">
-                  <div className="stat-value">{inviteInfo?.totalInvited ?? 0}</div>
+                  <div className="stat-value">
+                    {inviteInfo?.totalInvited ?? 0}
+                  </div>
                   <div className="stat-label">累计邀请（人）</div>
                 </div>
                 <span className="stat-deco stat-deco-1" aria-hidden="true" />
@@ -130,9 +120,7 @@ const InvitePage = () => {
             <div className="records-section">
               <div className="section-head">
                 <h2 className="section-title">邀请记录</h2>
-                <span className="section-sub">
-                  共 {records.length} 位好友
-                </span>
+                <span className="section-sub">共 {records.length} 位好友</span>
               </div>
               {records.length === 0 ? (
                 <Empty description="暂无邀请记录" />
@@ -153,7 +141,9 @@ const InvitePage = () => {
                       </div>
                       <div className="record-reward">+{record.reward} 积分</div>
                       <Tag
-                        color={record.status === "success" ? "success" : "warning"}
+                        color={
+                          record.status === "success" ? "success" : "warning"
+                        }
                       >
                         {record.status === "success" ? "已生效" : "待完成"}
                       </Tag>

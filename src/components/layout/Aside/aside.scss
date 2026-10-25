@@ -124,6 +124,32 @@
       }
     }
 
+    /* 积分入口 */
+    .points-trigger {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 36px;
+      padding: 0 12px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+      background: var(--color-bg-hover);
+      border: 1px solid var(--color-border);
+
+      svg {
+        color: var(--color-warm-500);
+      }
+
+      &:hover {
+        background: var(--color-pure-200) !important;
+        border-color: rgba(212, 165, 116, 0.4) !important;
+        color: var(--color-text) !important;
+      }
+    }
+
     .user-avatar-trigger {
       cursor: pointer;
       display: flex;
@@ -140,6 +166,97 @@
         transform: scale(1.05);
       }
     }
+  }
+}
+
+/* 消息 Popover */
+.msg-popover {
+  width: 320px;
+
+  .msg-popover-loading {
+    display: flex;
+    justify-content: center;
+    padding: 24px 0;
+  }
+
+  .msg-popover-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 320px;
+    overflow-y: auto;
+
+    .msg-popover-item {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 8px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--duration-fast);
+
+      .msg-item-dot {
+        flex-shrink: 0;
+        width: 6px;
+        height: 6px;
+        margin-top: 6px;
+        border-radius: 50%;
+        background: var(--color-border);
+        transition: background var(--duration-fast);
+      }
+
+      .msg-item-body {
+        flex: 1;
+        min-width: 0;
+
+        .msg-item-title {
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--color-text-secondary);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .msg-item-content {
+          font-size: 12px;
+          color: var(--color-text-quaternary);
+          margin-top: 2px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .msg-item-time {
+        flex-shrink: 0;
+        font-size: 11px;
+        color: var(--color-text-quaternary);
+      }
+
+      &:hover {
+        background: var(--color-bg-hover);
+
+        .msg-item-title {
+          color: var(--color-text);
+        }
+      }
+
+      &.is-unread {
+        .msg-item-dot {
+          background: var(--color-error);
+        }
+
+        .msg-item-title {
+          font-weight: 600;
+          color: var(--color-text);
+        }
+      }
+    }
+  }
+
+  > .ant-btn {
+    margin-top: 4px;
   }
 }
 

@@ -11,11 +11,21 @@ import {
   Crown,
   UserRound,
   Bot,
+  Bell,
+  Coins,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { Avatar, Popover, Tag, Button } from "antd";
+import { Avatar, Popover, Tag, Button, Badge, Empty, Spin } from "antd";
+import { useRequest } from "ahooks";
 import { useUserStore } from "@/store";
 import { DEFAULT_IMAGES } from "@/constants/assets";
+import {
+  getMessages,
+  getUnreadCount,
+  markMessageRead,
+} from "@/actions/userCenter";
+import type { MessageItem } from "@/actions/userCenter";
+import { formatDate } from "@/utils/timeUtils";
 import NextImage from "next/image";
 import "./aside.scss";
 
@@ -56,6 +66,78 @@ const MenuBtn = () => {
   );
 };
 
+/** 消息触发器：Popover 展示最近消息，点击跳转消息中心 */
+const MessageTrigger = () => {
+  const router = useRouter();
+  const { data: countRes } = useRequest(getUnreadCount);
+  const { data: msgRes, loading } = useRequest(getMessages);
+
+  const unreadCount = countRes && countRes.success ? countRes.data : 0;
+  const recentMessages: MessageItem[] =
+    msgRes && msgRes.success ? (msgRes.data || []).slice(0, 5) : [];
+
+  const goMessageCenter = () => router.push("/personInfo/messages");
+
+  const handleItemClick = async (msg: MessageItem) => {
+    if (!msg.isRead) {
+      await markMessageRead(msg.id);
+    }
+    goMessageCenter();
+  };
+
+  const msgPopoverContent = (
+    <div className="msg-popover">
+      {loading ? (
+        <div className="msg-popover-loading">
+          <Spin size="small" />
+        </div>
+      ) : recentMessages.length === 0 ? (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无消息" />
+      ) : (
+        <div className="msg-popover-list">
+          {recentMessages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`msg-popover-item ${msg.isRead ? "" : "is-unread"}`}
+              onClick={() => handleItemClick(msg)}
+            >
+              <span className="msg-item-dot" aria-hidden="true" />
+              <div className="msg-item-body">
+                <div className="msg-item-title">{msg.title}</div>
+                <div className="msg-item-content">{msg.content}</div>
+              </div>
+              <span className="msg-item-time">
+                {formatDate(msg.createTime, "Auto")}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      <Button block type="text" onClick={goMessageCenter}>
+        查看全部消息
+      </Button>
+    </div>
+  );
+
+  return (
+    <Popover
+      content={msgPopoverContent}
+      trigger="click"
+      placement="rightBottom"
+      className="msg-popover-wrap"
+    >
+      <Badge count={unreadCount} size="small" offset={[-2, 2]}>
+        <Button
+          shape="circle"
+          type="default"
+          icon={<Bell size={18} />}
+          title="消息"
+        />
+      </Badge>
+    </Popover>
+  );
+};
+
 const PersonPanel = () => {
   const router = useRouter();
   const { isLoggedIn, userInfo, logout } = useUserStore();
@@ -69,27 +151,23 @@ const PersonPanel = () => {
     {
       text: "个人信息",
       icon: <User size={20} />,
-      onClick: () => router.push("/profile"),
+      onClick: () => router.push("/personInfo"),
     },
     {
       text: "会员中心",
       icon: <Crown size={20} />,
-      onClick: () => router.push("/vip"),
+      onClick: () => router.push("/personInfo/vip"),
     },
-    {
-      text: "我的订单",
-      icon: <ShoppingCart size={20} />,
-      onClick: () => router.push("/orders"),
-    },
+
     {
       text: "关于我们",
       icon: <BookOpen size={20} />,
-      onClick: () => router.push("/about"),
+      onClick: () => router.push("/personInfo/about"),
     },
     {
       text: "邀请记录",
       icon: <Gift size={20} />,
-      onClick: () => router.push("/invite"),
+      onClick: () => router.push("/personInfo/invite"),
     },
     { text: "退出登录", icon: <LogOut size={20} />, onClick: handleLogout },
   ];
@@ -144,33 +222,69 @@ const PersonPanel = () => {
 
   if (!isLoggedIn) {
     return (
-      <div className="person-panel">
-        <Button
-          onClick={handleLogin}
-          type="default"
-          shape="circle"
-          icon={<UserRound />}
-        />
-      </div>
+      <>
+        <div className="person-panel">
+          <Button
+            onClick={handleLogin}
+            title="消息"
+            type="default"
+            shape="circle"
+            icon={<Bell size={18} />}
+          />
+        </div>
+        <div className="person-panel">
+          <Button
+            onClick={handleLogin}
+            title="积分"
+            type="default"
+            shape="circle"
+            icon={<Coins size={18} />}
+          />
+        </div>
+        <div className="person-panel">
+          <Button
+            onClick={handleLogin}
+            type="default"
+            shape="circle"
+            icon={<UserRound size={18} />}
+          />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="person-panel">
-      <Popover
-        content={userPanelContent}
-        trigger="click"
-        placement="rightBottom"
-        className="user-popover"
-      >
-        <div className="user-avatar-trigger">
-          <Avatar
-            size={36}
-            src={userInfo?.avatar || DEFAULT_IMAGES.defaultAvatar}
-          />
-        </div>
-      </Popover>
-    </div>
+    <>
+      <div className="person-panel">
+        <MessageTrigger />
+      </div>
+      <div className="person-panel">
+        <Button
+          className="points-trigger"
+          title="我的积分"
+          type="default"
+          onClick={() => router.push("/personInfo/vip")}
+        >
+          <Coins size={24} />
+          {userInfo?.points ?? 0}
+        </Button>
+      </div>
+      <div className="person-panel">
+        <Popover
+          content={userPanelContent}
+          trigger="click"
+          placement="rightBottom"
+          className="user-popover"
+        >
+          <div className="user-avatar-trigger">
+            <Avatar
+              size={36}
+              src={userInfo?.avatar || DEFAULT_IMAGES.defaultAvatar}
+            />
+          </div>
+        </Popover>
+      </div>
+    </>
   );
 };
 

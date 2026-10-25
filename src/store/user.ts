@@ -9,6 +9,8 @@ export interface UserInfo {
   nickname: string;
   avatar?: string;
   phone?: string | null;
+  /** 当前积分 */
+  points?: number;
 }
 
 interface UserState {
@@ -27,6 +29,7 @@ interface UserState {
       nickname: string;
       avatar?: string;
       phone?: string | null;
+      points?: number;
     },
     oauthType?: OAuthType,
   ) => void;
@@ -67,6 +70,7 @@ export const useUserStore = create<UserState>()(
             nickname: data.nickname,
             avatar: data.avatar,
             phone: data.phone,
+            points: data.points,
           },
           isLoggedIn: true,
           oauthType,

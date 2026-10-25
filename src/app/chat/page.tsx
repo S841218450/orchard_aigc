@@ -265,7 +265,6 @@ export const ChatPage = () => {
   );
   return (
     <div className="chat-page">
-      <UserCenterBackground tone="warm" />
       <div className="chat-aside">
         <ChatAside
           sessionList={sessionList}

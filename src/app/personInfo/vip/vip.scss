@@ -4,46 +4,7 @@
   flex-direction: column;
   height: 100vh;
   width: 100%;
-  background: var(--color-bg-sunken);
   overflow: hidden;
-
-  .vip-header {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid rgba(17, 17, 17, 0.06);
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      h1 {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 20px;
-        font-weight: 600;
-        color: var(--color-text);
-        margin: 0;
-
-        svg {
-          color: var(--color-warm-500);
-        }
-      }
-
-      .header-desc {
-        font-size: 12px;
-        color: var(--color-text-quaternary);
-      }
-    }
-  }
 
   .vip-content {
     position: relative;

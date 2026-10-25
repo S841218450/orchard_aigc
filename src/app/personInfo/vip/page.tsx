@@ -16,8 +16,6 @@ import { getVipInfo, getVipPlans } from "@/actions/userCenter";
 import type { VipInfo, VipPlan } from "@/actions/userCenter";
 import messageManager from "@/utils/messageManager";
 import { formatDate } from "@/utils/timeUtils";
-import UserCenterBackground from "@/components/userCenter/pageBackground/pageBackground";
-
 const BENEFIT_ICONS = [Zap, ShieldCheck, Headphones, Rocket];
 
 const VipPage = () => {
@@ -26,8 +24,7 @@ const VipPage = () => {
 
   const vipInfo: VipInfo | null =
     vipInfoRes && vipInfoRes.success ? vipInfoRes.data : null;
-  const plans: VipPlan[] =
-    plansRes && plansRes.success ? plansRes.data : [];
+  const plans: VipPlan[] = plansRes && plansRes.success ? plansRes.data : [];
 
   const loading = vipLoading || plansLoading;
 
@@ -38,17 +35,6 @@ const VipPage = () => {
 
   return (
     <div className="vip-page">
-      <UserCenterBackground tone="gold" />
-      <div className="vip-header">
-        <div className="header-left">
-          <h1>
-            <Crown size={24} />
-            会员中心
-          </h1>
-          <span className="header-desc">开通会员，解锁全部 AI 创作能力</span>
-        </div>
-      </div>
-
       <div className="vip-content">
         {loading ? (
           <div className="loading-state">
@@ -57,7 +43,9 @@ const VipPage = () => {
         ) : (
           <>
             {/* 会员状态卡片 */}
-            <div className={`vip-status-card ${vipInfo?.isVip ? "is-vip" : ""}`}>
+            <div
+              className={`vip-status-card ${vipInfo?.isVip ? "is-vip" : ""}`}
+            >
               <div className="status-card-deco" aria-hidden="true">
                 <span className="deco-crown">
                   <Crown size={120} strokeWidth={0.6} />
@@ -86,7 +74,10 @@ const VipPage = () => {
                   </div>
                 </div>
               </div>
-              <Button type="primary" onClick={() => messageManager.info("权益说明")}>
+              <Button
+                type="primary"
+                onClick={() => messageManager.info("权益说明")}
+              >
                 查看权益
               </Button>
             </div>
@@ -102,7 +93,8 @@ const VipPage = () => {
               ) : (
                 <div className="plans-grid">
                   {plans.map((plan, index) => {
-                    const PlanIcon = BENEFIT_ICONS[index % BENEFIT_ICONS.length];
+                    const PlanIcon =
+                      BENEFIT_ICONS[index % BENEFIT_ICONS.length];
                     return (
                       <Card
                         key={plan.id}
@@ -124,13 +116,13 @@ const VipPage = () => {
                           )}
                         </div>
                         <div className="plan-duration">
-                          {plan.duration === "永久"
-                            ? (
-                                <>
-                                  <InfinityIcon size={13} /> {plan.duration}
-                                </>
-                              )
-                            : plan.duration}
+                          {plan.duration === "永久" ? (
+                            <>
+                              <InfinityIcon size={13} /> {plan.duration}
+                            </>
+                          ) : (
+                            plan.duration
+                          )}
                         </div>
                         <ul className="plan-benefits">
                           {plan.benefits.map((benefit) => (

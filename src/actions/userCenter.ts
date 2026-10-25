@@ -66,6 +66,15 @@ export interface InviteRecord {
   createTime: number;
 }
 
+/** 站内信 */
+export interface MessageItem {
+  id: string;
+  title: string;
+  content: string;
+  isRead: boolean;
+  createTime: number;
+}
+
 // ==================== 结果类型 ====================
 
 type ActionResult<T = void> =
@@ -171,6 +180,64 @@ export async function getInviteRecords(): Promise<
     return {
       success: false,
       error: e?.msg || "获取邀请记录失败",
+    };
+  }
+}
+
+// ==================== 站内信 ====================
+
+/** 获取站内信列表 */
+export async function getMessages(
+  params?: { onlyUnread?: boolean },
+): Promise<ActionResult<MessageItem[]>> {
+  try {
+    const res = await API.getMessages(params);
+    return { success: true, data: res.data || [] };
+  } catch (e: any) {
+    return {
+      success: false,
+      error: e?.msg || "获取消息列表失败",
+    };
+  }
+}
+
+/** 获取未读消息数 */
+export async function getUnreadCount(): Promise<ActionResult<number>> {
+  try {
+    const res = await API.getUnreadCount();
+    return { success: true, data: res.data ?? 0 };
+  } catch (e: any) {
+    return {
+      success: false,
+      error: e?.msg || "获取未读消息数失败",
+    };
+  }
+}
+
+/** 标记单条消息已读 */
+export async function markMessageRead(
+  messageId: string,
+): Promise<ActionResult> {
+  try {
+    await API.markMessageRead({ messageId });
+    return { success: true, data: undefined };
+  } catch (e: any) {
+    return {
+      success: false,
+      error: e?.msg || "标记已读失败",
+    };
+  }
+}
+
+/** 全部标记已读 */
+export async function markAllMessagesRead(): Promise<ActionResult> {
+  try {
+    await API.markAllMessagesRead({});
+    return { success: true, data: undefined };
+  } catch (e: any) {
+    return {
+      success: false,
+      error: e?.msg || "全部标记已读失败",
     };
   }
 }
